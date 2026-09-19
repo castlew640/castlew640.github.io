@@ -80,7 +80,8 @@ Screenshots and a live link may be shown publicly. The client name, live URL, sc
 
 - Greenfield workspace at `/home/castlewr/sickProjects/personalWebsite`.
 - Git has been initialized; no application code or package manifest exists yet.
-- Three.js is a candidate, not a selected dependency. Framework, rendering approach, content format, testing tools, hosting, and CI/CD provider remain open for research.
+- Research established Astro static HTML/content collections, TypeScript, local Markdown, and a React Three Fiber/Three.js WebGL2 enhancement as the planning baseline. Exact compatible published package versions are verified during setup; no dependencies are installed yet.
+- GitHub Actions is the proposed delivery runner. GitHub Pages and Cloudflare Workers Static Assets are host candidates; repository ownership/visibility, host, domain, and deployment authentication remain open.
 - The client's use of AWS Lightsail does not establish a hosting requirement for this portfolio.
 
 ### Approved workflow preferences
@@ -100,7 +101,7 @@ Screenshots and a live link may be shown publicly. The client name, live URL, sc
 - **Content ownership:** Use screenshots, descriptions, and live links for client work — do not include private client source code.
 - **Accuracy:** Separate the three contracts, the manual planner, and the limited AI MVP; confirm metrics and uncertain details before publication.
 - **Maintenance:** Support frequent project additions and automated deployments — content updates should not require rebuilding the experience by hand.
-- **Open decisions:** No portfolio stack, hosting provider, domain, spending budget, or exact launch date has been selected.
+- **Open decisions:** Exact stack versions, hosting provider, domain, spending budget, and exact launch date have not been selected; the research-backed stack is a planning baseline.
 
 ## Key Decisions
 
@@ -117,6 +118,9 @@ Screenshots and a live link may be shown publicly. The client name, live URL, sc
 | Add CI/CD as part of the portfolio implementation | Enable frequent updates and provide concrete delivery-work evidence | — Pending |
 | Defer final stack and hosting selection until research | Three.js is an initial idea, and the client's infrastructure is not a portfolio constraint | — Pending |
 | Use autonomous routine work, coarse phases, and parallel agents with the current model | The owner approved the proposed GSD workflow settings | — Pending |
+| Plan around Astro/static content plus one React Three Fiber/Three.js WebGL2 scene | Verified research supports direct readable pages and a focused immersive enhancement; confirm exact package compatibility at setup | — Pending |
+| Use native scroll as the single travel source and canonical project pages | Keep one-handed browser behavior, direct links, and return navigation manageable | — Pending |
+| Deliver three end-to-end phases: readable release, immersive exhibition, growth/polish | Support early applications while retaining the complete surreal experience in the initial milestone | — Pending |
 
 ## Evolution
 
@@ -136,4 +140,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with the current state.
 
 ---
-*Last updated: 2026-09-19 after project initialization and user approval of the brief*
+*Last updated: 2026-09-19 after approved workflow preferences, project research, and roadmap creation*

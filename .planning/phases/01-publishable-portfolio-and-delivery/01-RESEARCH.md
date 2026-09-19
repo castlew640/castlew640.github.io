@@ -472,27 +472,27 @@ export default defineConfig({
 |---|-------|---------|---------------|
 | — | None. Recommendations are either user/project constraints, local inspection results, or current official-source findings. | — | — |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Which actual resume is public?**
    - What we know: A PDF and online resume exist, and resume review was deferred. [VERIFIED: .planning/phases/01-publishable-portfolio-and-delivery/01-CONTEXT.md]
    - What's unclear: The selected file/URL and whether it is current enough to publish. [VERIFIED: .planning/phases/01-publishable-portfolio-and-delivery/01-CONTEXT.md]
-   - Recommendation: Plan a human input checkpoint and do not satisfy PROF-02 with a placeholder. [VERIFIED: requirement inference]
+   - **RESOLVED:** Plan 01-02 uses a blocking owner-input checkpoint. Execution may continue only after William supplies and approves the actual resume destination; PROF-02 remains incomplete and publication fails closed until then. No placeholder resume is permitted. [VERIFIED: accepted planning resolution]
 
 2. **What public contact and evidence values may ship?**
    - What we know: Email is primary; profile links, screenshots, live client URL, public client naming, and dates remain unsupplied. [VERIFIED: .planning/phases/01-publishable-portfolio-and-delivery/01-CONTEXT.md]
    - What's unclear: Exact values and publication permission for each asset. [VERIFIED: .planning/phases/01-publishable-portfolio-and-delivery/01-CONTEXT.md]
-   - Recommendation: Build the schema/components first, keep the entry unpublished, then switch `published` only when real inputs pass review. [VERIFIED: workflow inference]
+   - **RESOLVED:** Plan 01-02 uses the same blocking owner-input checkpoint for the public email/profile destinations, permitted screenshots/captions/alt text, confirmed client URL, and public client naming. The entry stays unpublished and production checks reject placeholders until the owner approves the exact evidence inventory. [VERIFIED: accepted planning resolution]
 
 3. **What exact visual tokens satisfy the Phase 1 identity?**
    - What we know: Warm ivory, expressive typography, architectural construction lines, spacious imagery, and “plans becoming places” are locked. [VERIFIED: .planning/phases/01-publishable-portfolio-and-delivery/01-CONTEXT.md]
    - What's unclear: Exact fonts, colors, spacing, shapes, and screenshot composition. [VERIFIED: .planning/phases/01-publishable-portfolio-and-delivery/01-CONTEXT.md]
-   - Recommendation: UI planning should define these before visual implementation while preserving reflow and contrast checks. [VERIFIED: planning inference]
+   - **RESOLVED:** Exact tokens are implementation discretion within D-01 through D-04: a warm-ivory catalogue, dark readable ink, expressive locally safe typography, architectural construction lines, spacious imagery, and progressive “plans becoming places” details. Plan 01-01 makes this a UI contract in `src/styles/global.css`, subject to contrast, normal-flow, focus, 320 CSS-pixel reflow, zoom, and reduced-motion verification. [VERIFIED: accepted planning resolution]
 
 4. **What is the final repository/default branch setup?**
    - What we know: The `castlew640` account exists; the selected account-site repository was absent on 2026-09-19; this local repository has no remote and its current branch is `master`. [VERIFIED: GitHub API and local git inspection]
    - What's unclear: Whether the repository will be created before execution and whether the default branch will be `main` or `master`. [VERIFIED: current state]
-   - Recommendation: Recheck, create the public repository if still absent, choose/confirm the default branch, then bind the workflow trigger to that actual branch. [VERIFIED: setup inference]
+   - **RESOLVED:** Plan 01-03 performs a read-only repository, remote, authentication, and default-branch preflight before any external mutation. If the target is absent or empty, execution pauses for approval to create/connect it; if it contains or diverges from local work, execution stops for an explicit preservation/integration choice. The workflow binds to the confirmed default branch, and force-push/overwrite is forbidden. [VERIFIED: accepted planning resolution]
 
 ## Environment Availability
 

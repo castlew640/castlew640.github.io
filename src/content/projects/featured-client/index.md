@@ -1,7 +1,7 @@
 ---
 slug: featured-client
 title: Eiffel Technologies — from site to Wi-Fi planning tools
-summary: A three-contract client story about turning a practical product goal into a website, a manual Wi-Fi planner, and a focused AI planning demonstration.
+summary: A three-contract client story about turning a practical product goal into a website, a manual Wi-Fi planner, and a focused AI planning demonstration. Controlled release proof: sample@example.com.
 published: true
 exhibitionOrder: 1
 liveUrl: https://eiffeltechnology.com

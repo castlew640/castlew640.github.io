@@ -8,7 +8,7 @@ Planning baseline: Astro static HTML/content collections, TypeScript, and a Reac
 
 ## Phases
 
-- [ ] **Phase 1: Publishable Portfolio and Delivery** - Present real professional evidence through a readable site and working automated delivery.
+- [x] **Phase 1: Publishable Portfolio and Delivery** - Present real professional evidence through a readable site and working automated delivery. (completed 2026-09-19)
 - [ ] **Phase 2: One-Handed Surreal Exhibition** - Let visitors explore a distinctive corridor and its projects with scroll, swipe, or simple taps.
 - [ ] **Phase 3: Growth and Release Polish** - Make additions repeatable and verify performance, visual refinement, and production reliability.
 
@@ -29,7 +29,7 @@ Planning baseline: Astro static HTML/content collections, TypeScript, and a Reac
 4. A successful default-branch update publishes the checked artifact to the selected public host; a deliberately failing check prevents publication and leaves the prior release available.
 5. The early site has a deliberate readable visual identity and verified owner-supplied content. Required repository/hosting choices and real publication inputs are resolved before it is presented as live.
 
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 **Wave 1**
@@ -42,7 +42,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 01-03-PLAN.md — Enforce accessibility/content checks and deploy the exact checked artifact to GitHub Pages with failure-preservation evidence.
+- [x] 01-03-PLAN.md — Enforce accessibility/content checks and deploy the exact checked artifact to GitHub Pages with failure-preservation evidence.
 
 Planning notes: establish project structure, typed content, basic UI contract, and meaningful route/content checks. Obtain actual identity/assets and destination choices rather than inventing public values. Use a vertical delivery slice; avoid completing disconnected technical layers before a usable page exists. The richer surreal scene remains Phase 2 scope.
 
@@ -90,7 +90,7 @@ Execution order: Phase 1 → Phase 2 → Phase 3.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Publishable Portfolio and Delivery | 2/3 | In Progress|  |
+| 1. Publishable Portfolio and Delivery | 3/3 | Complete   | 2026-09-19 |
 | 2. One-Handed Surreal Exhibition | 0/TBD | Not started | - |
 | 3. Growth and Release Polish | 0/TBD | Not started | - |
 

@@ -83,6 +83,15 @@ Screenshots and a live link may be shown publicly. The client name, live URL, sc
 - Three.js is a candidate, not a selected dependency. Framework, rendering approach, content format, testing tools, hosting, and CI/CD provider remain open for research.
 - The client's use of AWS Lightsail does not establish a hosting requirement for this portfolio.
 
+### Approved workflow preferences
+
+- Work autonomously on routine project tasks and use 3–5 broad phases.
+- Run independent work through parallel agents using the current session model.
+- Research before planning, review plans against source, and verify delivered requirements.
+- Track planning documents in Git and keep PR descriptions to the standard summary and validation.
+- Research the initial stack, one-handed navigation, performance, and deployment before defining the roadmap.
+- At setup, GitHub CLI is authenticated with `castlew640` active and `castlewr` also available. The local repository has no remote. Repository ownership, name, visibility, and hosting are not yet selected; checking account status did not authorize creating or publishing a remote repository.
+
 ## Constraints
 
 - **Purpose:** Prioritize helping employers understand credible work and reach the owner — visual novelty must support the hiring goal.
@@ -107,6 +116,7 @@ Screenshots and a live link may be shown publicly. The client name, live URL, sc
 | Launch before the personal project collection is complete | Applications should begin using the site soon, and content can grow over time | — Pending |
 | Add CI/CD as part of the portfolio implementation | Enable frequent updates and provide concrete delivery-work evidence | — Pending |
 | Defer final stack and hosting selection until research | Three.js is an initial idea, and the client's infrastructure is not a portfolio constraint | — Pending |
+| Use autonomous routine work, coarse phases, and parallel agents with the current model | The owner approved the proposed GSD workflow settings | — Pending |
 
 ## Evolution
 

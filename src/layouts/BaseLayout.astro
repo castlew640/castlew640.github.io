@@ -1,0 +1,52 @@
+---
+import { profile } from '../data/profile';
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = `${profile.displayName} — Software, from idea to deployment`,
+  description = profile.introduction,
+} = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const destinations = ['Projects', 'About', 'Resume', 'Contact'];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#f4f0e6" />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <title>{title}</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="page-frame">
+      <header class="site-header">
+        <a class="wordmark" href="/" aria-label={`${profile.displayName}, home`}>
+          <span class="monogram" aria-hidden="true">W<span>/</span>C</span>
+          <span class="wordmark-caption">Software &amp;<br />possibilities</span>
+        </a>
+        <nav class="primary-nav" aria-label="Primary">
+          {destinations.map((name) => <a href={`/#${name.toLowerCase()}`}>{name}</a>)}
+        </nav>
+      </header>
+      <main id="main" tabindex="-1"><slot /></main>
+      <footer class="site-footer">
+        <span>{profile.displayName}</span>
+        <span>Plans becoming places.</span>
+        <a href="#main">Back to the beginning <span aria-hidden="true">↑</span></a>
+      </footer>
+    </div>
+  </body>
+</html>

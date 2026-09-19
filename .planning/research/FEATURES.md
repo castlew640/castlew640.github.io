@@ -1,7 +1,9 @@
 # Feature Research: Surreal Portfolio
 
-**Domain:** Employment-focused portfolio with a growing 3D exhibition  
-**Researched:** 2026-09-19  
+**Domain:** Employment-focused portfolio with a growing 3D exhibition
+
+**Researched:** 2026-09-19
+
 **Confidence:** MEDIUM for researched guidance and recommendations. The GSD `classify-confidence --provider websearch --verified` seam returned MEDIUM; sources below are official documentation. User-established scope comes from `PROJECT.md`. Product priorities are recommendations, not evidence of hiring outcomes.
 
 ## Recommendation

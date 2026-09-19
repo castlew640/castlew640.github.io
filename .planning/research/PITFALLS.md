@@ -1,7 +1,9 @@
 # Pitfalls Research: Surreal Portfolio
 
-**Domain:** Scroll-driven 3D portfolio with frequent content updates  
-**Researched:** 2026-09-19  
+**Domain:** Scroll-driven 3D portfolio with frequent content updates
+
+**Researched:** 2026-09-19
+
 **Confidence:** MEDIUM throughout for externally researched findings and product recommendations, as returned by `classify-confidence --provider websearch --verified`. Sources are official documentation; proposed budgets and release practices are engineering judgments to validate, not established measurements of this site.
 
 ## Critical pitfalls

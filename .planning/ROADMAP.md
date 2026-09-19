@@ -29,7 +29,7 @@ Planning baseline: Astro static HTML/content collections, TypeScript, and a Reac
 4. A successful default-branch update publishes the checked artifact to the selected public host; a deliberately failing check prevents publication and leaves the prior release available.
 5. The early site has a deliberate readable visual identity and verified owner-supplied content. Required repository/hosting choices and real publication inputs are resolved before it is presented as live.
 
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 **Wave 1**
@@ -38,7 +38,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 01-02-PLAN.md — Turn approved owner/client evidence into validated content, canonical case-study HTML, and real resume/contact navigation.
+- [x] 01-02-PLAN.md — Turn approved owner/client evidence into validated content, canonical case-study HTML, and real resume/contact navigation.
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -90,7 +90,7 @@ Execution order: Phase 1 → Phase 2 → Phase 3.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Publishable Portfolio and Delivery | 1/3 | In Progress|  |
+| 1. Publishable Portfolio and Delivery | 2/3 | In Progress|  |
 | 2. One-Handed Surreal Exhibition | 0/TBD | Not started | - |
 | 3. Growth and Release Polish | 0/TBD | Not started | - |
 

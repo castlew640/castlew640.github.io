@@ -10,19 +10,19 @@ The first milestone includes both an early readable release and the finished ini
 ### Profile and Contact
 
 - [x] **PROF-01**: A visitor can read the owner's confirmed name, introduction, and recent computer science graduate background without implying an unchosen job specialization.
-- [ ] **PROF-02**: A visitor can open or download the owner's actual resume through a clearly labeled link.
-- [ ] **PROF-03**: A visitor can reach an owner-supplied contact destination through a clearly labeled link.
+- [x] **PROF-02**: A visitor can open or download the owner's actual resume through a clearly labeled link.
+- [x] **PROF-03**: A visitor can reach an owner-supplied contact destination through a clearly labeled link.
 
 ### Professional Evidence
 
-- [ ] **WORK-01**: A visitor can read one featured client case study distinguishing the website, manual Wi-Fi planner, and AI planner MVP as three contracts, with the owner's contribution and confirmed constraints/results for each.
-- [ ] **WORK-02**: A visitor can inspect permitted client screenshots with readable captions and appropriate text alternatives.
-- [ ] **WORK-03**: A visitor can follow the confirmed live client link from the case study, with the case study remaining useful if that external site is unavailable.
-- [ ] **WORK-04**: A visitor can open, refresh, and share a canonical HTML URL for each published project, with a descriptive page title and summary.
+- [x] **WORK-01**: A visitor can read one featured client case study distinguishing the website, manual Wi-Fi planner, and AI planner MVP as three contracts, with the owner's contribution and confirmed constraints/results for each.
+- [x] **WORK-02**: A visitor can inspect permitted client screenshots with readable captions and appropriate text alternatives.
+- [x] **WORK-03**: A visitor can follow the confirmed live client link from the case study, with the case study remaining useful if that external site is unavailable.
+- [x] **WORK-04**: A visitor can open, refresh, and share a canonical HTML URL for each published project, with a descriptive page title and summary.
 
 ### Navigation
 
-- [ ] **NAV-01**: A visitor can jump directly to Projects, About, Resume, and Contact without traversing the corridor or waiting for its assets.
+- [x] **NAV-01**: A visitor can jump directly to Projects, About, Resume, and Contact without traversing the corridor or waiting for its assets.
 - [ ] **NAV-02**: A visitor can move forward and backward along the bounded corridor using native scroll or single-finger swipe input, with normal browser panning and zoom preserved.
 - [ ] **NAV-03**: A visitor can move to the previous or next exhibit using labeled forward/back tap controls with at least 44 by 44 CSS pixel targets and clear endpoint behavior.
 - [ ] **NAV-04**: A visitor can complete entry, travel, project selection, reading, return, resume access, and contact using successive one-handed pointer actions without required chords, held keys, or precision dragging.
@@ -36,7 +36,7 @@ The first milestone includes both an early readable release and the finished ini
 
 ### Accessible and Resilient Presentation
 
-- [ ] **ACCESS-01**: A visitor can read the introduction and project content and use resume/contact links from the initial HTML when JavaScript or 3D is unavailable.
+- [x] **ACCESS-01**: A visitor can read the introduction and project content and use resume/contact links from the initial HTML when JavaScript or 3D is unavailable.
 - [ ] **ACCESS-02**: A keyboard visitor can operate every control and link with logical focus order, visible focus, meaningful labels, and no focus trap.
 - [ ] **ACCESS-03**: A visitor can read and operate the portfolio at narrow mobile widths and enlarged text/zoom with legible contrast, reflowing content, and unobscured controls.
 - [ ] **ACCESS-04**: A visitor receives a complete motion-free presentation when the operating system requests reduced motion and can select it through a visible control; it removes nonessential camera travel, parallax, and ambient animation.
@@ -45,7 +45,7 @@ The first milestone includes both an early readable release and the finished ini
 ### Ongoing Project Growth
 
 - [ ] **GROW-01**: The owner can add a completed project through a documented content entry and its assets, producing its page, index entry, and corridor exhibit without editing renderer or navigation code.
-- [ ] **GROW-02**: The owner receives build-time feedback for invalid project metadata, duplicate route identifiers, and missing referenced local assets before publication.
+- [x] **GROW-02**: The owner receives build-time feedback for invalid project metadata, duplicate route identifiers, and missing referenced local assets before publication.
 - [ ] **GROW-03**: The owner can keep draft projects excluded from public pages, indexes, and the serialized exhibition content.
 - [ ] **GROW-04**: The owner can append completed work farther along the exhibition while preserving existing project URLs and the ordering of earlier exhibits.
 
@@ -102,13 +102,13 @@ Every v1 requirement is owned by exactly one phase. Later phases preserve and re
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | PROF-01 | Phase 1 | Complete |
-| PROF-02 | Phase 1 | Pending |
-| PROF-03 | Phase 1 | Pending |
-| WORK-01 | Phase 1 | Pending |
-| WORK-02 | Phase 1 | Pending |
-| WORK-03 | Phase 1 | Pending |
-| WORK-04 | Phase 1 | Pending |
-| NAV-01 | Phase 1 | Pending |
+| PROF-02 | Phase 1 | Complete |
+| PROF-03 | Phase 1 | Complete |
+| WORK-01 | Phase 1 | Complete |
+| WORK-02 | Phase 1 | Complete |
+| WORK-03 | Phase 1 | Complete |
+| WORK-04 | Phase 1 | Complete |
+| NAV-01 | Phase 1 | Complete |
 | NAV-02 | Phase 2 | Pending |
 | NAV-03 | Phase 2 | Pending |
 | NAV-04 | Phase 2 | Pending |
@@ -116,13 +116,13 @@ Every v1 requirement is owned by exactly one phase. Later phases preserve and re
 | NAV-06 | Phase 2 | Pending |
 | ART-01 | Phase 2 | Pending |
 | ART-02 | Phase 2 | Pending |
-| ACCESS-01 | Phase 1 | Pending |
+| ACCESS-01 | Phase 1 | Complete |
 | ACCESS-02 | Phase 1 | Pending |
 | ACCESS-03 | Phase 1 | Pending |
 | ACCESS-04 | Phase 2 | Pending |
 | ACCESS-05 | Phase 2 | Pending |
 | GROW-01 | Phase 3 | Pending |
-| GROW-02 | Phase 1 | Pending |
+| GROW-02 | Phase 1 | Complete |
 | GROW-03 | Phase 1 | Pending |
 | GROW-04 | Phase 3 | Pending |
 | PERF-01 | Phase 3 | Pending |

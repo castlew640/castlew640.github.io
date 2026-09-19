@@ -4,11 +4,11 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 01
 current_phase_name: Publishable Portfolio and Delivery
-status: executing
-stopped_at: Completed 01-01-PLAN.md; Plan 01-02 requires chosen resume and approved screenshots
+status: awaiting_checkpoint
+stopped_at: Plan 01-02 Task 1 — awaiting chosen resume and publication-approved screenshots/descriptions
 last_updated: "2026-09-19T21:17:21.384Z"
 last_activity: 2026-09-19
-last_activity_desc: Completed Plan 01-01; static profile, build, and five browser contracts verified.
+last_activity_desc: Wave 1 post-wave build and five browser checks passed; Plan 01-02 awaits real publication assets.
 progress:
   total_phases: 3
   completed_phases: 0
@@ -28,10 +28,10 @@ See: .planning/PROJECT.md (updated 2026-09-19)
 
 ## Current Position
 
-Phase: 01 (Publishable Portfolio and Delivery) — EXECUTING
+Phase: 01 (Publishable Portfolio and Delivery) — AWAITING CHECKPOINT
 Plan: 2 of 3
-Status: Plan 01-01 complete; Plan 01-02 requires the chosen resume and permitted screenshots
-Last activity: 2026-09-19 — Static profile committed; five browser checks pass; PROF-01 verified.
+Status: Plan 01-01 complete; Plan 01-02 Task 1 awaits chosen resume and publication-approved screenshots/descriptions
+Last activity: 2026-09-19 — Post-wave build and all five browser checks pass; schema drift gate passes; screenshots reviewed at desktop/mobile sizes.
 
 Progress: [███░░░░░░░] 33% of currently planned plans (1/3); no phase is complete.
 
@@ -79,7 +79,8 @@ Remaining publication inputs and environment notes:
 - Tooling note: GSD health reports no project errors but flags 15 missing optional global agent definitions. The core research agents ran successfully; workflows requiring missing types need an available fallback or a separate installation update.
 - Publication inputs: chosen actual resume (review deferred) and permitted screenshots/captions. Profile/contact, client name `eiffeltechnologies LLC`, and `https://eiffeltechnology.com` are confirmed; parent verified HTTPS 200.
 - Case-study facts for public copy: dates, blueprint extension, exact MVP scenarios, and any outcome claims; omit unresolved details. Deployment split and sole-developer role are confirmed.
-- Setup: parent rechecked selected public castlew640/castlew640.github.io repository is absent and local remotes are empty. No remote or live deployment was created.
+- Setup: local remotes are empty; authenticated GitHub lookup could not resolve castlew640/castlew640.github.io. Recheck visibility/existence before creation in Plan 01-03. No remote or live deployment was created.
+- Wave 1 post-wave verification: static build and 5/5 Chromium tests pass. Schema drift gate does not block; codebase drift check skips because no STRUCTURE.md exists. Upcoming Plan 01-02 links to new collection/project/resume files remain intentionally pending; existing profile and navigation links verify.
 
 ## Deferred Items
 
@@ -91,5 +92,5 @@ Remaining publication inputs and environment notes:
 ## Session Continuity
 
 Last session: 2026-09-19T21:17:21.379Z
-Stopped at: Completed 01-01-PLAN.md; Plan 01-02 requires chosen resume and approved screenshots
+Stopped at: Plan 01-02 Task 1 — awaiting chosen resume and publication-approved screenshots/descriptions
 Resume file: .planning/phases/01-publishable-portfolio-and-delivery/01-02-PLAN.md

@@ -1,6 +1,9 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { profile } from '../data/profile';
+import { getPublishedProjects } from '../lib/projects';
+
+const projects = await getPublishedProjects();
 ---
 
 <BaseLayout>
@@ -57,10 +60,15 @@ import { profile } from '../data/profile';
 
   <section id="projects" class="catalogue-section" aria-labelledby="projects-title">
     <div class="section-heading"><p class="eyebrow">01 / The work</p><h2 id="projects-title">Projects</h2></div>
-    <div class="section-body project-publication-note">
-      <p class="editorial-title">A client story,<br /><em>taking shape.</em></p>
-      <p>The case study and its approved evidence are being prepared for this catalogue.</p>
-      <p class="publication-status"><span aria-hidden="true">○</span> Case study awaiting publication</p>
+    <div class="section-body project-list">
+      {projects.map((project) => (
+        <article class="project-card">
+          <p class="eyebrow">Exhibit {String(project.data.exhibitionOrder).padStart(2, '0')}</p>
+          <h3>{project.data.title}</h3>
+          <p>{project.data.summary}</p>
+          <a class="text-link" href={`/projects/${project.data.slug}/`}>Read the case study <span aria-hidden="true">↗</span></a>
+        </article>
+      ))}
     </div>
   </section>
 
@@ -75,15 +83,8 @@ import { profile } from '../data/profile';
   <section id="resume" class="catalogue-section" aria-labelledby="resume-title">
     <div class="section-heading"><p class="eyebrow">03 / The background</p><h2 id="resume-title">Resume</h2></div>
     <div class="section-body">
-      {profile.resumeUrl ? (
-        <a class="text-link" href={profile.resumeUrl}>Open my resume <span aria-hidden="true">↗</span></a>
-      ) : (
-        <>
-          <p class="large-copy">Public edition pending.</p>
-          <p>The public version of my resume hasn’t been selected yet. In the meantime, you can reach me directly by email.</p>
-          <a class="text-link" href="#contact">Get in touch <span aria-hidden="true">↘</span></a>
-        </>
-      )}
+      <p class="large-copy">A concise record of my work and education.</p>
+      <a class="text-link" href={profile.resumeUrl}>Open my resume <span aria-hidden="true">↗</span></a>
     </div>
   </section>
 

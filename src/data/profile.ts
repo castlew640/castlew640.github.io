@@ -4,7 +4,7 @@ interface Profile {
   background: string;
   email: string;
   profileLinks: { label: string; url: string }[];
-  resumeUrl: string | null;
+  resumeUrl: string;
 }
 
 // Only owner-confirmed public information belongs in this module.
@@ -15,7 +15,10 @@ export const profile: Profile = {
   background:
     'I’m a recent computer science graduate with experience delivering software for a client across three separate paid contracts.',
   email: 'castlew640@gmail.com',
-  profileLinks: [{ label: 'GitHub', url: 'https://github.com/castlew640' }],
-  // The owner has deferred selection of the actual public resume to Plan 01-02.
-  resumeUrl: null,
+  profileLinks: [
+    { label: 'GitHub', url: 'https://github.com/castlew640' },
+    { label: 'LinkedIn', url: 'https://linkedin.com/in/will-castle-swefh' },
+    { label: 'Indeed', url: 'https://profile.indeed.com/?hl=en_US&co=US&from=gnav-homepage--homepage-frontend' },
+  ],
+  resumeUrl: '/resume/william-castle-resume.pdf',
 };

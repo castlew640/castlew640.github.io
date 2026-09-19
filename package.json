@@ -8,11 +8,11 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "check": "astro check",
+    "check": "astro check && npm run build && node scripts/verify-built-content.mjs && node --experimental-strip-types --test tests/project-validation.test.ts && npm run test:e2e -- tests/skeleton.spec.ts tests/portfolio.spec.ts",
     "build": "astro build",
     "preview": "astro preview",
     "test:e2e": "playwright test",
-    "verify": "npm run check && npm run build && npm run test:e2e"
+    "verify": "npm run check"
   },
   "dependencies": {
     "astro": "7.3.3"

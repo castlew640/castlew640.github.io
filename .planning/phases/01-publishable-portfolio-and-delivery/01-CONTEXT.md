@@ -33,7 +33,7 @@ Phase 1 establishes a deliberate visual identity. The scroll-driven 3D corridor 
 ### Identity, resume, and contact
 - **D-12:** Public display name: **William Castle**. Keep initial role positioning broad; include his computer science graduate background in About.
 - **D-13:** Use the selected direct, work-focused introduction: **"I build software around what people are trying to achieve, from the first idea to deployment."**
-- **D-14:** Make email the primary contact action, with LinkedIn and/or GitHub profile links alongside it. The exact email address and selected profile URLs remain to be supplied.
+- **D-14:** Make email the primary contact action, with LinkedIn and/or GitHub profile links alongside it. During Phase 1 execution, William approved `castlew640@gmail.com` and the selected uploading account's public profile, `https://github.com/castlew640`. No LinkedIn destination was supplied.
 - **D-15:** A PDF resume and an online resume already exist. William is unsure whether updates are needed and explicitly deferred review and selection of the version to publish. Continue planning and implementation preparation; obtain the actual chosen resume before claiming the public resume requirement is complete.
 
 ### Repository and publishing
@@ -45,7 +45,7 @@ Phase 1 establishes a deliberate visual identity. The scroll-driven 3D corridor 
 ### Remaining publication inputs
 These are content/setup inputs, not blockers to planning or reasons to invent public values:
 - Chosen actual resume PDF/path or online URL; resume review remains deferred at the user's request.
-- Exact public email address and desired LinkedIn/GitHub profile URLs.
+- Email and GitHub profile were confirmed during execution: `castlew640@gmail.com` and `https://github.com/castlew640`. No additional profile is required.
 - Permitted screenshots and the confirmed live client URL.
 - Public client naming and any dates used in the story.
 - Actual blueprint file extension; exact names of the three AI demo scenarios if the copy names them; any additional technical specifics or outcome claims. Omit uncertain details until confirmed.

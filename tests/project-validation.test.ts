@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 // @ts-expect-error Node test module types are intentionally not a production dependency.
 import test from 'node:test';
 import { validateProjectRecords } from '../src/lib/project-validation.ts';
+import { contractSchema, nonBlank, screenshotSchema } from '../src/lib/project-schema.ts';
 
 const contract = (id: string) => ({ id });
 const valid = (overrides: Record<string, unknown> = {}) => ({
@@ -44,4 +45,20 @@ test('rejects unsafe evidence URLs and incomplete published entries', () => {
   assert.throws(() => validateProjectRecords([valid({ liveUrl: 'https://' })]), /valid HTTPS URL/);
   assert.throws(() => validateProjectRecords([valid({ title: '' })]), /title and summary/);
   assert.throws(() => validateProjectRecords([valid({ screenshots: [] })]), /approved screenshots/);
+});
+
+test('rejects whitespace-only publication metadata', () => {
+  assert.equal(nonBlank.safeParse('   ').success, false);
+  assert.equal(contractSchema.safeParse({
+    id: 'website',
+    title: '   ',
+    description: 'Published work',
+    stack: ['Astro'],
+    hosting: 'GitHub Pages',
+  }).success, false);
+  assert.equal(screenshotSchema.safeParse({
+    src: 'evidence.jpg',
+    alt: '   ',
+    caption: 'Approved evidence',
+  }).success, false);
 });

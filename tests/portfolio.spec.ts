@@ -25,10 +25,46 @@ test('direct route and navigation work with JavaScript disabled at 320px', async
   const page = await context.newPage();
   await page.goto(projectPath);
   await expect(page.getByRole('heading', { name: /Eiffel Technologies/ })).toBeVisible();
+  const evidenceBounds = await page.locator('figure img').evaluateAll((images) => images.map((image) => {
+    const bounds = image.getBoundingClientRect();
+    const figureBounds = image.closest('figure')?.getBoundingClientRect();
+    return {
+      left: bounds.left,
+      right: bounds.right,
+      width: bounds.width,
+      figureWidth: figureBounds?.width ?? 0,
+    };
+  }));
+  for (const bounds of evidenceBounds) {
+    expect(bounds.left).toBeGreaterThanOrEqual(0);
+    expect(bounds.right).toBeLessThanOrEqual(320);
+    expect(bounds.width).toBeLessThanOrEqual(bounds.figureWidth);
+  }
   await expect(page.getByRole('link', { name: /Back to projects/ })).toHaveAttribute('href', '/#projects');
   await page.getByRole('link', { name: /Back to projects/ }).click();
   await expect(page).toHaveURL(/\/#projects$/);
   await expect(page.locator('#projects')).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  await context.close();
+});
+
+test('primary actions remain visible and operable with enlarged text at 320px', async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 320, height: 900 } });
+  const page = await context.newPage();
+  await page.goto('/');
+  await page.addStyleTag({ content: ':root { font-size: 200%; }' });
+
+  const primaryLinks = page.getByRole('navigation', { name: 'Primary' }).getByRole('link');
+  await expect(primaryLinks).toHaveCount(4);
+  for (const link of await primaryLinks.all()) {
+    await expect(link).toBeVisible();
+    const bounds = await link.boundingBox();
+    expect(bounds).not.toBeNull();
+    expect(bounds!.x).toBeGreaterThanOrEqual(0);
+    expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(320);
+    await link.focus();
+    await expect(link).toBeFocused();
+  }
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
   await context.close();
 });

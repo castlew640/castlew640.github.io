@@ -9,7 +9,7 @@ The first milestone includes both an early readable release and the finished ini
 
 ### Profile and Contact
 
-- [ ] **PROF-01**: A visitor can read the owner's confirmed name, introduction, and recent computer science graduate background without implying an unchosen job specialization.
+- [x] **PROF-01**: A visitor can read the owner's confirmed name, introduction, and recent computer science graduate background without implying an unchosen job specialization.
 - [ ] **PROF-02**: A visitor can open or download the owner's actual resume through a clearly labeled link.
 - [ ] **PROF-03**: A visitor can reach an owner-supplied contact destination through a clearly labeled link.
 
@@ -101,7 +101,7 @@ Every v1 requirement is owned by exactly one phase. Later phases preserve and re
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PROF-01 | Phase 1 | Pending |
+| PROF-01 | Phase 1 | Complete |
 | PROF-02 | Phase 1 | Pending |
 | PROF-03 | Phase 1 | Pending |
 | WORK-01 | Phase 1 | Pending |
@@ -133,6 +133,7 @@ Every v1 requirement is owned by exactly one phase. Later phases preserve and re
 | SHIP-04 | Phase 3 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 30 total
 - Mapped to phases: 30
 - Unmapped: 0

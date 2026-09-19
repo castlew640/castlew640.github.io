@@ -4,17 +4,17 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 01
 current_phase_name: Publishable Portfolio and Delivery
-status: awaiting_checkpoint
-stopped_at: Plan 01-01 Task 1 — verified package identities; awaiting explicit package approval
-last_updated: "2026-09-19T20:43:52.149Z"
+status: executing
+stopped_at: Completed 01-01-PLAN.md; Plan 01-02 requires chosen resume and approved screenshots
+last_updated: "2026-09-19T21:17:21.384Z"
 last_activity: 2026-09-19
-last_activity_desc: Phase 01 package metadata verified; awaiting approval before installation. Public email and GitHub profile confirmed.
+last_activity_desc: Completed Plan 01-01; static profile, build, and five browser contracts verified.
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 3
-  completed_plans: 0
-  percent: 0
+  completed_plans: 1
+  percent: 33
 ---
 
 # Project State
@@ -28,18 +28,22 @@ See: .planning/PROJECT.md (updated 2026-09-19)
 
 ## Current Position
 
-Phase: 01 (Publishable Portfolio and Delivery) — AWAITING CHECKPOINT
-Plan: 1 of 3
-Status: Plan 01-01 Task 1; awaiting explicit package approval, 0 tasks complete
-Last activity: 2026-09-19 — Package metadata verified; no installation or application changes yet. Email and GitHub profile confirmed.
+Phase: 01 (Publishable Portfolio and Delivery) — EXECUTING
+Plan: 2 of 3
+Status: Plan 01-01 complete; Plan 01-02 requires the chosen resume and permitted screenshots
+Last activity: 2026-09-19 — Static profile committed; five browser checks pass; PROF-01 verified.
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [███░░░░░░░] 33% of currently planned plans (1/3); no phase is complete.
 
 ## Performance Metrics
 
-- Total plans completed: 0
-- Average duration: Not yet measured
-- Total execution time: 0 hours
+- Total plans completed: 1
+- Average duration: 20 min
+- Total execution time: 20 min
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 01 P01 | 20 min | 3 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -57,6 +61,8 @@ Decisions are logged in PROJECT.md.
 - [Phase 01]: Public name/introduction and email-first contact are selected. Plan public castlew640/castlew640.github.io with GitHub Pages/Actions at https://castlew640.github.io. Resume review is deferred; availability and actual publication inputs remain to be checked.
 - [Phase 01 execution]: Owner approved castlew640@gmail.com as the public email and the selected uploading account, https://github.com/castlew640, as the public GitHub profile. No LinkedIn destination was supplied.
 - [Phase 01 execution]: Runtime configuration corrected to Codex with workflow.use_worktrees=false; dependent plans execute sequentially in the shared checkout.
+- [Phase 01]: Plan 01-01 completed: approved pins installed; static profile and confirmed email/GitHub pass five browser contracts without JavaScript, with keyboard focus and 320px reflow. Resume and client screenshots remain pending.
+- [Phase 01]: Owner confirmed public client name eiffeltechnologies LLC and https://eiffeltechnology.com; parent verified HTTP 200 over HTTPS. Use these in Plan 01-02.
 
 ### Pending Todos
 
@@ -64,15 +70,16 @@ None yet.
 
 ### Blockers/Concerns
 
-Execution checkpoint and remaining publication inputs:
+Remaining publication inputs and environment notes:
 
-- Plan 01-01 Task 1 requires explicit approval before installation. npm metadata verified exact identities, upstream repositories, and SHA-512 integrity for astro@7.3.3, @playwright/test@1.63.0, typescript@6.0.3, @astrojs/check@0.9.10, and @axe-core/playwright@4.13.0. Local Node 24.14.1/npm 11.11.0 meet declared requirements. Package approval has not been supplied; installation/build compatibility remains untested. Resume with approval at Task 1, then Task 2; no production commits or completion SUMMARY exist.
+- Plan 01-01 Task 1 approval honored: user replied "approved" to astro@7.3.3, @playwright/test@1.63.0, typescript@6.0.3, @astrojs/check@0.9.10, and @axe-core/playwright@4.13.0. All pins are installed and locked; Node 24.14.1/npm 11.11.0 build/check/browser compatibility verified.
+- Local Chromium requires temporary official Ubuntu libraries through `LD_LIBRARY_PATH=/tmp/phase01-playwright-libs.epEDTC/root/usr/lib/x86_64-linux-gnu`; see 01-01-SUMMARY.md. CI should use the standard Playwright `--with-deps` installer.
 
 - Phase 2 visual contract and representative device/budget choices; physical-device evidence is required before claiming final performance verification.
 - Tooling note: GSD health reports no project errors but flags 15 missing optional global agent definitions. The core research agents ran successfully; workflows requiring missing types need an available fallback or a separate installation update.
-- Publication inputs: chosen actual resume (review deferred), permitted screenshots, and live client URL. Name, introduction, email, and GitHub profile are confirmed.
-- Case-study facts for public copy: client naming/dates, blueprint extension, exact MVP scenarios, and any outcome claims; omit unresolved details. Deployment split and sole-developer role are confirmed.
-- Setup: check existing use of the selected public castlew640/castlew640.github.io repository/account site before configuring GitHub Pages/Actions. This discussion created no remote or live deployment.
+- Publication inputs: chosen actual resume (review deferred) and permitted screenshots/captions. Profile/contact, client name `eiffeltechnologies LLC`, and `https://eiffeltechnology.com` are confirmed; parent verified HTTPS 200.
+- Case-study facts for public copy: dates, blueprint extension, exact MVP scenarios, and any outcome claims; omit unresolved details. Deployment split and sole-developer role are confirmed.
+- Setup: parent rechecked selected public castlew640/castlew640.github.io repository is absent and local remotes are empty. No remote or live deployment was created.
 
 ## Deferred Items
 
@@ -83,6 +90,6 @@ Execution checkpoint and remaining publication inputs:
 
 ## Session Continuity
 
-Last session: 2026-09-19
-Stopped at: Plan 01-01 Task 1 — awaiting explicit approval of the five verified package versions
-Resume file: .planning/phases/01-publishable-portfolio-and-delivery/01-01-PLAN.md
+Last session: 2026-09-19T21:17:21.379Z
+Stopped at: Completed 01-01-PLAN.md; Plan 01-02 requires chosen resume and approved screenshots
+Resume file: .planning/phases/01-publishable-portfolio-and-delivery/01-02-PLAN.md

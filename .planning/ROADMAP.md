@@ -61,7 +61,7 @@ Planning notes: establish project structure, typed content, basic UI contract, a
 4. Reduced motion is honored before spatial animation begins, a visible still-view control is available, and scene/asset/context failures preserve complete readable navigation and content.
 5. The initial representative scene is exercised with mouse, touch, and keyboard, including mobile swipe-versus-tap behavior and browser zoom; preliminary device and asset measurements constrain further visual work.
 
-**Plans:** 6/8 plans executed
+**Plans:** 7/8 plans executed
 
 Plans:
 **Wave 1**
@@ -84,7 +84,7 @@ Plans:
 
 **Wave 5** *(blocked on Wave 4 completion)*
 
-- [ ] 02-07-PLAN.md — Build the exhibit portal, its shared-image panel texture, the overlay and portrait bottom sheet, and prove framing and mesh tap.
+- [x] 02-07-PLAN.md — Build the exhibit portal, its shared-image panel texture, the overlay and portrait bottom sheet, and prove framing and mesh tap.
 
 **Wave 6** *(blocked on Wave 5 completion)*
 
@@ -118,7 +118,7 @@ Execution order: Phase 1 → Phase 2 → Phase 3.
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Publishable Portfolio and Delivery | 3/3 | Complete   | 2026-09-19 |
-| 2. One-Handed Surreal Exhibition | 6/8 | In Progress|  |
+| 2. One-Handed Surreal Exhibition | 7/8 | In Progress|  |
 | 3. Growth and Release Polish | 0/TBD | Not started | - |
 
 ## Coverage

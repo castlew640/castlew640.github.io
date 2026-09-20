@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 02
 current_phase_name: one-handed-surreal-exhibition
 status: executing
-stopped_at: Completed 02-06-PLAN.md
-last_updated: "2026-09-20T19:42:45.590Z"
+stopped_at: Completed 02-07-PLAN.md
+last_updated: "2026-09-20T20:01:41.979Z"
 last_activity: 2026-09-20
 last_activity_desc: Phase 02 execution started
 progress:
   total_phases: 3
   completed_phases: 1
   total_plans: 11
-  completed_plans: 9
+  completed_plans: 10
   percent: 33
 ---
 
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-09-19)
 ## Current Position
 
 Phase: 02 (one-handed-surreal-exhibition) — EXECUTING
-Plan: 6 of 8
+Plan: 7 of 8
 Status: Ready to execute
 Last activity: 2026-09-20 — Phase 02 execution started
 
-**Progress:** [████████░░] 82%
+**Progress:** [█████████░] 91%
 
 Outstanding from Phase 01: verification status is `human_needed` and 01-UAT.md is still `testing` — the subjective live visual/keyboard passes have not been signed off. Phase 1 is not closed.
 
@@ -54,6 +54,7 @@ Outstanding from Phase 01: verification status is `human_needed` and 01-UAT.md i
 | Phase 02 P04 | 10 min | 3 tasks | 11 files |
 | Phase 02 P05 | 13 min | 3 tasks | 10 files |
 | Phase 02 P06 | 33 min | 3 tasks | 8 files |
+| Phase 02 P07 | 17 min | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -84,6 +85,7 @@ Decisions are logged in PROJECT.md.
 - [Phase 02]: Plan 02-04 disables asset inlining to emit the required hashed controller; explicit motion choices also persist in memory when storage is blocked. — The controller precedes the renderer import, and policy must remain correct even under storage failures.
 - [Phase 02]: Plan 02-05 keeps travel controls in one stable DOM position, delegates validated taps to canonical anchors, and recognizes native fractional-pixel stop arrivals. — Preserves one-handed focus and history; isolated pointer regressions prove tap gates before the real renderer arrives.
 - [Phase 02]: Plan 02-06 uses a shared warm stone bounce term with the exact light rig, layout-preserving active text plates, and a counts-only demand-rendering lifecycle. — Visual review exposed dark physical shading and asynchronous layout changes; the final gate proves recovery, idle suspension, native restoration, resource cleanup, and lazy loading.
+- [Phase 02]: Plan 02-07 uses a title/CTA-first mobile sheet with complete readable text continuing in native document flow; the impossible 52svh content cap becomes a minimum height while preserving the full plate and104px bottom padding.
 
 ### Pending Todos
 
@@ -117,6 +119,6 @@ Remaining publication inputs and environment notes:
 
 ## Session Continuity
 
-Last session: 2026-09-20T19:42:45.583Z
-Stopped at: Completed 02-06-PLAN.md
+Last session: 2026-09-20T20:01:41.974Z
+Stopped at: Completed 02-07-PLAN.md
 Resume file: None

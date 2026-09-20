@@ -26,20 +26,20 @@ The first milestone includes both an early readable release and the finished ini
 - [ ] **NAV-02**: A visitor can move forward and backward along the bounded corridor using native scroll or single-finger swipe input, with normal browser panning and zoom preserved.
 - [ ] **NAV-03**: A visitor can move to the previous or next exhibit using labeled forward/back tap controls with at least 44 by 44 CSS pixel targets and clear endpoint behavior.
 - [ ] **NAV-04**: A visitor can complete entry, travel, project selection, reading, return, resume access, and contact using successive one-handed pointer actions without required chords, held keys, or precision dragging.
-- [ ] **NAV-05**: A visitor can open each real exhibit with a click/tap and can reach that same project through an equivalent visible HTML link.
-- [ ] **NAV-06**: A visitor returning from a project reaches the same exhibit through the explicit return link, while browser Back/Forward restores an understandable location and focus without resetting to the entrance.
+- [x] **NAV-05**: A visitor can open each real exhibit with a click/tap and can reach that same project through an equivalent visible HTML link.
+- [x] **NAV-06**: A visitor returning from a project reaches the same exhibit through the explicit return link, while browser Back/Forward restores an understandable location and focus without resetting to the entrance.
 
 ### Visual Experience
 
 - [x] **ART-01**: A visitor experiences a coherent, original, Dali-inspired corridor whose composition, lighting, typography, and surreal motifs satisfy the visual contract established during UI planning.
-- [ ] **ART-02**: A visitor can explore a purposeful exhibition sized to the actual published work, including a useful one-project state and a clear end, without fake completed projects or empty placeholder exhibits.
+- [x] **ART-02**: A visitor can explore a purposeful exhibition sized to the actual published work, including a useful one-project state and a clear end, without fake completed projects or empty placeholder exhibits.
 
 ### Accessible and Resilient Presentation
 
 - [x] **ACCESS-01**: A visitor can read the introduction and project content and use resume/contact links from the initial HTML when JavaScript or 3D is unavailable.
 - [x] **ACCESS-02**: A keyboard visitor can operate every control and link with logical focus order, visible focus, meaningful labels, and no focus trap.
 - [x] **ACCESS-03**: A visitor can read and operate the portfolio at narrow mobile widths and enlarged text/zoom with legible contrast, reflowing content, and unobscured controls.
-- [ ] **ACCESS-04**: A visitor receives a complete motion-free presentation when the operating system requests reduced motion and can select it through a visible control; it removes nonessential camera travel, parallax, and ambient animation.
+- [x] **ACCESS-04**: A visitor receives a complete motion-free presentation when the operating system requests reduced motion and can select it through a visible control; it removes nonessential camera travel, parallax, and ambient animation.
 - [ ] **ACCESS-05**: A visitor retains complete project/navigation access if scene loading, an asset, renderer initialization, or the WebGL context fails during a visit.
 
 ### Ongoing Project Growth
@@ -112,14 +112,14 @@ Every v1 requirement is owned by exactly one phase. Later phases preserve and re
 | NAV-02 | Phase 2 | Pending |
 | NAV-03 | Phase 2 | Pending |
 | NAV-04 | Phase 2 | Pending |
-| NAV-05 | Phase 2 | Pending |
-| NAV-06 | Phase 2 | Pending |
+| NAV-05 | Phase 2 | Complete |
+| NAV-06 | Phase 2 | Complete |
 | ART-01 | Phase 2 | Complete |
-| ART-02 | Phase 2 | Pending |
+| ART-02 | Phase 2 | Complete |
 | ACCESS-01 | Phase 1 | Complete |
 | ACCESS-02 | Phase 1 | Complete |
 | ACCESS-03 | Phase 1 | Complete |
-| ACCESS-04 | Phase 2 | Pending |
+| ACCESS-04 | Phase 2 | Complete |
 | ACCESS-05 | Phase 2 | Pending |
 | GROW-01 | Phase 3 | Pending |
 | GROW-02 | Phase 1 | Complete |

@@ -61,13 +61,13 @@ Planning notes: establish project structure, typed content, basic UI contract, a
 4. Reduced motion is honored before spatial animation begins, a visible still-view control is available, and scene/asset/context failures preserve complete readable navigation and content.
 5. The initial representative scene is exercised with mouse, touch, and keyboard, including mobile swipe-versus-tap behavior and browser zoom; preliminary device and asset measurements constrain further visual work.
 
-**Plans:** 1/8 plans executed
+**Plans:** 2/8 plans executed
 
 Plans:
 **Wave 1**
 
 - [x] 02-01-PLAN.md — Lock the vanilla-three stack behind a package legitimacy gate and reconcile the approved UI contract with the measured budget and the proven defects.
-- [ ] 02-02-PLAN.md — Ship the illustrated exhibition catalogue as the default document, with exhibit sections and the return path onto the exhibit anchor.
+- [x] 02-02-PLAN.md — Ship the illustrated exhibition catalogue as the default document, with exhibit sections and the return path onto the exhibit anchor.
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -118,7 +118,7 @@ Execution order: Phase 1 → Phase 2 → Phase 3.
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Publishable Portfolio and Delivery | 3/3 | Complete   | 2026-09-19 |
-| 2. One-Handed Surreal Exhibition | 1/8 | In Progress|  |
+| 2. One-Handed Surreal Exhibition | 2/8 | In Progress|  |
 | 3. Growth and Release Polish | 0/TBD | Not started | - |
 
 ## Coverage

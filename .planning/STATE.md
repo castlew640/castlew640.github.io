@@ -2,15 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
+current_phase: 02
+current_phase_name: one-handed-surreal-exhibition
 status: executing
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-09-20T14:49:21.776Z"
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-09-20T18:21:53.486Z"
 last_activity: 2026-09-20
+last_activity_desc: Phase 02 execution started
 progress:
   total_phases: 3
   completed_phases: 1
   total_plans: 11
-  completed_plans: 4
+  completed_plans: 5
   percent: 33
 ---
 
@@ -21,24 +24,24 @@ progress:
 See: .planning/PROJECT.md (updated 2026-09-19)
 
 **Core value:** Help employers understand real software delivery through a memorable, one-handed portfolio.
-**Current focus:** Phase 02 — One-Handed Surreal Exhibition
+**Current focus:** Phase 02 — one-handed-surreal-exhibition
 
 ## Current Position
 
-Phase: 02 (One-Handed Surreal Exhibition) — EXECUTING
+Phase: 02 (one-handed-surreal-exhibition) — EXECUTING
 Plan: 2 of 8
 Status: Ready to execute
-Last activity: 2026-09-20
+Last activity: 2026-09-20 — Phase 02 execution started
 
-Progress: [████░░░░░░] 36%
+**Progress:** [█████░░░░░] 45%
 
 Outstanding from Phase 01: verification status is `human_needed` and 01-UAT.md is still `testing` — the subjective live visual/keyboard passes have not been signed off. Phase 1 is not closed.
 
 ## Performance Metrics
 
-- Total plans completed: 3
-- Average duration: 25 min
-- Total execution time: 75 min
+- Total plans completed: 5
+- Average duration: 21 min
+- Total execution time: 106 min
 
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
@@ -46,6 +49,7 @@ Outstanding from Phase 01: verification status is `human_needed` and 01-UAT.md i
 | Phase 01 P02 | 35 | 3 tasks | 11 files |
 | Phase 01 P03 | 20 min | 3 tasks | 8 files |
 | Phase 02 P01 | 20 min | 3 tasks | 5 files |
+| Phase 02 P02 | 11 min | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -71,6 +75,7 @@ Decisions are logged in PROJECT.md.
 - [Phase 01]: Preserve release history with an approved controlled failure followed by a normal git revert; never force-push. — Recorded evidence proves failed checks cannot replace the live site without rewriting history.
 - [Phase 02]: Plan 02-01: three@0.186.0 + @types/three@0.186.0 installed at exact pins (developer-approved via package-legitimacy gate); no React/R3F. scripts/verify-scene-boundary.mjs wired into npm run check. — Measured React+R3F bundle (308,170 B gzipped) exceeds the UI-SPEC 190 KB budget by 62%; vanilla-three (151,848 B gzipped) fits with headroom
 - [Phase 02]: 02-UI-SPEC.md reconciled with the shipping stack (11 corrections); 02-RESEARCH.md's six Open Questions marked RESOLVED with per-question resolution notes. — 02-UI-SPEC.md is the artifact Success Criterion 1 is checked against; every later Phase 2 plan reads it as the spec
+- [Phase 02]: Plan 02-02 labels the landing with resume-title and contact-title so its accessible name differs from the nested Contact region. — The prescribed duplicate Contact landmark failed axe; the combined label preserves both headings and passes the full deployment gate.
 
 ### Pending Todos
 
@@ -104,6 +109,6 @@ Remaining publication inputs and environment notes:
 
 ## Session Continuity
 
-Last session: 2026-09-20T14:49:21.744Z
-Stopped at: Completed 02-01-PLAN.md
+Last session: 2026-09-20T18:21:19.408Z
+Stopped at: Completed 02-02-PLAN.md
 Resume file: None

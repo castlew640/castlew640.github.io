@@ -2,18 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 02
-current_phase_name: One-Handed Surreal Exhibition
-status: ready_to_execute
-stopped_at: Phase 02 planned -- 8 plans in 6 waves, all gates green
-last_updated: "2026-09-20T14:34:17.573Z"
-last_activity: 2026-09-20 -- Phase 02 planning complete
+status: executing
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-09-20T14:49:21.776Z"
+last_activity: 2026-09-20
 progress:
   total_phases: 3
   completed_phases: 1
   total_plans: 11
-  completed_plans: 3
-  percent: 27
+  completed_plans: 4
+  percent: 33
 ---
 
 # Project State
@@ -27,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-09-19)
 
 ## Current Position
 
-Phase: 02 (One-Handed Surreal Exhibition) — READY TO EXECUTE
-Plan: 0 of 8
-Status: Planned — 8 plans in 6 waves; research, pattern map, plan-checker, requirements and decision-coverage gates all green
-Last activity: 2026-09-20 -- Phase 02 planning complete
+Phase: 02 (One-Handed Surreal Exhibition) — EXECUTING
+Plan: 2 of 8
+Status: Ready to execute
+Last activity: 2026-09-20
 
-Progress: [░░░░░░░░░░] 0% of Phase 2 plans (0/8)
+Progress: [████░░░░░░] 36%
 
 Outstanding from Phase 01: verification status is `human_needed` and 01-UAT.md is still `testing` — the subjective live visual/keyboard passes have not been signed off. Phase 1 is not closed.
 
@@ -47,6 +45,7 @@ Outstanding from Phase 01: verification status is `human_needed` and 01-UAT.md i
 | Phase 01 P01 | 20 min | 3 tasks | 11 files |
 | Phase 01 P02 | 35 | 3 tasks | 11 files |
 | Phase 01 P03 | 20 min | 3 tasks | 8 files |
+| Phase 02 P01 | 20 min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -70,6 +69,8 @@ Decisions are logged in PROJECT.md.
 - [Phase 01]: Deploy only the checked dist artifact; the least-privilege deploy job never rebuilds source. — Successful checks must promote the exact tested files.
 - [Phase 01]: Use the actual master default branch and GitHub Pages workflow publishing at the account-site root. — The new repository adopted the existing local branch and account-site naming needs no base path.
 - [Phase 01]: Preserve release history with an approved controlled failure followed by a normal git revert; never force-push. — Recorded evidence proves failed checks cannot replace the live site without rewriting history.
+- [Phase 02]: Plan 02-01: three@0.186.0 + @types/three@0.186.0 installed at exact pins (developer-approved via package-legitimacy gate); no React/R3F. scripts/verify-scene-boundary.mjs wired into npm run check. — Measured React+R3F bundle (308,170 B gzipped) exceeds the UI-SPEC 190 KB budget by 62%; vanilla-three (151,848 B gzipped) fits with headroom
+- [Phase 02]: 02-UI-SPEC.md reconciled with the shipping stack (11 corrections); 02-RESEARCH.md's six Open Questions marked RESOLVED with per-question resolution notes. — 02-UI-SPEC.md is the artifact Success Criterion 1 is checked against; every later Phase 2 plan reads it as the spec
 
 ### Pending Todos
 
@@ -103,6 +104,6 @@ Remaining publication inputs and environment notes:
 
 ## Session Continuity
 
-Last session: 2026-09-20T05:09:02.913Z
-Stopped at: Phase 2 UI-SPEC approved
-Resume file: .planning/phases/02-one-handed-surreal-exhibition/02-UI-SPEC.md
+Last session: 2026-09-20T14:49:21.744Z
+Stopped at: Completed 02-01-PLAN.md
+Resume file: None

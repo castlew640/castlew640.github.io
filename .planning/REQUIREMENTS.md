@@ -31,7 +31,7 @@ The first milestone includes both an early readable release and the finished ini
 
 ### Visual Experience
 
-- [ ] **ART-01**: A visitor experiences a coherent, original, Dali-inspired corridor whose composition, lighting, typography, and surreal motifs satisfy the visual contract established during UI planning.
+- [x] **ART-01**: A visitor experiences a coherent, original, Dali-inspired corridor whose composition, lighting, typography, and surreal motifs satisfy the visual contract established during UI planning.
 - [ ] **ART-02**: A visitor can explore a purposeful exhibition sized to the actual published work, including a useful one-project state and a clear end, without fake completed projects or empty placeholder exhibits.
 
 ### Accessible and Resilient Presentation
@@ -114,7 +114,7 @@ Every v1 requirement is owned by exactly one phase. Later phases preserve and re
 | NAV-04 | Phase 2 | Pending |
 | NAV-05 | Phase 2 | Pending |
 | NAV-06 | Phase 2 | Pending |
-| ART-01 | Phase 2 | Pending |
+| ART-01 | Phase 2 | Complete |
 | ART-02 | Phase 2 | Pending |
 | ACCESS-01 | Phase 1 | Complete |
 | ACCESS-02 | Phase 1 | Complete |

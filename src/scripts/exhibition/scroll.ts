@@ -21,7 +21,9 @@ export function measureStops(stops: MeasuredStop[]): void {
 export function progressFor(scrollY: number, stops: { offsetTop: number; z: number }[]): ScrollProgress {
   if (stops.length === 0) return { stopIndex: 0, localProgress: 0, z: 0 };
   let stopIndex = 0;
-  while (stopIndex < stops.length - 1 && scrollY >= stops[stopIndex + 1].offsetTop) stopIndex++;
+  // Native scrolling can round a fractional layout offset to the nearest CSS pixel.
+  // Treat that position as arrival so a repeated arrow tap advances to the next stop.
+  while (stopIndex < stops.length - 1 && scrollY >= Math.round(stops[stopIndex + 1].offsetTop)) stopIndex++;
   const start = stops[stopIndex];
   const end = stops[stopIndex + 1] ?? start;
   const span = end.offsetTop - start.offsetTop;

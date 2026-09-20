@@ -55,3 +55,11 @@ test('empty and collapsed scroll segments return finite progress without motion'
   assert.deepEqual(progressFor(50, [{ offsetTop: 100, z: 0 }, { offsetTop: 100, z: -18 }]),
     { stopIndex: 0, localProgress: 0, z: 0 });
 });
+
+test('native scrolling reaches a stop even when its fractional offset rounds down', () => {
+  const stops = [{ offsetTop: 0, z: 0 }, { offsetTop: 1800.25, z: -18 }, { offsetTop: 2500.75, z: -36 }];
+  assert.equal(progressFor(1799, stops).stopIndex, 0);
+  assert.deepEqual(progressFor(1800, stops), { stopIndex: 1, localProgress: 0, z: -18 });
+  assert.equal(progressFor(2500, stops).stopIndex, 1);
+  assert.deepEqual(progressFor(2501, stops), { stopIndex: 2, localProgress: 0, z: -36 });
+});

@@ -26,11 +26,13 @@ const labels = {
     <figcaption>{shot.caption}</figcaption>
   </figure>
   <ExhibitDrawing variant={index} />
-  <p class="eyebrow">Exhibit {String(index + 1).padStart(2, '0')}</p>
-  <h2 class="exhibit-title" id={`exhibit-${slug}-title`}>{project.data.title}</h2>
-  <p>{project.data.summary}</p>
-  <ul class="contract-labels">
-    {project.data.contracts.map((contract) => <li>{labels[contract.id]}</li>)}
-  </ul>
-  <a class="text-link exhibit-link" href={`/projects/${slug}/`}>Read case study <span>→</span></a>
+  <div class="exhibit-overlay">
+    <p class="eyebrow">Exhibit {String(index + 1).padStart(2, '0')}</p>
+    <h2 class="exhibit-title" id={`exhibit-${slug}-title`}>{project.data.title}</h2>
+    <p class="exhibit-summary">{project.data.summary}</p>
+    <ul class="contract-labels">
+      {project.data.contracts.map((contract) => <li>{labels[contract.id]}</li>)}
+    </ul>
+    <a class="text-link exhibit-link" href={`/projects/${slug}/`}>Read case study <span>→</span></a>
+  </div>
 </StopSection>

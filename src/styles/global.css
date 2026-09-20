@@ -190,6 +190,36 @@
   .exhibit-list [data-stop] > * + * { margin-top: 16px; }
   .exhibit-list .eyebrow { font: 600 12px/1.4 var(--mono); letter-spacing: 0.1em; }
   .exhibit-title { font: 400 20px/1.2 var(--sans); letter-spacing: 0; text-wrap: balance; }
+  .exhibit-overlay { background: color-mix(in srgb, var(--paper) 88%, transparent); }
+  .exhibit-overlay > * + * { margin-top: 16px; }
+  html[data-scene="active"] .exhibit-list [data-stop] { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; }
+  html[data-scene="active"] .exhibit-list figure[data-panel-source] { grid-area: 1 / 1; align-self: start; visibility: hidden; }
+  html[data-scene="active"] .exhibit-list .stop-drawing { grid-area: 2 / 1; }
+  html[data-scene="active"] .exhibit-overlay { grid-area: 1 / 1; align-self: start; justify-self: end; width: min(34rem, 40vw); margin-top: 46svh; padding: 24px; }
+  html[data-scene="active"] #exhibition figure.panel-source-failed { visibility: visible; grid-area: 2 / 1; align-self: start; background: var(--paper); }
+  /* Keep the real image and alt text in the accessibility tree. A failed decode
+     renders its authored alt as text, avoiding the browser's broken-image icon. */
+  #exhibition .panel-source-failed img { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  #exhibition .panel-source-failed::before { content: attr(data-image-description); display: block; padding: 24px; border: 1px solid var(--line); color: var(--ink); }
+  @media (max-width: 48rem) {
+    html[data-scene="active"] .exhibit-overlay {
+      justify-self: stretch; width: calc(100% + 2 * var(--gutter)); margin-inline: calc(-1 * var(--gutter));
+      margin-top: 48svh; padding: 24px var(--gutter) 104px; min-height: 52svh;
+      border-top: 1px solid var(--line); backdrop-filter: blur(6px);
+      display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px;
+      grid-template-areas: 'eyebrow' 'title' 'link' '.' 'summary' 'contracts';
+      grid-template-rows: auto auto auto minmax(104px, calc(52svh - 144px)) auto auto;
+    }
+    html[data-scene="active"] .exhibit-overlay > * { margin: 0; }
+    html[data-scene="active"] .exhibit-overlay .eyebrow { grid-area: eyebrow; }
+    html[data-scene="active"] .exhibit-overlay .exhibit-title { grid-area: title; display: block; overflow: visible; }
+    html[data-scene="active"] .exhibit-overlay .exhibit-link { grid-area: link; justify-self: start; }
+    html[data-scene="active"] .exhibit-overlay .exhibit-summary { grid-area: summary; }
+    html[data-scene="active"] .exhibit-overlay .contract-labels { grid-area: contracts; }
+  }
+  @media (max-height: 420px) {
+    html[data-scene="active"] .exhibit-overlay { min-height: 40svh; }
+  }
   .landing-invitation { font: 400 40px/1.2 var(--serif); letter-spacing: -0.035em; color: var(--ink); }
   .landing-invitation em { color: var(--rust); font-style: normal; }
   .contract-labels { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }

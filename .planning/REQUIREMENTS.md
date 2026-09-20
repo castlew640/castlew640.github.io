@@ -23,7 +23,7 @@ The first milestone includes both an early readable release and the finished ini
 ### Navigation
 
 - [x] **NAV-01**: A visitor can jump directly to Projects, About, Resume, and Contact without traversing the corridor or waiting for its assets.
-- [ ] **NAV-02**: A visitor can move forward and backward along the bounded corridor using native scroll or single-finger swipe input, with normal browser panning and zoom preserved.
+- [x] **NAV-02**: A visitor can move forward and backward along the bounded corridor using native scroll or single-finger swipe input, with normal browser panning and zoom preserved.
 - [ ] **NAV-03**: A visitor can move to the previous or next exhibit using labeled forward/back tap controls with at least 44 by 44 CSS pixel targets and clear endpoint behavior.
 - [ ] **NAV-04**: A visitor can complete entry, travel, project selection, reading, return, resume access, and contact using successive one-handed pointer actions without required chords, held keys, or precision dragging.
 - [x] **NAV-05**: A visitor can open each real exhibit with a click/tap and can reach that same project through an equivalent visible HTML link.
@@ -40,7 +40,7 @@ The first milestone includes both an early readable release and the finished ini
 - [x] **ACCESS-02**: A keyboard visitor can operate every control and link with logical focus order, visible focus, meaningful labels, and no focus trap.
 - [x] **ACCESS-03**: A visitor can read and operate the portfolio at narrow mobile widths and enlarged text/zoom with legible contrast, reflowing content, and unobscured controls.
 - [x] **ACCESS-04**: A visitor receives a complete motion-free presentation when the operating system requests reduced motion and can select it through a visible control; it removes nonessential camera travel, parallax, and ambient animation.
-- [ ] **ACCESS-05**: A visitor retains complete project/navigation access if scene loading, an asset, renderer initialization, or the WebGL context fails during a visit.
+- [x] **ACCESS-05**: A visitor retains complete project/navigation access if scene loading, an asset, renderer initialization, or the WebGL context fails during a visit.
 
 ### Ongoing Project Growth
 
@@ -109,7 +109,7 @@ Every v1 requirement is owned by exactly one phase. Later phases preserve and re
 | WORK-03 | Phase 1 | Complete |
 | WORK-04 | Phase 1 | Complete |
 | NAV-01 | Phase 1 | Complete |
-| NAV-02 | Phase 2 | Pending |
+| NAV-02 | Phase 2 | Complete |
 | NAV-03 | Phase 2 | Pending |
 | NAV-04 | Phase 2 | Pending |
 | NAV-05 | Phase 2 | Complete |
@@ -120,7 +120,7 @@ Every v1 requirement is owned by exactly one phase. Later phases preserve and re
 | ACCESS-02 | Phase 1 | Complete |
 | ACCESS-03 | Phase 1 | Complete |
 | ACCESS-04 | Phase 2 | Complete |
-| ACCESS-05 | Phase 2 | Pending |
+| ACCESS-05 | Phase 2 | Complete |
 | GROW-01 | Phase 3 | Pending |
 | GROW-02 | Phase 1 | Complete |
 | GROW-03 | Phase 1 | Complete |

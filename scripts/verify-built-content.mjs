@@ -41,4 +41,9 @@ for (const identifier of ['website', 'manual-planner', 'ai-mvp', 'castlew640@gma
 for (const asset of ['clientScreenshot1', 'clientscreenshot2', 'clientScreenshot3']) {
   if (!files.some((file) => file.includes(asset))) throw new Error(`Missing required evidence asset: ${asset}`);
 }
+for (const identifier of ['exhibit-featured-client', 'Read case study']) {
+  if (!html.includes(identifier)) throw new Error(`Missing required exhibition content: ${identifier}`);
+}
+if (html.includes('Read the case study')) throw new Error(`Retired case-study link wording found in the home route`);
+if (!project.includes('/#exhibit-featured-client')) throw new Error(`Missing exhibit return anchor in the case study`);
 console.log(`Built content verified: ${files.length} files, ${requiredFiles.length} required routes/assets present.`);

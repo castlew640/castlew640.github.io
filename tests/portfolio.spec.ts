@@ -8,7 +8,9 @@ test('home and direct project routes expose descriptive metadata and evidence', 
   expect(response?.status()).toBe(200);
   await expect(page).toHaveTitle(/William Castle/);
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://castlew640.github.io/');
-  await expect(page.getByRole('link', { name: 'Read the case study' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Read case study →' })).toBeVisible();
+  await expect(page.getByText('Read the case study')).toHaveCount(0);
+  await expect(page.locator('.exhibit-link')).toHaveText('Read case study →');
   const projectResponse = await page.goto(projectPath);
   expect(projectResponse?.status()).toBe(200);
   await expect(page).toHaveTitle(/Eiffel Technologies/);
@@ -40,9 +42,9 @@ test('direct route and navigation work with JavaScript disabled at 320px', async
     expect(bounds.right).toBeLessThanOrEqual(320);
     expect(bounds.width).toBeLessThanOrEqual(bounds.figureWidth);
   }
-  await expect(page.getByRole('link', { name: /Back to projects/ })).toHaveAttribute('href', '/#projects');
-  await page.getByRole('link', { name: /Back to projects/ }).click();
-  await expect(page).toHaveURL(/\/#projects$/);
+  await expect(page.getByRole('link', { name: /Back to the exhibition/ })).toHaveAttribute('href', '/#exhibit-featured-client');
+  await page.getByRole('link', { name: /Back to the exhibition/ }).click();
+  await expect(page).toHaveURL(/\/#exhibit-featured-client$/);
   await expect(page.locator('#projects')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
   await context.close();
@@ -100,9 +102,9 @@ test('reduced motion keeps journeys usable and disables nonessential motion', as
   await expect(page.getByRole('heading', { level: 1, name: 'William Castle' })).toBeVisible();
   await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Projects' }).click();
   await expect(page.locator('#projects')).toBeVisible();
-  await page.getByRole('link', { name: 'Read the case study' }).click();
+  await page.getByRole('link', { name: 'Read case study →' }).click();
   await expect(page.getByRole('heading', { name: /Eiffel Technologies/ })).toBeVisible();
-  await page.getByRole('link', { name: /Back to projects/ }).click();
+  await page.getByRole('link', { name: /Back to the exhibition/ }).click();
   await expect(page.locator('#projects')).toBeVisible();
   const motion = await page.evaluate(() => ({
     scroll: getComputedStyle(document.documentElement).scrollBehavior,

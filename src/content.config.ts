@@ -8,7 +8,7 @@ const projects = defineCollection({
   schema: ({ image }) => z.object({
     slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
     title: nonBlank,
-    summary: nonBlank,
+    summary: nonBlank.max(200),
     published: z.boolean(),
     exhibitionOrder: z.number().int().nonnegative(),
     liveUrl: z.string().url().refine((value) => value.startsWith('https:'), 'Live URLs must use HTTPS').optional(),

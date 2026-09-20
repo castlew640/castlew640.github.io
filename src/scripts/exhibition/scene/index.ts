@@ -1,10 +1,11 @@
 import {
   ACESFilmicToneMapping, AmbientLight, DirectionalLight, Fog, HemisphereLight,
-  Light, Material, Mesh, PCFSoftShadowMap, PerspectiveCamera, Raycaster, Scene, SRGBColorSpace, Vector2, WebGLRenderer,
+  Light, Material, Mesh, PCFSoftShadowMap, PerspectiveCamera, Raycaster, Scene, SRGBColorSpace, Vector2, Vector3, WebGLRenderer,
 } from 'three';
 import { createQualityPolicy, qualityFor } from './quality';
 import { createInkMaterials } from './ink';
 import { createArchitecture } from './architecture';
+import { createExhibits } from './exhibit';
 
 export interface SceneHandle {
   setCameraZ(z: number): void;
@@ -95,6 +96,15 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
     cameraX: 0, cameraY: 1.62, cameraRotationX: 0, cameraZ: camera.position.z,
     walkwayObstructions: architecture.walkwayObstructions,
   };
+  const exhibits = createExhibits(Array.from(exhibition.querySelectorAll<HTMLElement>('[data-stop][data-slug]')),
+    inks, architecture.stone, renderer.capabilities.getMaxAnisotropy(), () => requestRender());
+  scene.add(exhibits.group);
+  debug.walkwayObstructions = architecture.walkwayObstructions + exhibits.walkwayObstructions;
+  debug.pickablePanels = exhibits.panels.length;
+  debug.nonPanelRaycasts = 0;
+  exhibits.group.traverse((object) => {
+    if (object instanceof Mesh && !exhibits.panels.includes(object as typeof exhibits.panels[number]) && object.raycast === Mesh.prototype.raycast) debug.nonPanelRaycasts = Number(debug.nonPanelRaycasts) + 1;
+  });
   const materials = new Set<Material>(Object.values(inks));
   scene.traverse((object) => {
     if (object instanceof Mesh) for (const material of Array.isArray(object.material) ? object.material : [object.material]) materials.add(material);
@@ -127,6 +137,26 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
     debug.cameraRotationX = camera.rotation.x;
   };
 
+  const updatePanels = (): void => {
+    camera.updateMatrixWorld();
+    const current = exhibits.panels.reduce<typeof exhibits.panels[number] | undefined>((nearest, panel) =>
+      !nearest || Math.abs(panel.position.z - camera.position.z + 11.94) < Math.abs(nearest.position.z - camera.position.z + 11.94) ? panel : nearest, undefined);
+    if (!current) return;
+    const topLeft = new Vector3(-2, 5.1, current.position.z).project(camera);
+    const bottomRight = new Vector3(2, 3.1, current.position.z).project(camera);
+    debug.panelLeft = (topLeft.x + 1) / 2;
+    debug.panelTop = (1 - topLeft.y) / 2;
+    debug.panelRight = (bottomRight.x + 1) / 2;
+    debug.panelBottom = (1 - bottomRight.y) / 2;
+    debug.panelMinX = -2; debug.panelMaxX = 2;
+    debug.panelMinY = 3.1; debug.panelMaxY = 5.1;
+    debug.panelZ = current.position.z;
+    debug.panelVariant = current.userData.variant;
+    debug.panelTextureReady = Boolean(current.material.map);
+    debug.panelTextureSRGB = current.material.map?.colorSpace === SRGBColorSpace;
+    debug.panelReusesImage = current.material.map?.image === (current.userData.stop as HTMLElement).querySelector('figure img');
+  };
+
   const applyQuality = (): void => {
     const policy = qualityFor(size.x, window.devicePixelRatio, quality.level);
     renderer.setPixelRatio(policy.pixelRatio);
@@ -157,6 +187,7 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
         // Changing buffer size clears the canvas. Apply quality on this requested
         // frame, never after a draw where it would erase a correctly idle image.
         if (qualityDirty) applyQuality();
+        updatePanels();
         renderer.render(scene, camera);
       } catch {
         dispose();
@@ -226,6 +257,7 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
     observer.disconnect();
     canvas.removeEventListener('webglcontextlost', contextLost);
     canvas.removeEventListener('webglcontextcreationerror', creationError);
+    exhibits.dispose();
     architecture.dispose();
     for (const ink of Object.values(inks)) ink.dispose();
     sun.shadow.dispose();
@@ -257,8 +289,8 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
       camera.updateMatrixWorld();
       pointer.set((x - bounds.left) / bounds.width * 2 - 1, -(y - bounds.top) / bounds.height * 2 + 1);
       raycaster.setFromCamera(pointer, camera);
-      const hit = raycaster.intersectObjects(scene.children, true)[0];
-      return typeof hit?.object.userData.slug === 'string' ? hit.object.userData.slug : null;
+      const hit = raycaster.intersectObjects(exhibits.panels, false)[0];
+      return (hit?.object.userData.stop as HTMLElement | undefined)?.dataset.slug ?? null;
     },
     resize, dispose,
   };

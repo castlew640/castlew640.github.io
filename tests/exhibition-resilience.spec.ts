@@ -283,7 +283,7 @@ test('scene resources and css-pixel ink stay bounded across three deliberate rem
   const counts = () => page.evaluate(() => ({ materials: window.__exhibition?.materials, geometries: window.__exhibition?.geometries, textures: window.__exhibition?.textures }));
   await expect.poll(() => page.evaluate(() => window.__exhibition?.renderCount ?? 0)).toBeGreaterThan(0);
   const first = await counts();
-  expect(first.materials).toBe(8);
+  expect(first.materials).toBe(8 + Number(await page.evaluate(() => window.__exhibition?.pickablePanels)));
   expect(await page.evaluate(() => window.__exhibition?.lineSegments)).toBeLessThanOrEqual(1200);
   expect(await page.evaluate(() => window.__exhibition?.walkwayObstructions)).toBe(0);
   expect(await page.evaluate(() => window.__exhibition?.pixelRatio)).toBe(1.75);

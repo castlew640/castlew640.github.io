@@ -140,3 +140,78 @@ test('all shipped primary anchors resolve in their original reading order', asyn
     .map((section) => section.id).filter((id) => ['projects', 'about', 'resume', 'contact'].includes(id)),
   )).toEqual(['projects', 'about', 'resume', 'contact']);
 });
+
+async function panelPoint(page: Page): Promise<{ x: number; y: number }> {
+  await page.goto('/');
+  await expect.poll(() => page.evaluate(() => window.__exhibition?.panelTextureReady)).toBe(true);
+  await page.locator(`#${exhibitId}`).evaluate((el) => el.scrollIntoView());
+  await expect.poll(() => page.evaluate(() => Number(window.__exhibition?.cameraZ))).toBeCloseTo(-18, 2);
+  return page.evaluate(() => {
+    const d = window.__exhibition!;
+    return { x: (Number(d.panelLeft) + Number(d.panelRight)) / 2 * innerWidth, y: (Number(d.panelTop) + Number(d.panelBottom)) / 2 * innerHeight };
+  });
+}
+
+test('one touch on the screenshot opens the same anchor as the visible case-study link', async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 664 }, hasTouch: true, deviceScaleFactor: 3, reducedMotion: 'no-preference' });
+  const page = await context.newPage();
+  const point = await panelPoint(page);
+  await page.locator('.exhibit-link').evaluate((anchor) => {
+    const link = anchor as HTMLAnchorElement;
+    const click = link.click.bind(link);
+    link.click = () => { sessionStorage.setItem('panel-used-anchor', 'true'); click(); };
+  });
+  await page.touchscreen.tap(point.x, point.y);
+  await expect(page).toHaveURL(new RegExp(`${projectPath}$`));
+  expect(await page.evaluate(() => location.pathname)).toBe(projectPath);
+  expect(await page.evaluate(() => sessionStorage.getItem('panel-used-anchor'))).toBe('true');
+  await panelPoint(page);
+  await page.getByRole('link', { name: 'Read case study →' }).tap();
+  await expect(page).toHaveURL(new RegExp(`${projectPath}$`));
+  await context.close();
+});
+
+for (const gesture of ['long press', 'wandering press', 'scroll during press', 'two pointers', 'pier', 'missing slug'] as const) {
+  test(`a real panel rejects ${gesture}`, async ({ browser }) => {
+    const context = await browser.newContext({ viewport: { width: 390, height: 664 }, hasTouch: true, deviceScaleFactor: 3, reducedMotion: 'no-preference' });
+    const page = await context.newPage();
+    const point = await panelPoint(page);
+    const initial = page.url();
+    if (gesture === 'pier') point.x = await page.evaluate(() => {
+      const d = window.__exhibition!;
+      return (0.5 + (Number(d.panelRight) - Number(d.panelLeft)) * 3.9 / 4) * innerWidth;
+    });
+    if (gesture === 'missing slug') await page.locator(`#${exhibitId}`).evaluate((el) => el.removeAttribute('data-slug'));
+    await page.mouse.move(point.x, point.y);
+    await page.mouse.down();
+    if (gesture === 'long press') await page.waitForTimeout(550);
+    if (gesture === 'wandering press') { await page.mouse.move(point.x + 15, point.y); await page.mouse.move(point.x, point.y); }
+    if (gesture === 'scroll during press') { await page.evaluate(() => scrollBy(0, 8)); await settleLayout(page); }
+    if (gesture === 'two pointers') await page.evaluate(({ x, y }) => {
+      window.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 2, clientX: x, clientY: y, isPrimary: false }));
+    }, point);
+    await page.mouse.up();
+    if (gesture === 'two pointers') await page.evaluate(() => window.dispatchEvent(new PointerEvent('pointerup', { pointerId: 2 })));
+    await page.waitForTimeout(200);
+    expect(page.url()).toBe(initial);
+    await context.close();
+  });
+}
+
+test('lintel sill walkway and empty sky never act as project links', async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'no-preference' });
+  const page = await context.newPage();
+  await panelPoint(page);
+  const initial = page.url();
+  const points = await page.evaluate(() => {
+    const d = window.__exhibition!;
+    const projectY = (y: number, distance: number) => (0.5 - (y - 1.62) / distance / (2 * Math.tan(Number(d.fovY) * Math.PI / 360))) * innerHeight;
+    return [{ x: innerWidth / 2, y: projectY(5.6, 11.5) }, { x: innerWidth / 2, y: projectY(3.02, 11.94) }, { x: 200, y: 800 }, { x: 40, y: 90 }];
+  });
+  for (const point of points) {
+    await page.mouse.click(point.x, point.y);
+    await page.waitForTimeout(100);
+    expect(page.url()).toBe(initial);
+  }
+  await context.close();
+});

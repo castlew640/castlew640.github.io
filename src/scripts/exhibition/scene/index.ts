@@ -114,7 +114,7 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
     }
   });
   debug.materials = materials.size;
-  architecture.drawn.traverse((object) => {
+  for (const group of [architecture.drawn, exhibits.group]) group.traverse((object) => {
     if ('geometry' in object) {
       const geometry = object.geometry as import('three').BufferGeometry;
       debug.lineSegments = Number(debug.lineSegments ?? 0) + (geometry.getAttribute('instanceStart')?.count ?? 0);

@@ -124,3 +124,63 @@ test('native page scrolling and gesture policies remain intact', async ({ page }
   await page.keyboard.press('PageDown');
   await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(100);
 });
+
+for (const viewport of [{ width: 1440, height: 810 }, { width: 390, height: 664 }, { width: 844, height: 390 }]) {
+  test(`the real panel fits the computed field at ${viewport.width} by ${viewport.height}`, async ({ browser }) => {
+    const context = await browser.newContext({ viewport, hasTouch: viewport.width < 900, deviceScaleFactor: 3, reducedMotion: 'no-preference' });
+    const page = await context.newPage();
+    await page.goto('/');
+    await expect.poll(() => page.evaluate(() => window.__exhibition?.panelTextureReady)).toBe(true);
+    await page.locator('#exhibit-featured-client').evaluate((el) => el.scrollIntoView());
+    await expect.poll(() => page.evaluate(() => Number(window.__exhibition?.cameraZ))).toBeCloseTo(-18, 2);
+    const data = await page.evaluate(() => window.__exhibition!);
+    const fovY = Number(data.fovY) * Math.PI / 180;
+    const fovX = 2 * Math.atan(Math.tan(fovY / 2) * Number(data.cssWidth) / Number(data.cssHeight));
+    const expectedWidthFraction = Math.atan(2.00 / 12) / Math.tan(fovX / 2);
+    expect(Math.abs(Number(data.panelRight) - Number(data.panelLeft) - expectedWidthFraction)).toBeLessThanOrEqual(0.02);
+    expect(Number(data.panelTop)).toBeGreaterThanOrEqual(0.05);
+    expect(data).toMatchObject({ panelMinX: -2, panelMaxX: 2, panelMinY: 3.1, panelMaxY: 5.1, panelZ: -29.94, panelVariant: 0, panelTextureSRGB: true, panelReusesImage: true, pickablePanels: 1, nonPanelRaycasts: 0, walkwayObstructions: 0 });
+    expect(Number(data.materials)).toBeLessThanOrEqual(18);
+    expect(Number(data.drawCalls)).toBeLessThanOrEqual(90);
+    expect(Number(data.triangles)).toBeLessThanOrEqual(120000);
+    const overlay = await page.locator('.exhibit-overlay').boundingBox();
+    expect(overlay!.y).toBeGreaterThan(Number(data.panelBottom) * viewport.height);
+    if (viewport.width === 1440) {
+      expect(Math.abs(overlay!.y / viewport.height - 0.46)).toBeLessThan(0.01);
+      expect(overlay!.width).toBe(Math.min(34 * 16, viewport.width * 0.4));
+    }
+    if (viewport.width === 390) {
+      const link = (await page.getByRole('link', { name: 'Read case study →' }).boundingBox())!;
+      const controls = (await page.locator('.exhibition-controls').boundingBox())!;
+      expect(1 - (link.y + link.height / 2) / viewport.height).toBeGreaterThanOrEqual(0.30);
+      expect(1 - (link.y + link.height / 2) / viewport.height).toBeLessThanOrEqual(0.48);
+      expect(controls.y - link.y - link.height).toBeGreaterThanOrEqual(16);
+      await expect(page.locator('.exhibit-overlay')).toHaveCSS('padding-bottom', '104px');
+    }
+    await context.close();
+  });
+}
+
+test('mobile exhibit text continues in document flow at enlarged sizes without covering controls', async ({ browser }) => {
+  for (const width of [390, 320]) {
+    const context = await browser.newContext({ viewport: { width, height: 664 }, hasTouch: true, reducedMotion: 'no-preference' });
+    const page = await context.newPage();
+    await page.goto('/');
+    await expect(page.locator('html')).toHaveAttribute('data-scene', 'active');
+    await page.addStyleTag({ content: ':root { font-size: 200%; }' });
+    await page.locator('#exhibit-featured-client').evaluate((el) => el.scrollIntoView());
+    await page.waitForTimeout(200);
+    const link = (await page.getByRole('link', { name: 'Read case study →' }).boundingBox())!;
+    const controls = (await page.locator('.exhibition-controls').boundingBox())!;
+    expect(controls.y - link.y - link.height).toBeGreaterThanOrEqual(16);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    await expect(page.locator('.exhibit-overlay')).toHaveCSS('overflow-y', 'visible');
+    for (const selector of ['.exhibit-summary', '.contract-labels']) {
+      await page.locator(selector).evaluate((el) => el.scrollIntoView({ block: 'start' }));
+      await expect(page.locator(selector)).toBeInViewport();
+      expect(await page.locator(selector).evaluate((el) => getComputedStyle(el.parentElement!).backgroundColor)).toContain('0.88');
+    }
+    for (const button of await page.locator('.exhibition-controls button').all()) await expect(button).toBeInViewport({ ratio: 1 });
+    await context.close();
+  }
+});

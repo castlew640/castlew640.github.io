@@ -382,3 +382,105 @@ test('sustained measured cost degrades quality in order and fast frames reverse 
     expect(policy.level).toBe(level);
   }
 });
+
+test('a blocked renderer chunk retains the catalogue with one retry', async ({ browser }) => {
+  const context = await browser.newContext({ reducedMotion: 'no-preference' });
+  const page = await context.newPage();
+  let aborted = 0;
+  await page.route('**/_astro/*.js', async (route) => {
+    const response = await route.fetch();
+    if ((await response.text()).includes('WebGLRenderer')) { aborted++; await route.abort(); }
+    else await route.fulfill({ response });
+  });
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: 'The exhibition could not start.', exact: true })).toBeVisible();
+  expect(aborted).toBe(1);
+  await expect(page.getByRole('button', { name: 'Try the exhibition again', exact: true })).toHaveCount(1);
+  await expect(page.getByRole('link', { name: 'Read case study →' })).toHaveCount(1);
+  await expect(page.getByRole('link', { name: 'Open my resume' })).toHaveAttribute('href', /\.pdf$/);
+  await expect(page.getByRole('link', { name: 'castlew640@gmail.com' })).toHaveAttribute('href', 'mailto:castlew640@gmail.com');
+  await expect(page.locator('canvas')).toHaveCount(0);
+  await context.close();
+});
+
+test('a blocked screenshot restores its authored description and caption without a broken icon', async ({ browser }) => {
+  const context = await browser.newContext({ reducedMotion: 'no-preference' });
+  const page = await context.newPage();
+  await page.route('**/*.webp', (route) => route.abort());
+  await page.goto(exhibitPath);
+  await expect(page.locator('html')).toHaveAttribute('data-scene', 'active');
+  const figure = page.locator('figure[data-panel-source]');
+  await expect(figure).toHaveClass(/panel-source-failed/);
+  await expect(figure).toHaveCSS('visibility', 'visible');
+  await expect(figure).not.toHaveAttribute('aria-hidden', 'true');
+  const img = figure.locator('img');
+  await expect(img).toHaveAttribute('alt', /\S/);
+  await expect(img).toHaveCSS('opacity', '0');
+  await expect(img).toHaveAttribute('src', /\.webp$/);
+  expect(await img.evaluate((el) => (el as HTMLImageElement).naturalWidth)).toBe(0);
+  expect(await figure.evaluate((el) => getComputedStyle(el, '::before').content)).toContain(await img.getAttribute('alt'));
+  await expect(figure.locator('figcaption')).toHaveText(/\S/);
+  expect(await page.evaluate(() => window.__exhibition?.panelTextureReady)).toBe(false);
+  expect(await page.locator('body').innerText()).not.toMatch(/webgl|gpu|driver|chrome|safari|firefox|unsupported device/i);
+  await page.getByRole('link', { name: 'Read case study →' }).click();
+  await expect(page).toHaveURL(new RegExp(`${projectPath}$`));
+  await context.close();
+});
+
+test('the live panel reuses one image request and restores the figure in still view', async ({ browser }) => {
+  const context = await browser.newContext({ reducedMotion: 'no-preference' });
+  const page = await context.newPage();
+  const requests: string[] = [];
+  page.on('request', (request) => { if (request.url().endsWith('.webp')) requests.push(request.url()); });
+  await page.goto('/');
+  await expect.poll(() => page.evaluate(() => window.__exhibition?.panelReusesImage)).toBe(true);
+  const figure = page.locator('figure[data-panel-source]');
+  expect(requests).toHaveLength(1);
+  expect(requests[0]).toBe(await figure.locator('img').evaluate((el) => (el as HTMLImageElement).src));
+  await expect(figure).toHaveAttribute('aria-hidden', 'true');
+  await expect(figure).toHaveCSS('visibility', 'hidden');
+  const link = page.getByRole('link', { name: 'Read case study →' });
+  await page.locator(`#${exhibitId}`).focus();
+  await page.keyboard.press('Tab');
+  await expect(link).toBeFocused();
+  await page.getByRole('button', { name: 'Still view', exact: true }).click();
+  await expect(figure).not.toHaveAttribute('aria-hidden', 'true');
+  await expect(figure).toHaveCSS('visibility', 'visible');
+  expect(requests).toHaveLength(1);
+  await context.close();
+});
+
+test('every published exhibit contains the canonical case-study anchor without javascript', async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto('/');
+  const exhibits = page.locator('#exhibition [data-slug]');
+  expect(await exhibits.count()).toBeGreaterThan(0);
+  for (const exhibit of await exhibits.all()) {
+    await expect(exhibit.getByRole('link', { name: 'Read case study →', exact: true })).toHaveAttribute('href', `/projects/${await exhibit.getAttribute('data-slug')}/`);
+  }
+  await expect(page.getByRole('link', { name: 'Read the case study ↗', exact: true })).toHaveCount(0);
+  await context.close();
+});
+
+test('the overlay plate guarantees ink contrast with the scene active and after teardown', async ({ browser }) => {
+  const context = await browser.newContext({ reducedMotion: 'no-preference' });
+  const page = await context.newPage();
+  await page.goto('/');
+  await expect(page.locator('html')).toHaveAttribute('data-scene', 'active');
+  for (const active of [true, false]) {
+    if (!active) await page.getByRole('button', { name: 'Still view', exact: true }).click();
+    const contrast = await page.locator('.exhibit-overlay').evaluate((el) => {
+      const style = getComputedStyle(el);
+      const rgb = (value: string) => value.match(/[\d.]+/g)!.map(Number);
+      const ink = rgb(style.color).map((value) => value / 255);
+      const plate = rgb(style.backgroundColor);
+      const luminance = (channels: number[]) => channels.map((v) => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)
+        .reduce((sum, value, i) => sum + value * [0.2126, 0.7152, 0.0722][i], 0);
+      // color(srgb r g b / .88): worst-case scene is black under the plate.
+      return (luminance(plate.slice(0, 3).map((v) => v * plate[3])) + 0.05) / (luminance(ink) + 0.05);
+    });
+    expect(contrast).toBeGreaterThanOrEqual(4.5);
+  }
+  await context.close();
+});

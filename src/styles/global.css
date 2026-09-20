@@ -156,6 +156,22 @@
   .view-toggle { position: fixed; z-index: 2; top: max(12px, env(safe-area-inset-top, 0px)); right: var(--gutter); min-width: 44px; min-height: 44px; padding: 12px 16px; font: 600 12px/1.4 var(--mono); text-transform: uppercase; letter-spacing: 0.1em; border: 1px solid var(--line); background: var(--paper); color: var(--ink); cursor: pointer; }
   .view-toggle:hover { border-color: var(--rust); }
   .view-notice { max-width: 40rem; margin-left: auto; color: var(--muted); font: 400 16px/1.65 var(--sans); }
+  .exhibition-controls { position: fixed; z-index: 2; left: 50%; bottom: max(24px, env(safe-area-inset-bottom, 0px) + 16px); transform: translateX(-50%); display: flex; gap: 12px; overflow: visible; padding: 8px; }
+  .exhibition-controls button { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 64px; height: 64px; padding: 0; border: 1px solid var(--line); background: color-mix(in srgb, var(--paper) 92%, transparent); color: var(--ink); cursor: pointer; }
+  .exhibition-controls button:hover { background: var(--paper); }
+  .exhibition-controls button > span { font: 600 12px/1.4 var(--mono); text-transform: uppercase; letter-spacing: 0.1em; }
+  .exhibition-controls svg { width: 24px; height: 24px; fill: var(--rust); fill-opacity: 0.9; stroke: var(--edge); stroke-width: 1.4px; }
+  .exhibition-controls button:active svg { fill-opacity: 1; }
+  .exhibition-controls .is-endpoint { opacity: 0.45; }
+  .exhibition-marker { position: absolute; width: 4px; height: 4px; left: calc(50% - 2px); top: calc(50% - 2px); background: var(--rust); }
+  .exhibition-status { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100vw - 32px); text-align: center; background: var(--paper); color: var(--muted); font: 400 12px/1.4 var(--sans); }
+  @media (min-width: 48rem) {
+    .exhibition-controls { bottom: 32px; }
+    .exhibition-controls button { width: 56px; height: 56px; }
+  }
+  @media (max-height: 420px) {
+    .exhibition-controls button { width: 56px; height: 56px; }
+  }
   #exhibition [data-stop] { min-height: 100svh; scroll-margin-block-start: 0; }
   #projects { display: block; }
   .exhibit-list { display: grid; gap: 64px; margin-top: 64px; }

@@ -1,6 +1,7 @@
 import { buildStopTable } from '../../lib/exhibition/stops';
 import { motionPermitted, readStoredChoice, reduceQuery, writeChoice, type ViewMode } from './policy';
 import { measureStops, progressFor, type MeasuredStop } from './scroll';
+import { createControls } from './controls';
 
 export function enterMovingView(): void {
   if (!motionPermitted()) return;
@@ -43,6 +44,8 @@ export function start(): void {
   const stops: MeasuredStop[] = elements.map((el, index) => ({
     id: ids[index], el, offsetTop: 0, z: table.stops[index].z,
   }));
+  const controls = createControls(stops, () => mode);
+  document.querySelector('.page-frame')?.append(controls.nav);
   let progress = progressFor(window.scrollY, []);
   let measured = false;
   let frame = 0;
@@ -51,6 +54,7 @@ export function start(): void {
 
   const derive = (): void => {
     progress = progressFor(window.scrollY, stops);
+    controls.update(progress.stopIndex);
   };
 
   const remeasure = (): void => {

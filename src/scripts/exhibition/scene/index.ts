@@ -1,6 +1,6 @@
 import {
   ACESFilmicToneMapping, AmbientLight, DirectionalLight, Fog, HemisphereLight,
-  PCFSoftShadowMap, PerspectiveCamera, Raycaster, Scene, SRGBColorSpace, Vector2, WebGLRenderer,
+  Light, Material, Mesh, PCFSoftShadowMap, PerspectiveCamera, Raycaster, Scene, SRGBColorSpace, Vector2, WebGLRenderer,
 } from 'three';
 import { createQualityPolicy, qualityFor } from './quality';
 import { createInkMaterials } from './ink';
@@ -51,6 +51,7 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
   renderer.toneMappingExposure = 1;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = PCFSoftShadowMap;
+  renderer.debug.onShaderError = () => { throw new Error('Exhibition shader compilation failed'); };
 
   const scene = new Scene();
   scene.fog = new Fog(0xefe4cf, 60, 240);
@@ -84,11 +85,25 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
   let frame = 0;
   let resizeTimer = 0;
   let renderCount = 0;
+  let qualityDirty = false;
+  const exhibition = document.getElementById('exhibition')!;
+  const initialBounds = exhibition.getBoundingClientRect();
+  let inViewport = initialBounds.bottom > 0 && initialBounds.top < window.innerHeight;
+  let suspended = document.hidden || !inViewport;
   const debug: Record<string, number | boolean> = {
-    mounted: true, renderCount: 0, lights: 3, shadowLights: 1,
+    mounted: true, suspended, renderCount: 0, lights: 0, shadowLights: 0,
     cameraX: 0, cameraY: 1.62, cameraRotationX: 0, cameraZ: camera.position.z,
-    materials: Object.keys(inks).length + 2, walkwayObstructions: architecture.walkwayObstructions,
+    walkwayObstructions: architecture.walkwayObstructions,
   };
+  const materials = new Set<Material>(Object.values(inks));
+  scene.traverse((object) => {
+    if (object instanceof Mesh) for (const material of Array.isArray(object.material) ? object.material : [object.material]) materials.add(material);
+    if (object instanceof Light) {
+      debug.lights = Number(debug.lights) + 1;
+      if (object.castShadow) debug.shadowLights = Number(debug.shadowLights) + 1;
+    }
+  });
+  debug.materials = materials.size;
   architecture.drawn.traverse((object) => {
     if ('geometry' in object) {
       const geometry = object.geometry as import('three').BufferGeometry;
@@ -129,15 +144,19 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
     debug.pixelRatio = policy.pixelRatio;
     debug.shadowMapSize = policy.shadowMapSize;
     debug.reflectionEnabled = policy.reflection;
+    qualityDirty = false;
   };
 
   const requestRender = (): void => {
-    if (disposed || frame) return;
+    if (disposed || suspended || frame) return;
     frame = requestAnimationFrame(() => {
       frame = 0;
-      if (disposed) return;
+      if (disposed || suspended) return;
       const started = performance.now();
       try {
+        // Changing buffer size clears the canvas. Apply quality on this requested
+        // frame, never after a draw where it would erase a correctly idle image.
+        if (qualityDirty) applyQuality();
         renderer.render(scene, camera);
       } catch {
         dispose();
@@ -151,7 +170,7 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
       debug.textures = renderer.info.memory.textures;
       debug.inkCssResolution = Object.values(inks).every((ink) => ink.resolution.equals(size));
       debug.inkScreenSpace = Object.values(inks).every((ink) => !ink.worldUnits);
-      if (renderCount > 1 && quality.sample(performance.now() - started)) applyQuality();
+      if (renderCount > 1 && quality.sample(performance.now() - started)) qualityDirty = true;
     });
   };
 
@@ -175,6 +194,23 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
     resizeTimer = window.setTimeout(resize, 80);
   };
 
+  const updateSuspension = (): void => {
+    const next = document.hidden || !inViewport;
+    if (next === suspended || disposed) return;
+    suspended = next;
+    debug.suspended = suspended;
+    if (suspended) {
+      cancelAnimationFrame(frame);
+      frame = 0;
+    } else requestRender();
+  };
+  const observer = new IntersectionObserver(([entry]) => {
+    inViewport = entry.isIntersecting;
+    updateSuspension();
+  });
+  observer.observe(exhibition);
+  document.addEventListener('visibilitychange', updateSuspension);
+
   const contextLost = (event: Event): void => {
     event.preventDefault();
     dispose();
@@ -186,13 +222,19 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
     cancelAnimationFrame(frame);
     window.clearTimeout(resizeTimer);
     window.removeEventListener('resize', queueResize);
+    document.removeEventListener('visibilitychange', updateSuspension);
+    observer.disconnect();
     canvas.removeEventListener('webglcontextlost', contextLost);
     canvas.removeEventListener('webglcontextcreationerror', creationError);
     architecture.dispose();
     for (const ink of Object.values(inks)) ink.dispose();
     sun.shadow.dispose();
     renderer.dispose();
+    if (!renderer.getContext().isContextLost()) renderer.forceContextLoss();
     container.remove();
+    debug.geometries = renderer.info.memory.geometries;
+    debug.textures = renderer.info.memory.textures;
+    debug.materials = 0;
     debug.mounted = false;
   }
   window.addEventListener('resize', queueResize, { passive: true });
@@ -212,6 +254,7 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
     hitPanel(x, y) {
       if (disposed) return null;
       const bounds = canvas.getBoundingClientRect();
+      camera.updateMatrixWorld();
       pointer.set((x - bounds.left) / bounds.width * 2 - 1, -(y - bounds.top) / bounds.height * 2 + 1);
       raycaster.setFromCamera(pointer, camera);
       const hit = raycaster.intersectObjects(scene.children, true)[0];

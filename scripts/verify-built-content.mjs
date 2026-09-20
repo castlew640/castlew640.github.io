@@ -46,4 +46,42 @@ for (const identifier of ['exhibit-featured-client', 'Read case study']) {
 }
 if (html.includes('Read the case study')) throw new Error(`Retired case-study link wording found in the home route`);
 if (!project.includes('/#exhibit-featured-client')) throw new Error(`Missing exhibit return anchor in the case study`);
+
+const scripts = new Map(await Promise.all(files
+  .filter((file) => relative(root, file).startsWith('_astro/') && file.endsWith('.js'))
+  .map(async (file) => [relative(root, file), await readFile(file, 'utf8')])));
+const sceneChunks = [...scripts].filter(([, source]) => source.includes('WebGLRenderer')).map(([file]) => file);
+if (!sceneChunks.length) throw new Error(`Missing separate WebGLRenderer scene chunk`);
+const scriptUrls = (source) => [...source.matchAll(/<script\b[^>]*\bsrc=["']([^"']+)["']/g)].map((match) => match[1]);
+const assetName = (url) => new URL(url, 'https://artifact.invalid/').pathname.slice(1);
+async function assertLazy(source, route) {
+  const pending = scriptUrls(source).map(assetName);
+  const visited = new Set();
+  // Follow static imports too: a tiny entrypoint which eagerly imports a split
+  // renderer chunk is still eager even though its own source has no marker.
+  while (pending.length) {
+    const file = pending.pop();
+    if (visited.has(file)) continue;
+    visited.add(file);
+    const code = scripts.get(file);
+    if (!code) continue;
+    if (code.includes('WebGLRenderer')) throw new Error(`Scene chunk is eagerly referenced by ${route}: ${file}`);
+    for (const match of code.matchAll(/\bimport\s*(?:[^;"'()]*?\bfrom\s*)?["']([^"']+)["']/g)) {
+      pending.push(new URL(match[1], `https://artifact.invalid/${file}`).pathname.slice(1));
+    }
+  }
+  for (const chunk of sceneChunks) {
+    if (new RegExp(`<link\\b[^>]*href=["'][^"']*${chunk.split('/').pop().replaceAll('.', '\\.')}["']`).test(source)) {
+      throw new Error(`Scene chunk is eagerly preloaded by ${route}: ${chunk}`);
+    }
+  }
+}
+await assertLazy(html, 'index.html');
+for (const file of files.filter((file) => relative(root, file).startsWith('projects/') && file.endsWith('.html'))) {
+  const source = await readFile(file, 'utf8');
+  for (const chunk of sceneChunks) {
+    if (source.includes(chunk.split('/').pop())) throw new Error(`Project route references scene chunk: ${relative(root, file)}`);
+  }
+  await assertLazy(source, relative(root, file));
+}
 console.log(`Built content verified: ${files.length} files, ${requiredFiles.length} required routes/assets present.`);

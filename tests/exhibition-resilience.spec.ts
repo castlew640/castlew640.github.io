@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { createQualityPolicy, qualityFor } from '../src/scripts/exhibition/scene/quality';
 
 const exhibitId = 'exhibit-featured-client';
 const exhibitPath = `/#${exhibitId}`;
@@ -221,11 +222,17 @@ test('context loss keeps navigation usable and context restoration never resumes
   await expect(page.locator('html')).toHaveAttribute('data-scene', 'active');
   const canvas = await page.locator('.exhibition-canvas canvas').elementHandle();
   expect(canvas).not.toBeNull();
-  await canvas!.evaluate((element) => {
+  const lostContext = await canvas!.evaluateHandle((element) => {
     const gl = (element as HTMLCanvasElement).getContext('webgl2');
     const extension = gl?.getExtension('WEBGL_lose_context');
     if (!extension) throw new Error('The test renderer must support context-loss simulation');
     extension.loseContext();
+    return {
+      restore: () => new Promise<void>((resolve) => {
+        element.addEventListener('webglcontextrestored', () => resolve(), { once: true });
+        extension.restoreContext();
+      }),
+    };
   });
   await expect(page.getByText('The exhibition stopped rendering. Everything is still here to read.', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Try the exhibition again', exact: true })).toHaveCount(1);
@@ -233,9 +240,8 @@ test('context loss keeps navigation usable and context restoration never resumes
   await expect(link).toBeVisible();
   await link.focus();
   await expect(link).toBeFocused();
-  await canvas!.evaluate((element) => {
-    (element as HTMLCanvasElement).getContext('webgl2')?.getExtension('WEBGL_lose_context')?.restoreContext();
-  });
+  await lostContext.evaluate((context) => context.restore());
+  await lostContext.dispose();
   await page.waitForTimeout(1100);
   await expect(page.locator('html')).not.toHaveAttribute('data-scene', 'active');
   await expect(page.locator('.exhibition-canvas')).toHaveCount(0);
@@ -268,4 +274,111 @@ test('the moving scene retains native canvas gestures and the fixed camera and l
   }
   expect(await page.evaluate(() => ({ lights: window.__exhibition?.lights, shadowLights: window.__exhibition?.shadowLights }))).toEqual({ lights: 3, shadowLights: 1 });
   await context.close();
+});
+
+test('scene resources and css-pixel ink stay bounded across three deliberate remounts', async ({ browser }) => {
+  const context = await browser.newContext({ reducedMotion: 'no-preference', deviceScaleFactor: 2, viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  await page.goto('/');
+  const counts = () => page.evaluate(() => ({ materials: window.__exhibition?.materials, geometries: window.__exhibition?.geometries, textures: window.__exhibition?.textures }));
+  await expect.poll(() => page.evaluate(() => window.__exhibition?.renderCount ?? 0)).toBeGreaterThan(0);
+  const first = await counts();
+  expect(first.materials).toBe(8);
+  expect(await page.evaluate(() => window.__exhibition?.lineSegments)).toBeLessThanOrEqual(1200);
+  expect(await page.evaluate(() => window.__exhibition?.walkwayObstructions)).toBe(0);
+  expect(await page.evaluate(() => window.__exhibition?.pixelRatio)).toBe(1.75);
+  expect(await page.evaluate(() => Object.values(window.__exhibition!).every((value) => typeof value === 'number' || typeof value === 'boolean'))).toBe(true);
+  expect(await page.evaluate(() => Array.from({ length: 6 }, (_, i) => window.__exhibition![`ink${i}Width`]))).toEqual([1.4, 1.3, 1, 1, 1, 1.4]);
+  expect(await page.evaluate(() => Array.from({ length: 6 }, (_, i) => window.__exhibition![`ink${i}Color`]))).toEqual([0x4e5144, 0x8b877b, 0xb9b3a4, 0xb9b3a4, 0x656256, 0x8e4935]);
+  for (let i = 0; i < 3; i++) {
+    await page.getByRole('button', { name: 'Still view', exact: true }).click();
+    await expect(page.locator('.exhibition-canvas')).toHaveCount(0);
+    expect(await page.evaluate(() => window.__exhibition?.mounted)).toBe(false);
+    expect(await page.evaluate(() => window.__exhibition?.geometries)).toBe(0);
+    await page.getByRole('button', { name: 'Still view', exact: true }).click();
+    await expect.poll(counts).toEqual(first);
+    await expect(page.locator('.exhibition-canvas canvas')).toHaveCount(1);
+  }
+  await page.setViewportSize({ width: 844, height: 390 });
+  await expect.poll(() => page.evaluate(() => window.__exhibition?.cssWidth)).toBe(844);
+  expect(await page.evaluate(() => window.__exhibition?.inkScreenSpace && window.__exhibition?.inkCssResolution)).toBe(true);
+  await context.close();
+});
+
+test('the scene idles and independently suspends for hidden tabs and offscreen exhibition', async ({ browser }) => {
+  const context = await browser.newContext({ reducedMotion: 'no-preference' });
+  const page = await context.newPage();
+  await page.goto('/');
+  const count = () => page.evaluate(() => Number(window.__exhibition?.renderCount ?? 0));
+  await expect.poll(count).toBeGreaterThan(0);
+  await page.waitForTimeout(1100);
+  const idle = await count();
+  await page.waitForTimeout(1100);
+  expect(await count()).toBe(idle);
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'hidden', { configurable: true, value: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+    scrollBy(0, 200);
+  });
+  await page.waitForTimeout(200);
+  expect(await count()).toBe(idle);
+  expect(await page.evaluate(() => window.__exhibition?.suspended)).toBe(true);
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'hidden', { configurable: true, value: false });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await expect.poll(count).toBe(idle + 1);
+  // A tall footer puts the scrolling exhibition completely outside the viewport.
+  await page.addStyleTag({ content: '.site-footer { min-height: 200vh; }' });
+  await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
+  await expect.poll(() => page.evaluate(() => window.__exhibition?.suspended)).toBe(true);
+  const offscreen = await count();
+  await page.evaluate(() => {
+    document.dispatchEvent(new Event('visibilitychange'));
+    scrollBy(0, -10);
+  });
+  await page.waitForTimeout(200);
+  expect(await count()).toBe(offscreen);
+  await page.evaluate(() => scrollTo(0, 0));
+  await expect.poll(count).toBe(offscreen + 1);
+  await context.close();
+});
+
+test('actual emitted renderer chunks never download for reduced motion or project routes', async ({ browser }) => {
+  const context = await browser.newContext({ reducedMotion: 'reduce' });
+  const page = await context.newPage();
+  const downloaded: Promise<string>[] = [];
+  page.on('response', (response) => {
+    if (response.url().endsWith('.js')) downloaded.push(response.text());
+  });
+  await page.goto('/');
+  await page.locator('#landing').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
+  expect((await Promise.all(downloaded)).some((source) => source.includes('WebGLRenderer'))).toBe(false);
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await expect(page.locator('html')).toHaveAttribute('data-scene', 'active');
+  expect((await Promise.all(downloaded)).some((source) => source.includes('WebGLRenderer'))).toBe(true);
+  downloaded.length = 0;
+  await page.goto(projectPath);
+  await page.waitForTimeout(300);
+  expect((await Promise.all(downloaded)).some((source) => source.includes('WebGLRenderer'))).toBe(false);
+  await expect(page.locator('canvas')).toHaveCount(0);
+  await context.close();
+});
+
+test('sustained measured cost degrades quality in order and fast frames reverse each step', () => {
+  const policy = createQualityPolicy();
+  expect(qualityFor(1440, 3)).toEqual({ level: 0, reflection: true, shadowMapSize: 1024, pixelRatio: 2, shadows: true });
+  expect(qualityFor(390, 3).pixelRatio).toBe(1.75);
+  for (let level = 1; level <= 4; level++) {
+    for (let frame = 0; frame < 11; frame++) expect(policy.sample(35)).toBe(false);
+    expect(policy.sample(35)).toBe(true);
+    const settings = qualityFor(1440, 2, policy.level);
+    expect(settings).toEqual({ level, reflection: false, shadowMapSize: level < 2 ? 1024 : 512, pixelRatio: level < 3 ? 2 : 1.25, shadows: level < 4 });
+  }
+  for (let level = 3; level >= 0; level--) {
+    for (let frame = 0; frame < 89; frame++) expect(policy.sample(5)).toBe(false);
+    expect(policy.sample(5)).toBe(true);
+    expect(policy.level).toBe(level);
+  }
 });

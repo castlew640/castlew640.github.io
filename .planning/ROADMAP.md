@@ -61,7 +61,7 @@ Planning notes: establish project structure, typed content, basic UI contract, a
 4. Reduced motion is honored before spatial animation begins, a visible still-view control is available, and scene/asset/context failures preserve complete readable navigation and content.
 5. The initial representative scene is exercised with mouse, touch, and keyboard, including mobile swipe-versus-tap behavior and browser zoom; preliminary device and asset measurements constrain further visual work.
 
-**Plans:** 2/8 plans executed
+**Plans:** 3/8 plans executed
 
 Plans:
 **Wave 1**
@@ -71,7 +71,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 02-03-PLAN.md — Author the four inline architectural drawings, with the reflection motif and both fixed impossible constructions, at every stop.
+- [x] 02-03-PLAN.md — Author the four inline architectural drawings, with the reflection motif and both fixed impossible constructions, at every stop.
 - [ ] 02-04-PLAN.md — Build the pure stop table, the motion policy gate, scroll derivation, hash-arrival focus, and the visible still-view control.
 
 **Wave 3** *(blocked on Wave 2 completion)*
@@ -118,7 +118,7 @@ Execution order: Phase 1 → Phase 2 → Phase 3.
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Publishable Portfolio and Delivery | 3/3 | Complete   | 2026-09-19 |
-| 2. One-Handed Surreal Exhibition | 2/8 | In Progress|  |
+| 2. One-Handed Surreal Exhibition | 3/8 | In Progress|  |
 | 3. Growth and Release Polish | 0/TBD | Not started | - |
 
 ## Coverage

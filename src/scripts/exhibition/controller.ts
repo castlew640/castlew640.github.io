@@ -14,7 +14,12 @@ export async function enterMovingView(options: SceneOptions, mounted: () => void
   try {
     const { createScene } = await import('./scene');
     if (generation !== sceneGeneration || !motionPermitted()) return;
-    const handle = await createScene(options);
+    const handle = await createScene({ ...options, measureRender(render) {
+      // Submission cost only governs quality; scene geometry never reads time.
+      const started = performance.now();
+      render();
+      return performance.now() - started;
+    } });
     if (generation !== sceneGeneration || !motionPermitted()) {
       handle?.dispose();
       return;

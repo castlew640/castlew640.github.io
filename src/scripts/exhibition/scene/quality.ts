@@ -22,13 +22,20 @@ export function createQualityPolicy() {
   let level = 0;
   let slow = 0;
   let fast = 0;
+  let expensive = 0;
+  let reflectionFallback = false;
   return {
     get level() { return level; },
+    get reflectionFallback() { return reflectionFallback; },
     sample(milliseconds: number): boolean {
+      expensive = milliseconds > 33 ? expensive + 1 : 0;
+      const previousFallback = reflectionFallback;
+      if (expensive >= 2) reflectionFallback = true;
       slow = milliseconds > 28 ? slow + 1 : 0;
       fast = milliseconds < 14 ? fast + 1 : 0;
       const next = slow >= 12 ? Math.min(4, level + 1) : fast >= 90 ? Math.max(0, level - 1) : level;
-      if (next === level) return false;
+      if (fast >= 90) reflectionFallback = false;
+      if (next === level) return previousFallback !== reflectionFallback;
       level = next;
       slow = fast = 0;
       return true;

@@ -6,6 +6,7 @@ import { createQualityPolicy, qualityFor } from './quality';
 import { createInkMaterials } from './ink';
 import { createArchitecture } from './architecture';
 import { createExhibits } from './exhibit';
+import { createCompletedGroup, createReflection } from './reflection';
 
 export interface SceneHandle {
   setCameraZ(z: number): void;
@@ -18,6 +19,7 @@ export interface SceneOptions {
   landingStopZ: number;
   cameraZ: number;
   onFailure(reason: 'start' | 'context'): void;
+  measureRender?: (render: () => void) => number;
 }
 
 declare global {
@@ -71,7 +73,9 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
   sun.shadow.radius = 4;
   const hemisphere = new HemisphereLight('#f4f0e6', '#e3e5d8', 0.55);
   const ambient = new AmbientLight('#efe4cf', 0.12);
-  for (const light of [sun, hemisphere, ambient]) light.layers.enable(2);
+  sun.layers.enable(2);
+  hemisphere.layers.enable(2);
+  ambient.layers.enable(2);
   scene.add(sun, sun.target, hemisphere, ambient);
 
   const quality = createQualityPolicy();
@@ -99,6 +103,13 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
   const exhibits = createExhibits(Array.from(exhibition.querySelectorAll<HTMLElement>('[data-stop][data-slug]')),
     inks, architecture.stone, renderer.capabilities.getMaxAnisotropy(), () => requestRender());
   scene.add(exhibits.group);
+  architecture.group.remove(architecture.water);
+  const completed = createCompletedGroup([architecture.group, exhibits.group], architecture.stone, inks);
+  const reflection = createReflection(scene, camera, renderer, completed, inks);
+  debug.completedLayerZeroObjects = 0;
+  completed.group.traverse((object) => { if (object.layers.isEnabled(0)) debug.completedLayerZeroObjects = Number(debug.completedLayerZeroObjects) + 1; });
+  debug.lightsOnBothLayers = [sun, hemisphere, ambient].every((light) => light.layers.isEnabled(0) && light.layers.isEnabled(2));
+  renderer.info.autoReset = false;
   debug.walkwayObstructions = architecture.walkwayObstructions + exhibits.walkwayObstructions;
   debug.pickablePanels = exhibits.panels.length;
   debug.nonPanelRaycasts = 0;
@@ -173,7 +184,12 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
     debug.qualityLevel = policy.level;
     debug.pixelRatio = policy.pixelRatio;
     debug.shadowMapSize = policy.shadowMapSize;
-    debug.reflectionEnabled = policy.reflection;
+    reflection.resize(size, window.devicePixelRatio, policy.reflection && !quality.reflectionFallback);
+    debug.reflectionEnabled = reflection.enabled;
+    debug.reflectionLayerMask = reflection.layerMask;
+    debug.reflectionTargetWidth = reflection.targetWidth;
+    debug.reflectionTargetHeight = reflection.targetHeight;
+    debug.reflectionFallbackSegments = reflection.fallbackSegments;
     qualityDirty = false;
   };
 
@@ -182,13 +198,17 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
     frame = requestAnimationFrame(() => {
       frame = 0;
       if (disposed || suspended) return;
-      const started = performance.now();
+      let submissionCost = 0;
       try {
         // Changing buffer size clears the canvas. Apply quality on this requested
         // frame, never after a draw where it would erase a correctly idle image.
         if (qualityDirty) applyQuality();
         updatePanels();
-        renderer.render(scene, camera);
+        renderer.info.reset();
+        reflection.beginFrame();
+        const render = () => renderer.render(scene, camera);
+        if (options.measureRender) submissionCost = options.measureRender(render);
+        else render();
       } catch {
         dispose();
         options.onFailure('start');
@@ -199,9 +219,17 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
       debug.triangles = renderer.info.render.triangles;
       debug.geometries = renderer.info.memory.geometries;
       debug.textures = renderer.info.memory.textures;
+      materials.clear();
+      for (const ink of Object.values(inks)) materials.add(ink);
+      scene.traverse((object) => {
+        if (object instanceof Mesh) for (const material of Array.isArray(object.material) ? object.material : [object.material]) materials.add(material);
+      });
+      debug.materials = materials.size;
+      debug.renderTargetRendersPerFrame = reflection.passes;
+      debug.reflectionLayerMask = reflection.layerMask;
       debug.inkCssResolution = Object.values(inks).every((ink) => ink.resolution.equals(size));
       debug.inkScreenSpace = Object.values(inks).every((ink) => !ink.worldUnits);
-      if (renderCount > 1 && quality.sample(performance.now() - started)) qualityDirty = true;
+      if (renderCount > 1 && quality.sample(submissionCost)) qualityDirty = true;
     });
   };
 
@@ -257,6 +285,7 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
     observer.disconnect();
     canvas.removeEventListener('webglcontextlost', contextLost);
     canvas.removeEventListener('webglcontextcreationerror', creationError);
+    reflection.dispose();
     exhibits.dispose();
     architecture.dispose();
     for (const ink of Object.values(inks)) ink.dispose();
@@ -281,6 +310,9 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
       if (next === camera.position.z) return;
       camera.position.z = next;
       updateCamera();
+      // Publish projection and camera together, even before the scheduled draw.
+      // Otherwise readers can observe the new pose with the previous frame's panel.
+      updatePanels();
       requestRender();
     },
     hitPanel(x, y) {

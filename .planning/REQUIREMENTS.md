@@ -24,8 +24,8 @@ The first milestone includes both an early readable release and the finished ini
 
 - [x] **NAV-01**: A visitor can jump directly to Projects, About, Resume, and Contact without traversing the corridor or waiting for its assets.
 - [x] **NAV-02**: A visitor can move forward and backward along the bounded corridor using native scroll or single-finger swipe input, with normal browser panning and zoom preserved.
-- [ ] **NAV-03**: A visitor can move to the previous or next exhibit using labeled forward/back tap controls with at least 44 by 44 CSS pixel targets and clear endpoint behavior.
-- [ ] **NAV-04**: A visitor can complete entry, travel, project selection, reading, return, resume access, and contact using successive one-handed pointer actions without required chords, held keys, or precision dragging.
+- [x] **NAV-03**: A visitor can move to the previous or next exhibit using labeled forward/back tap controls with at least 44 by 44 CSS pixel targets and clear endpoint behavior.
+- [x] **NAV-04**: A visitor can complete entry, travel, project selection, reading, return, resume access, and contact using successive one-handed pointer actions without required chords, held keys, or precision dragging.
 - [x] **NAV-05**: A visitor can open each real exhibit with a click/tap and can reach that same project through an equivalent visible HTML link.
 - [x] **NAV-06**: A visitor returning from a project reaches the same exhibit through the explicit return link, while browser Back/Forward restores an understandable location and focus without resetting to the entrance.
 
@@ -110,8 +110,8 @@ Every v1 requirement is owned by exactly one phase. Later phases preserve and re
 | WORK-04 | Phase 1 | Complete |
 | NAV-01 | Phase 1 | Complete |
 | NAV-02 | Phase 2 | Complete |
-| NAV-03 | Phase 2 | Pending |
-| NAV-04 | Phase 2 | Pending |
+| NAV-03 | Phase 2 | Complete |
+| NAV-04 | Phase 2 | Complete |
 | NAV-05 | Phase 2 | Complete |
 | NAV-06 | Phase 2 | Complete |
 | ART-01 | Phase 2 | Complete |

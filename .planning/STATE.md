@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 02
 current_phase_name: one-handed-surreal-exhibition
 status: executing
-stopped_at: Completed 02-04-PLAN.md
-last_updated: "2026-09-20T18:49:27.864Z"
+stopped_at: Completed 02-05-PLAN.md
+last_updated: "2026-09-20T19:06:20.507Z"
 last_activity: 2026-09-20
 last_activity_desc: Phase 02 execution started
 progress:
   total_phases: 3
   completed_phases: 1
   total_plans: 11
-  completed_plans: 7
+  completed_plans: 8
   percent: 33
 ---
 
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-09-19)
 ## Current Position
 
 Phase: 02 (one-handed-surreal-exhibition) — EXECUTING
-Plan: 4 of 8
+Plan: 5 of 8
 Status: Ready to execute
 Last activity: 2026-09-20 — Phase 02 execution started
 
-**Progress:** [██████░░░░] 64%
+**Progress:** [███████░░░] 73%
 
 Outstanding from Phase 01: verification status is `human_needed` and 01-UAT.md is still `testing` — the subjective live visual/keyboard passes have not been signed off. Phase 1 is not closed.
 
@@ -52,6 +52,7 @@ Outstanding from Phase 01: verification status is `human_needed` and 01-UAT.md i
 | Phase 02 P02 | 11 min | 3 tasks | 9 files |
 | Phase 02 P03 | 9 min | 2 tasks | 6 files |
 | Phase 02 P04 | 10 min | 3 tasks | 11 files |
+| Phase 02 P05 | 13 min | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -80,6 +81,7 @@ Decisions are logged in PROJECT.md.
 - [Phase 02]: Plan 02-02 labels the landing with resume-title and contact-title so its accessible name differs from the nested Contact region. — The prescribed duplicate Contact landmark failed axe; the combined label preserves both headings and passes the full deployment gate.
 - [Phase 02]: Plan 02-03 shares local SVG defs/use geometry between unfinished architecture and completed reflections, with per-exhibit IDs scoped by index. — Preserves the reflection concept without runtime code, duplicate path sets or document ID collisions.
 - [Phase 02]: Plan 02-04 disables asset inlining to emit the required hashed controller; explicit motion choices also persist in memory when storage is blocked. — The controller precedes the renderer import, and policy must remain correct even under storage failures.
+- [Phase 02]: Plan 02-05 keeps travel controls in one stable DOM position, delegates validated taps to canonical anchors, and recognizes native fractional-pixel stop arrivals. — Preserves one-handed focus and history; isolated pointer regressions prove tap gates before the real renderer arrives.
 
 ### Pending Todos
 
@@ -113,6 +115,6 @@ Remaining publication inputs and environment notes:
 
 ## Session Continuity
 
-Last session: 2026-09-20T18:49:27.859Z
-Stopped at: Completed 02-04-PLAN.md
+Last session: 2026-09-20T19:06:20.502Z
+Stopped at: Completed 02-05-PLAN.md
 Resume file: None

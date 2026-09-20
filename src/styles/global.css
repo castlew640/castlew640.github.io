@@ -1,4 +1,4 @@
-@layer base, layout, details;
+@layer base, layout, details, exhibition;
 
 @layer base {
   :root {
@@ -13,6 +13,17 @@
     --sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     --mono: 'Courier New', Courier, monospace;
     --gutter: clamp(1.25rem, 5vw, 5rem);
+    --stone-lit: #ece6d6;
+    --stone-shade: #d2c9b5;
+    --stone-deep: #c2baa6;
+    --stone-floor: #e4dece;
+    --edge: #4e5144;
+    --edge-unbuilt: #8b877b;
+    --construction: #b9b3a4;
+    --registration: #656256;
+    --sun: #fff4e0;
+    --horizon: #efe4cf;
+    --water: #e3e5d8;
     font-family: var(--sans);
     color: var(--ink);
     background: var(--paper);
@@ -132,4 +143,25 @@
   .text-link span { color: var(--rust); font-size: 1.4rem; }
   .skip-link { position: absolute; top: 1rem; left: var(--gutter); z-index: 1; padding: 0.6rem 1rem; background: var(--ink); color: var(--paper); transform: translateY(-200%); }
   .skip-link:focus { transform: translateY(0); }
+}
+
+@layer exhibition {
+  #exhibition [data-stop] { min-height: 100svh; scroll-margin-block-start: 0; }
+  #projects { display: block; }
+  .exhibit-list { display: grid; gap: 64px; margin-top: 64px; }
+  .exhibit-list [data-stop] > * + * { margin-top: 16px; }
+  .exhibit-list .eyebrow { font: 600 12px/1.4 var(--mono); letter-spacing: 0.1em; }
+  .exhibit-title { font: 400 20px/1.2 var(--sans); letter-spacing: 0; text-wrap: balance; }
+  .landing-invitation { font: 400 40px/1.2 var(--serif); letter-spacing: -0.035em; color: var(--ink); }
+  .landing-invitation em { color: var(--rust); font-style: normal; }
+  .contract-labels { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+  .contract-labels li { padding: 8px 12px; border: 1px solid var(--line); background: var(--paper); color: var(--muted); font: 600 12px/1.4 var(--mono); text-transform: uppercase; letter-spacing: 0.1em; }
+  #exhibition figure img { aspect-ratio: 2 / 1; object-fit: cover; object-position: center; width: 100%; height: auto; }
+  .exhibition-horizon { background: linear-gradient(to bottom, #f4f0e6 0%, #efe4cf 72%, #e9dcc4 100%); }
+  .stop-drawing { display: block; width: 100%; max-width: 40rem; margin-inline: auto; }
+  .stop-drawing .drawing-label, .stop-drawing .drawing-caption { font-family: var(--mono); font-size: 0.625rem; color: var(--muted); }
+
+  @media (max-width: 48rem) {
+    .exhibit-title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+  }
 }

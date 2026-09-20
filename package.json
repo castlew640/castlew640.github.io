@@ -8,19 +8,21 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "check": "astro check && npm run build && node scripts/verify-built-content.mjs && node --experimental-strip-types --test tests/project-validation.test.ts && npm run test:e2e -- tests/skeleton.spec.ts tests/portfolio.spec.ts",
+    "check": "astro check && npm run build && node scripts/verify-built-content.mjs && node scripts/verify-scene-boundary.mjs && node --experimental-strip-types --test tests/project-validation.test.ts && npm run test:e2e -- tests/skeleton.spec.ts tests/portfolio.spec.ts",
     "build": "astro build",
     "preview": "astro preview",
     "test:e2e": "playwright test",
     "verify": "npm run check"
   },
   "dependencies": {
-    "astro": "7.3.3"
+    "astro": "7.3.3",
+    "three": "0.186.0"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.10",
     "@axe-core/playwright": "4.13.0",
     "@playwright/test": "1.63.0",
+    "@types/three": "0.186.0",
     "typescript": "6.0.3"
   }
 }

@@ -141,11 +141,21 @@
   .registration-mark { color: var(--rust); font-size: 1.2rem; margin-right: 0.5rem; vertical-align: -0.06em; }
   .text-link { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.1rem; max-width: 100%; min-height: 44px; font-size: 0.875rem; }
   .text-link span { color: var(--rust); font-size: 1.4rem; }
-  .skip-link { position: absolute; top: 1rem; left: var(--gutter); z-index: 1; padding: 0.6rem 1rem; background: var(--ink); color: var(--paper); transform: translateY(-200%); }
+  .skip-link { position: absolute; top: 1rem; left: var(--gutter); z-index: 3; padding: 0.6rem 1rem; background: var(--ink); color: var(--paper); transform: translateY(-200%); }
   .skip-link:focus { transform: translateY(0); }
 }
 
 @layer exhibition {
+  .page-frame { position: relative; z-index: 1; }
+  html[data-scene="active"] #exhibition { pointer-events: none; }
+  html[data-scene="active"] #exhibition a,
+  html[data-scene="active"] #exhibition button,
+  html[data-scene="active"] #exhibition figure,
+  html[data-scene="active"] #exhibition .exhibit-overlay { pointer-events: auto; }
+  .view-preferences { min-height: 68px; padding-top: max(12px, env(safe-area-inset-top, 0px)); padding-right: 128px; }
+  .view-toggle { position: fixed; z-index: 2; top: max(12px, env(safe-area-inset-top, 0px)); right: var(--gutter); min-width: 44px; min-height: 44px; padding: 12px 16px; font: 600 12px/1.4 var(--mono); text-transform: uppercase; letter-spacing: 0.1em; border: 1px solid var(--line); background: var(--paper); color: var(--ink); cursor: pointer; }
+  .view-toggle:hover { border-color: var(--rust); }
+  .view-notice { max-width: 40rem; margin-left: auto; color: var(--muted); font: 400 16px/1.65 var(--sans); }
   #exhibition [data-stop] { min-height: 100svh; scroll-margin-block-start: 0; }
   #projects { display: block; }
   .exhibit-list { display: grid; gap: 64px; margin-top: 64px; }

@@ -1,5 +1,5 @@
 import { buildStopTable } from '../../lib/exhibition/stops';
-import { motionPermitted, reduceQuery } from './policy';
+import { motionPermitted, readStoredChoice, reduceQuery, writeChoice, type ViewMode } from './policy';
 import { measureStops, progressFor, type MeasuredStop } from './scroll';
 
 export function enterMovingView(): void {
@@ -12,9 +12,30 @@ export function start(): void {
   if (!exhibition) return;
 
   // Decide motion policy before scheduling any work or requesting scene code.
-  let mode = motionPermitted() ? 'moving' : 'still';
-  document.documentElement.dataset.view = mode;
-  if (mode === 'moving') enterMovingView();
+  let mode: ViewMode = motionPermitted() ? 'moving' : 'still';
+
+  const preferences = document.createElement('div');
+  preferences.className = 'view-preferences';
+  preferences.setAttribute('role', 'region');
+  preferences.setAttribute('aria-label', 'Exhibition view');
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'view-toggle';
+  toggle.textContent = 'Still view';
+  const notice = document.createElement('p');
+  notice.className = 'view-notice';
+  notice.textContent = 'Still view is on because your device requests reduced motion.';
+  preferences.append(toggle, notice);
+  document.querySelector('.page-frame')?.prepend(preferences);
+  let explicitChoice = readStoredChoice();
+  const presentMode = (): void => {
+    document.documentElement.dataset.view = mode;
+    toggle.setAttribute('aria-pressed', String(mode === 'still'));
+    notice.hidden = !(mode === 'still' && reduceQuery.matches && explicitChoice === null);
+    if (mode === 'still') delete document.documentElement.dataset.scene;
+    else enterMovingView();
+  };
+  presentMode();
 
   const elements = Array.from(exhibition.querySelectorAll<HTMLElement>('[data-stop]'));
   const ids = elements.map((el) => el.dataset.stopId ?? el.id);
@@ -26,6 +47,7 @@ export function start(): void {
   let measured = false;
   let frame = 0;
   let needsMeasure = false;
+  let restoringView = false;
 
   const derive = (): void => {
     progress = progressFor(window.scrollY, stops);
@@ -46,7 +68,7 @@ export function start(): void {
   };
 
   const queue = (remeasureStops = false): void => {
-    if (!measured) return;
+    if (!measured || restoringView) return;
     needsMeasure ||= remeasureStops;
     if (frame) return;
     frame = requestAnimationFrame(() => {
@@ -61,6 +83,32 @@ export function start(): void {
     if (!location.hash) return;
     document.getElementById(location.hash.slice(1))?.focus({ preventScroll: true });
   };
+
+  const switchView = (nextMode: ViewMode): void => {
+    const currentStop = stops.reduce<MeasuredStop | undefined>((nearest, stop) =>
+      !nearest || Math.abs(stop.el.getBoundingClientRect().top) < Math.abs(nearest.el.getBoundingClientRect().top)
+        ? stop : nearest, undefined);
+    const stopId = currentStop?.id;
+    restoringView = true;
+    if (frame) cancelAnimationFrame(frame);
+    frame = 0;
+    needsMeasure = false;
+    mode = nextMode;
+    presentMode();
+    requestAnimationFrame(() => {
+      measureStops(stops);
+      const destination = stops.find((stop) => stop.id === stopId);
+      if (destination) window.scrollTo({ top: destination.offsetTop, behavior: 'auto' });
+      derive();
+      restoringView = false;
+    });
+  };
+
+  toggle.addEventListener('click', () => {
+    explicitChoice = mode === 'still' ? 'moving' : 'still';
+    writeChoice(explicitChoice);
+    switchView(explicitChoice);
+  }, { passive: true });
 
   const observer = new ResizeObserver(() => queue(true));
   const loaded = (): void => {
@@ -95,9 +143,8 @@ export function start(): void {
     historyArrival = false;
   }, { passive: true });
   reduceQuery.addEventListener('change', () => {
-    mode = motionPermitted() ? 'moving' : 'still';
-    document.documentElement.dataset.view = mode;
-    if (mode === 'still') delete document.documentElement.dataset.scene;
-    else enterMovingView();
+    const nextMode = motionPermitted() ? 'moving' : 'still';
+    if (nextMode !== mode) switchView(nextMode);
+    else presentMode();
   }, { passive: true });
 }

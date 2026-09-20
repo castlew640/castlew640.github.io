@@ -971,27 +971,33 @@ Derived: React + react-dom + R3F together add **156,322 B gzipped**; `Reflector`
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **The approved UI contract's stack and its own budget are mutually exclusive. Which gives way?** *(highest priority — blocks the stack decision and therefore Wave 0 planning)*
    - What we know: measured, on this machine, with gzip (the verified GitHub Pages encoding) — React + R3F costs **+156 KB gzipped**; the full R3F bundle is **308 KB** against a §I budget of **≤190 KB**; the vanilla-three bundle is **152 KB**. UI-SPEC §I states the rule itself: *"exceeding one is a signal to simplify the composition, not to renegotiate the budget late."*
    - What's unclear: UI-SPEC §Design System names "one React Three Fiber island" and §Registry Safety names `react`/`react-dom`/`@astrojs/react` as expected pins. The two clauses cannot both hold. `02-CONTEXT.md` never mentions React; `AGENTS.md` calls R3F a *"planning baseline"* and instructs verifying versions at setup — which this research has now done.
    - Recommendation: **drop React/R3F, build on plain `three@0.186.0`**, and amend UI-SPEC §Design System and §Registry Safety accordingly. The scene has no reconciliable state (§A.3 forbids animation state; §B.3 forbids a clock), so React's value here is near zero while its cost is 82% of the entire budget. This is a user-visible deviation from an *approved* artifact — surface it in `discuss-phase` or as an explicit plan checkpoint before any install.
+   - **Resolution:** landed in this plan's (02-01) Tasks 2 and 3 — plain `three@0.186.0` + `@types/three@0.186.0` installed at exact pins, no React, no R3F; `02-UI-SPEC.md` §Design System and §Registry Safety amended accordingly.
 
 2. **Should §K hook #6's portrait acceptance band be replaced with a computed expectation?**
    - What we know: the spec's band (50–58%) is arithmetically correct for 390 × 844 and arithmetically wrong for the viewport `100svh` actually produces (42.07% at 390 × 664). The formula itself reproduces all three spec rows exactly.
    - Recommendation: keep the formula, drop the hard-coded band; assert `|measured − expected(aspect)| ≤ 2` percentage points. Also correct §A.3's "≈3496 CSS px" travel figure to ≈2776 for a real iPhone 12 Pro.
+   - **Resolution:** landed in `02-UI-SPEC.md` §K hook #6 (computed `atan(2.00 / 12) / tan(fovX / 2)` expectation, ± 2 percentage-point tolerance) and §A.3 (travel figure corrected to ≈2776 CSS px); consumed by plan 02-07 Task 3.
 
 3. **Does the phase adopt `viewport-fit=cover`?** §F.3 explicitly leaves this open and requires the plan to state which branch it takes. Without it, every `env(safe-area-inset-*)` is `0` and the stated fallbacks are operative (arrow `bottom: 24px`, toggle `top: 12px`, overlay `padding-block-end: 104px`). With it, overlay bottom padding must become `calc(104px + env(safe-area-inset-bottom, 0px))` and the D-18 device check must confirm the arrows still sit inside the thumb band.
    - Recommendation: **do not add it.** It is the smaller change, the stated fallbacks are already exact, and the shipped viewport meta is covered by existing passing tests.
+   - **Resolution:** landed in `02-UI-SPEC.md` §F.3 — `viewport-fit=cover` is NOT adopted and the stated fallbacks (`24px`, `12px`, `104px`) are operative; consumed by plan 02-04 Task 3.
 
 4. **Reflector render-target flags are not configurable.** §C.4 specifies `depthBuffer: true, generateMipmaps: false`; `Reflector`'s options expose only `textureWidth`, `textureHeight`, `clipBias`, `shader`, `multisample`, `color`, and it constructs `new WebGLRenderTarget(w, h, { samples: multisample, type: HalfFloatType })` internally. `depthBuffer` defaults to `true` and `generateMipmaps` to `false` for render targets, so the spec's intent is satisfied by default — but it cannot be *asserted through the API*.
    - Recommendation: accept the defaults, document the reliance, and set `multisample: 0` on high-DPR devices where a 1024² MSAA target is the dominant cost. Do not fork Reflector for this.
+   - **Resolution:** landed in `02-UI-SPEC.md` §C.4 — `Reflector`'s render-target defaults are relied upon and documented, and `multisample: 0` applies above dpr 1.5; consumed by plan 02-08 Task 1.
 
 5. **Is `@react-three/fiber@10` relevant?** `dist-tags` shows `alpha: 10.0.0-alpha.5` and `canary: …`; `latest` is `9.7.0`. No stable 10. Moot if Question 1 resolves to vanilla three.
+   - **Resolution:** moot — Question 1 resolved to vanilla `three`, so R3F was dropped and there is nothing to reconcile.
 
 6. **Should WebKit be added to the Playwright matrix for D-18?** `devices['iPhone 12 Pro']` has `defaultBrowserType: 'webkit'`, and only `chromium` is installed locally and in CI (`npx playwright install --with-deps chromium`). Running the preset as-is against Chromium tests layout/touch but not the Safari engine; adding WebKit means a CI change and an unverified question about WebGL2 availability in Linux WebKit.
    - Recommendation: use the iPhone 12 Pro **viewport + `hasTouch` + `deviceScaleFactor`** under Chromium for automated framing/target-size/tap checks, and rely on the D-18 **manual** device pass for Safari-engine behaviour. Record that split explicitly so no one later reads a Chromium pass as a Safari pass.
+   - **Resolution:** landed in `02-UI-SPEC.md` new §M "Automated vs. Manual Device Coverage" — automated checks use Chromium with the iPhone 12 Pro viewport/`hasTouch`/`deviceScaleFactor`; Safari-engine behaviour is covered only by the D-18 manual pass; consumed by plan 02-07 Task 3 and plan 02-08 Task 3.
 
 ---
 

@@ -21,6 +21,8 @@ reviewed_at: 2026-09-20
 >
 > **Final pass (2026-09-20).** Threshold arch lowered 5.6 m → 5.0 m so its crown clears the tightest clamped field; the three contract markers moved from the lintel to the sill so they stay in frame; pier x-convention stated as inner/outer faces; §A.6 element types tightened so the shipped `skeleton.spec.ts` keeps passing unchanged; and §L added, naming the shipped `portfolio.spec.ts` assertions this contract invalidates. Approved 6/6 dimensions.
 
+> **Amendment (2026-09-20, Phase 2 planning).** `02-RESEARCH.md` measured a conflict between this contract's own stack and its own transfer budget and traced five further defects to three.js/API source. This pass amends the contract to describe the stack that actually ships and removes every clause RESEARCH.md proved unimplementable as written. Eleven changes: (1) §Design System drops the prior React-based-island wording (`@react-three/fiber`) for a vanilla-`three` module description; (2) §Registry Safety names exactly `three@0.186.0` and `@types/three@0.186.0`, no React family package; (3) a reading rule below states "the island" means the vanilla controller + lazy scene module everywhere it appears; (4) §A.3's travel figure is corrected from ≈3496 to ≈2776 CSS px for a real iPhone 12 Pro small viewport; (5) §A.6 gains a `pointer-events: none` stacking rule scoped to the active scene, fixing an unsatisfiable NAV-05 tap path; (6) §B.2 gains a units note distinguishing `linewidth` (CSS px) from `dashSize`/`gapSize` (model-space units); (7) §C.4 requires `layers.enable(2)` on all three lights; (8) §C.4 records that `Reflector`'s render-target defaults are relied upon, plus `multisample: 0` above dpr 1.5; (9) §F.3 states `viewport-fit=cover` is NOT adopted; (10) §K hook #6 replaces the hard-coded portrait band with a computed expectation; (11) §K hook #8 states the literal `layers.mask === 4` assertion. A new §M records the automated-vs-manual device-coverage split. No dimension, colour, or approval status changes; the Checker Sign-Off stands.
+
 ---
 
 ## Design System
@@ -29,7 +31,7 @@ reviewed_at: 2026-09-20
 |----------|-------|
 | Tool | none — bespoke CSS in `src/styles/global.css` (no shadcn, no Tailwind, no design-system CLI) |
 | Preset | not applicable |
-| Component library | none — Astro components plus one React Three Fiber island (`src/components/exhibition/`) |
+| Component library | none — Astro components in `src/components/exhibition/` plus one vanilla TypeScript module in `src/scripts/exhibition/`, bundled by Astro's default processed `<script>` (no React, no `@react-three/fiber`, no `client:*` directive). `src/lib/exhibition/` holds pure build-time TypeScript (stop table, exhibit manifest). |
 | Icon library | none — inline SVG paths plus the Phase 1 typographic glyph set (`↗ ↘ ↑ ← →  +`) |
 | Font | Existing Phase 1 stacks only. `--serif` (`'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif`), `--sans` (`'Helvetica Neue', Helvetica, Arial, sans-serif`), `--mono` (`'Courier New', Courier, monospace`). **No web font may be added in this phase** — the transfer budget belongs to the scene. |
 
@@ -194,7 +196,7 @@ Contrast floor: any shadowed ivory surface that sits behind DOM text must not re
 | shadcn official | none | not applicable — no component registry in use |
 | third-party | none | not applicable — no component registry in use |
 
-No `components.json` exists, no registry CLI is installed, and no third-party UI block enters this codebase. Every component in Phase 2 is written in this repository. Third-party code in this phase is limited to npm packages pinned during planning (`three`, `@react-three/fiber`, `@astrojs/react`, `react`, `react-dom`), which are governed by the Phase 1 package-legitimacy gate, not by a component registry.
+No `components.json` exists, no registry CLI is installed, and no third-party UI block enters this codebase. Every component in Phase 2 is written in this repository. Third-party code in this phase is limited to npm packages pinned during planning — exactly `three@0.186.0` and `@types/three@0.186.0`, governed by a blocking package-legitimacy gate, not by a component registry. React and `@react-three/fiber` were dropped: the measured React 19.2.8 + react-dom + `@react-three/fiber@9.7.0` bundle is **308,170 B gzipped** against the §I budget of ≤190 KB, while the vanilla-`three` bundle (including `Line2` and `Reflector`) is **151,848 B gzipped**. GitHub Pages was confirmed by live request to serve `content-encoding: gzip`, not brotli, so those are real transfer sizes, not pessimistic bounds.
 
 ---
 
@@ -213,6 +215,8 @@ No `components.json` exists, no registry CLI is installed, and no third-party UI
 ---
 
 # Phase-Specific Contracts
+
+> **Reading rule.** Every occurrence of "the island" in §D.2, §E.3 and §G.3 means the vanilla `<script type="module">` controller and its lazily `import()`ed scene module — not a React island, no `client:*` directive, and no change to `astro.config.ts`.
 
 The six sections above are the standard contract. Phase 2 is a WebGL2 spatial scene rather than a conventional component UI, so the following sections carry the rest of the design contract. **Success Criterion 1 is checked against Section A; Success Criterion 2 against Section E; Success Criterion 3 against Section H; Success Criterion 4 against Section G.**
 
@@ -260,7 +264,7 @@ Appending a project inserts a stop before `about` and pushes `about`/`landing` 1
 ### A.3 Scroll units
 
 - The exhibition wrapper `#exhibition` contains one `<section>` per stop. **Each stop section has `min-height: 100svh`** (`svh`, not `vh` — mobile browser chrome must not resize the corridor).
-- Total exhibition scroll span = `(N + 3) × 100svh` **plus the height of the `#projects` heading block** (an eyebrow and an `<h2>`, ≈ 120 px, retained for NAV-01 and for the shipped tests in §L). That block is absorbed into the entrance → exhibit-1 segment, which is therefore slightly longer than one viewport. At N = 1 on an iPhone 12 Pro (844 CSS px `svh`) the travel is **≈ 3496 CSS px**; on a 900 px-tall laptop viewport, ≈ 3720 px.
+- Total exhibition scroll span = `(N + 3) × 100svh` **plus the height of the `#projects` heading block** (an eyebrow and an `<h2>`, ≈ 120 px, retained for NAV-01 and for the shipped tests in §L). That block is absorbed into the entrance → exhibit-1 segment, which is therefore slightly longer than one viewport. `100svh` is the **small** viewport (browser chrome expanded), not the device's screen height — on an iPhone 12 Pro that is ≈664 CSS px, not 844. At N = 1 on an iPhone 12 Pro the travel is therefore **≈ 4 × 664 + 120 ≈ 2776 CSS px**; on a 900 px-tall (`svh`-derived) laptop viewport, ≈ 3720 px.
 - Camera z is derived **only** from measured DOM geometry: for each stop, `offsetTop = rect.top + scrollY`. Given `scrollY`, find the bracketing pair, compute `localProgress ∈ [0, 1]`, and `cameraZ = lerp(stopZ[k], stopZ[k+1], localProgress)`, then clamp per §A.1. Guard `N = 0` and any zero-length segment by returning `localProgress = 0`. Because offsets are measured rather than assumed, the heading block's height needs no special handling.
 - The mapping is **scoped to `#exhibition`**. Scrolling the site header or footer must not move the camera.
 - The camera is a pure function of `scrollY`. There is no easing state, no inertia, no second scroll engine, and no `ScrollControls` container. This is what makes reduced motion trivially correct: freeze the scroll and the scene is frozen.
@@ -345,6 +349,9 @@ Only the `.project-card` list *inside* `#projects` is replaced by the exhibit se
 | Arrow nav | `position: fixed; z-index: 2` |
 | Still-view toggle | `position: fixed; z-index: 2` |
 | Skip link | `z-index: 3` (raised from the shipped `1`, which would now tie with `.page-frame`) |
+| `#exhibition`, scene active | `html[data-scene="active"] #exhibition { pointer-events: none }`, with `pointer-events: auto` restored on `html[data-scene="active"] #exhibition a`, `html[data-scene="active"] #exhibition button`, `html[data-scene="active"] #exhibition figure` and `html[data-scene="active"] #exhibition .exhibit-overlay` |
+
+`.page-frame { position: relative; z-index: 1 }` is a full-width, full-document-height box that, without the rule above, intercepts every `pointerdown` over the exhibit panel — making §E.2 condition 6 unsatisfiable and blocking NAV-05 entirely. `pointer-events: none` does **not** disable document scrolling (scrolling is a viewport gesture; the underlying canvas never calls `preventDefault`), so NAV-02 is unaffected. The rule is scoped to `html[data-scene="active"]` so the still view — where `#exhibition` never receives that attribute — retains ordinary text selection and default pointer behaviour throughout.
 
 ---
 
@@ -366,6 +373,8 @@ Ink lines are rendered with `Line2` / `LineMaterial` (`three/examples/jsm/lines`
 | Annotation leader | **1.4 px** | `--rust` `#8e4935` | solid | The single line from the exhibit panel toward its `Read case study →` link, with a 3 px rust dot at the panel end |
 
 Every one of these widths, colours and dash patterns is lifted from the shipped `Fig. 01` drawing. The scene and the hero drawing must read as the same hand.
+
+**Units note.** `LineMaterial.linewidth` is genuinely in CSS pixels when `worldUnits` is `false` — the px figures in the table above are correct as written for stroke width. But `dashSize` and `gapSize` are accumulated by `computeLineDistances()` in **model space** and scaled only by `dashScale`, with no screen-space term. The px dash/gap figures in the table are therefore the intended *appearance* at the design standoff, not literal pixel values to pass to the material: the implementation chooses world-unit `dashSize`/`gapSize` values that subtend those pixel figures at the relevant viewing distance, and records the conversion in a comment at the point of use. **Forbidden:** driving `dashScale` per frame from camera distance — that would make dash phase a function of camera position, which reads as crawling even though it introduces no clock.
 
 ### B.3 Which elements are solid vs. drawn vs. mid-transformation
 
@@ -449,9 +458,11 @@ The reflective plane shows the **completed** architecture, not the fragmentary a
 - `builtGroup` — what the main camera sees: solid mass + ink lines, exactly as authored.
 - `completedGroup` — assigned to **layer 2**, invisible to the main camera. It contains the *finished* form of every drawn-only and mid-transformation element (solid ivory, no dashes, `progress = 1`), plus the solid mass.
 - A `Reflector`-style plane at `y = 0` renders `completedGroup` through a mirrored camera (`layers.set(2)`) into a `WebGLRenderTarget`.
-- Render target: `min(1024, viewportWidth · dpr) × min(1024, viewportHeight · dpr) × 0.5`, `depthBuffer: true`, `generateMipmaps: false`. **One reflection render per rendered frame, maximum.**
+- **All three §C.1 lights must call `layers.enable(2)`** (enable, never `set`), because `WebGLRenderer.projectObject` filters lights by camera layers exactly as it filters meshes — a layer-0 light is not collected for a layer-2 camera, and without this the reflection renders unlit black.
+- `reflector.getReflectionCamera(camera).layers.set(2)` must be called **once, after the `Reflector` exists**, because `getReflectionCamera` lazily clones the main camera and `Object3D.copy` copies `layers.mask`, so the clone starts on layer 0.
+- Render target: `min(1024, viewportWidth · dpr) × min(1024, viewportHeight · dpr) × 0.5`. `Reflector`'s options expose only `textureWidth`, `textureHeight`, `clipBias`, `shader`, `multisample` and `color` — it constructs the `WebGLRenderTarget` internally. `depthBuffer: true` and `generateMipmaps: false` are satisfied by `WebGLRenderTarget` defaults and are **relied upon rather than asserted through the API**; do not fork `Reflector` to make them explicit. Add `multisample: 0` when device pixel ratio exceeds 1.5, since a 1024² MSAA target is the dominant cost on high-DPR devices. **One reflection render per rendered frame, maximum.**
 - Composite: reflection tinted toward `--water` `#e3e5d8`, strength **0.42** at the walkway edge (`|x| = 3.0`), fading linearly to **0.0 at `|x| = 26 m`**. The plane is 60 m wide (`|x| ≤ 30`), so the fade completes 4 m inside the plane's edge and the outermost band is flat `--water` before fog takes over.
-- Verification hook: the reflection camera's layer mask must be `2`, and `completedGroup.layers` must not include `0`. A reflection that simply mirrors `builtGroup` fails this contract.
+- Verification hook: the reflection camera's layer mask must be `2` — literally, `reflectionCamera.layers.mask === 4` — and `completedGroup.layers` must not include `0`. A reflection that simply mirrors `builtGroup` fails this contract.
 
 **Phones take the primary path — this is deliberate.** The fallback trigger below is `viewportWidth × dpr < 700`; a 390 px phone at dpr 3 evaluates to 1170, so it does **not** trip. **The intended mobile baseline is the full reflection with the render target capped at 1024 px and the shadow map at 512²**, which is why §C.2 halves the shadow map below 768px rather than disabling reflections there. Slow devices are caught by the quality ladder in §I, which measures actual frame cost instead of guessing from screen size. The width trigger exists only for genuinely tiny or low-density surfaces.
 
@@ -608,13 +619,7 @@ screen fraction    = tan(angle) / tan(fov/2)        (normalised device coords)
 | 390 × 844 portrait (0.46209) | 68.00° | 34.62° | **53.47%** (spans 23.26%–76.74%) | 28.50% | 40.86% |
 | 844 × 390 landscape (2.16410) | 36.00° | 70.23° | **23.70%** | 5.37% | 31.02% |
 
-**Verifiable acceptance bands, stated per orientation** — this table is the single source for the framing criterion; §K hook #6 cites it rather than restating it:
-
-| Orientation | Band for rendered panel width |
-|---|---|
-| Landscape (`aspect ≥ 1.4`) | **23–31%** of viewport width |
-| Portrait (`aspect ≤ 0.75`) | **50–58%** of viewport width |
-| Intermediate aspects (0.75 < aspect < 1.4) | no band asserted; only the top-margin floor applies |
+**Note: the table above is a set of worked examples, not the assertion source.** The 50–58% portrait band it would suggest was derived from a 390 × 844 viewport, which `100svh` never produces — at the real 390 × 664 small viewport, the same geometry renders the panel **42.07%** wide. §K hook #6 states the actual, computed assertion; do not hard-code a per-orientation band from this table.
 
 **Top-margin floor, all aspects:** the panel's top edge must sit **≥ 5% of viewport height** below the viewport top. The binding case is a phone in landscape (5.37%); the laptop has 8.75% and portrait 28.50%. Any change to `fovY`, panel height, panel centre height or standoff must be re-checked against this floor.
 
@@ -639,7 +644,7 @@ The shipped viewport meta is `width=device-width, initial-scale=1`. **Without `v
 | Overlay `padding-inline` | `max(var(--gutter), 0, 0)` → **`var(--gutter)`** |
 | Overlay `padding-block-end` | **104px** = 64 (arrow) + 24 (`bottom`) + 16 (clearance) — exact at `env = 0` |
 
-Adding `viewport-fit=cover` to the viewport meta **is permitted** in this phase. If it is added, the overlay's bottom padding must be re-derived as `calc(104px + env(safe-area-inset-bottom, 0px))`, and every `env()` above becomes live. Either choice is a valid implementation of this contract; the plan must state which one it takes.
+**Decision for this phase: `viewport-fit=cover` is NOT adopted.** The shipped viewport meta (`width=device-width, initial-scale=1`) stays unchanged, every `env(safe-area-inset-*)` resolves to `0`, and the table above states the operative values — `24px`, `12px`, and `104px` are what ships. This is the smaller change, the stated fallbacks are already exact, and the shipped viewport meta is covered by existing passing tests. (Had the phase instead adopted `viewport-fit=cover`, the overlay's bottom padding would need to be re-derived as `calc(104px + env(safe-area-inset-bottom, 0px))`, and every `env()` above would become live — that branch is not taken.)
 
 ### F.4 Phones in landscape
 
@@ -803,9 +808,9 @@ Values in this contract that are directly checkable, for the planner's acceptanc
 3. `touch-action`, `overscroll-behavior`, `user-scalable` never set (NAV-02).
 4. The canvas has `aria-hidden="true"` and **does not** have the `inert` attribute; `.page-frame` carries `position: relative; z-index: 1` and the skip link `z-index: 3` (NAV-01, NAV-05).
 5. Arrow buttons' computed box ≥ 56 × 56 px at ≥ 768px and ≥ 64 × 64 px below 768px (NAV-03).
-6. **Exhibit panel framing (SC1, D-16):** the rendered panel width falls inside the per-orientation acceptance band in **§F.1**, and the panel's top edge satisfies §F.1's top-margin floor at every supported aspect. §F.1 is the single source for these numbers.
+6. **Exhibit panel framing (SC1, D-16):** `expectedWidthFraction = atan(2.00 / 12) / tan(fovX / 2)`, evaluated at the measured aspect; the rendered panel width must satisfy `|measured − expected| ≤ 2` percentage points (a **± 2 percentage-point** tolerance), plus the unchanged ≥ 5% top-margin floor (§F.1) at every supported aspect. §F.1's reference-viewport table gives worked examples of this formula, not the assertion itself.
 7. Both arrow buttons lie entirely inside the bottom 30% of `100svh` in portrait (D-16).
-8. Reflection camera `layers.mask` targets layer 2 and `completedGroup` is excluded from layer 0 (D-05).
+8. `reflectionCamera.layers.mask === 4` and `completedGroup` is excluded from layer 0 (D-05).
 9. `LineMaterial` `linewidth` values match §B.2 exactly; no `LineBasicMaterial` is used for architectural ink (D-04).
 10. `camera.position.x === 0`, `camera.position.y === 1.62`, `camera.rotation.x === 0` at every scroll position.
 11. `fovY` equals `clamp(2·atan(tan32°/aspect), 36°, 68°)` at the three reference aspects in §A.4.
@@ -854,6 +859,17 @@ Do not weaken or delete these while updating the above:
 ### L.3 New coverage this phase should add
 
 The §K hooks are the source list. At minimum, the phase's own tests should cover: reduced motion never importing the scene chunk (hook #1), the exhibit link present with JavaScript disabled (hook #17), `← Back to the exhibition` landing on the right exhibit with focus (hooks #13–14), arrow target sizes at both breakpoints (hook #5), and the shipped-anchor regression (hook #16).
+
+---
+
+## M. Automated vs. Manual Device Coverage
+
+D-18 names an iPhone 12 Pro and a Windows laptop using Chrome as representative manual test targets, with Safari expected as the mobile default. This phase's automated and manual coverage of that target split as follows:
+
+- **Automated (CI and local):** framing, target-size and tap checks run under **Chromium**, using Playwright's `iPhone 12 Pro` viewport preset — `390 × 664` CSS px (the small viewport `100svh` actually produces, not the `390 × 844` screen size) — with `hasTouch: true` and `deviceScaleFactor: 3`. Only `chromium` is installed locally (`npx playwright install --with-deps chromium` in CI); WebKit is not installed in either environment.
+- **Manual (D-18):** Safari-engine behaviour — actual `svh` resolution, safe-area handling, momentum-scroll interaction with the tap FSM, and rendering fidelity — is covered only by the D-18 manual device pass on a physical iPhone 12 Pro.
+
+**A Chromium pass must never later be read as a Safari pass.** The two are complementary, not redundant: Chromium automation proves layout arithmetic and interaction logic on every commit; the manual pass is the only check against the actual rendering engine most visitors on the reference device will use.
 
 ---
 

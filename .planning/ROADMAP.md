@@ -61,7 +61,34 @@ Planning notes: establish project structure, typed content, basic UI contract, a
 4. Reduced motion is honored before spatial animation begins, a visible still-view control is available, and scene/asset/context failures preserve complete readable navigation and content.
 5. The initial representative scene is exercised with mouse, touch, and keyboard, including mobile swipe-versus-tap behavior and browser zoom; preliminary device and asset measurements constrain further visual work.
 
-**Plans:** TBD during phase planning
+**Plans:** 0/8 plans complete
+
+Plans:
+**Wave 1**
+
+- [ ] 02-01-PLAN.md — Lock the vanilla-three stack behind a package legitimacy gate and reconcile the approved UI contract with the measured budget and the proven defects.
+- [ ] 02-02-PLAN.md — Ship the illustrated exhibition catalogue as the default document, with exhibit sections and the return path onto the exhibit anchor.
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 02-03-PLAN.md — Author the four inline architectural drawings, with the reflection motif and both fixed impossible constructions, at every stop.
+- [ ] 02-04-PLAN.md — Build the pure stop table, the motion policy gate, scroll derivation, hash-arrival focus, and the visible still-view control.
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 02-05-PLAN.md — Build the labelled travel arrows with endpoint semantics and the six-condition tap-versus-swipe discrimination.
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
+- [ ] 02-06-PLAN.md — Stand up the WebGL2 renderer, light rig, scroll-derived camera, ink language, entrance and threshold, demand rendering, and every failure path.
+
+**Wave 5** *(blocked on Wave 4 completion)*
+
+- [ ] 02-07-PLAN.md — Build the exhibit portal, its shared-image panel texture, the overlay and portrait bottom sheet, and prove framing and mesh tap.
+
+**Wave 6** *(blocked on Wave 5 completion)*
+
+- [ ] 02-08-PLAN.md — Add the layer-2 reflection, the three approach-driven transformations, the landing, and the phase's preliminary measurements.
 
 Planning notes: create the visual/interaction contract before extensive asset work. Use native document scroll as the authoritative travel position, one scene boundary, canonical project routes, and motion/failure policy from the start. Ground arrows may be visual meshes, but simple HTML controls must retain stable target sizes. A modal is optional future scope. Phase 3 owns final performance acceptance; it is not the first time performance is measured.
 
@@ -91,7 +118,7 @@ Execution order: Phase 1 → Phase 2 → Phase 3.
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Publishable Portfolio and Delivery | 3/3 | Complete   | 2026-09-19 |
-| 2. One-Handed Surreal Exhibition | 0/TBD | Not started | - |
+| 2. One-Handed Surreal Exhibition | 0/8 | Planned | - |
 | 3. Growth and Release Polish | 0/TBD | Not started | - |
 
 ## Coverage

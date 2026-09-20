@@ -16,7 +16,7 @@ Planning baseline: Astro static HTML/content collections, TypeScript, and a Reac
 
 ### Phase 1: Publishable Portfolio and Delivery
 
-**Goal:** Visitors can use a public portfolio link to understand the owner's work and reach resume/contact, while the owner can publish checked content updates automatically.
+**Goal:** As a prospective employer, I want to use a public portfolio to understand William Castle's work and reach his resume and contact details, so that I can assess his ability and contact him while checked updates publish reliably.
 **Mode:** mvp
 **Depends on:** Nothing (first phase)
 **Requirements:** PROF-01, PROF-02, PROF-03, WORK-01, WORK-02, WORK-03, WORK-04, NAV-01, ACCESS-01, ACCESS-02, ACCESS-03, GROW-02, GROW-03, SHIP-01, SHIP-02

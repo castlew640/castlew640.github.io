@@ -6,9 +6,9 @@ current_phase: 01
 current_phase_name: Publishable Portfolio and Delivery
 status: ready_for_verification
 stopped_at: Completed 01-03-PLAN.md
-last_updated: "2026-09-19T22:13:55.401Z"
+last_updated: "2026-09-19T22:34:55.042Z"
 last_activity: 2026-09-19
-last_activity_desc: Phase 1 checks, public Pages deployment, controlled failure proof, and restoration completed.
+last_activity_desc: Published the checked artifact, proved a failed check creates no deployment, and restored successfully through a normal revert.
 progress:
   total_phases: 3
   completed_phases: 1
@@ -88,6 +88,10 @@ Remaining publication inputs and environment notes:
 - Delivery is live at `https://castlew640.github.io/`; the public source repository is `https://github.com/castlew640/castlew640.github.io`. Initial and restored runs succeeded, while controlled run `35472453422` failed with no artifact or deployment and left the prior release available.
 - Subjective desktop/mobile appearance, zoom, and reduced-motion review remains for the Phase 1 verification/UAT gate; automated equivalents pass.
 - Wave 1 post-wave verification: static build and 5/5 Chromium tests pass. Schema drift gate does not block; codebase drift check skips because no STRUCTURE.md exists. Upcoming Plan 01-02 links to new collection/project/resume files remain intentionally pending; existing profile and navigation links verify.
+
+### Roadmap Evolution
+
+- Phase 1 edited: edited fields: goal (MVP user-story format; meaning preserved)
 
 ## Deferred Items
 

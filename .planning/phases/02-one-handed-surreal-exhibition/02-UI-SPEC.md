@@ -5,6 +5,7 @@ status: draft
 shadcn_initialized: false
 preset: none
 created: 2026-09-20
+revised: 2026-09-20
 ---
 
 # Phase 2 — UI Design Contract
@@ -14,6 +15,8 @@ created: 2026-09-20
 > **This document is the artifact that Phase 2 Success Criterion 1 is checked against.** ART-01 says the corridor must satisfy "the visual contract established during UI planning" — that contract is here. Every value below is chosen to be checkable in source or in observed behavior.
 >
 > **This contract extends the shipped Phase 1 design language; it does not replace it.** Every token named below already exists in `src/styles/global.css` or in the inline `Fig. 01` drawing in `src/pages/index.astro`. Phase 2 introduces no parallel palette, no new font, and no new breakpoint.
+
+> **Revision note (2026-09-20).** The first draft's exhibit bay was a transverse wall with an off-axis walkway opening, an off-axis screenshot panel, and a "constant 52° horizontal FOV" that held at neither reference device. Three faults followed from that: the panel was clipped in portrait, the camera (locked to `x = 0`) would have driven through solid wall, and the canvas was declared both `inert` and pickable. **The exhibit bay is now an open portal frame straddling an unobstructed walkway, with the panel mounted on-axis above head height.** Camera standoff moved from 6 m to 12 m, the panel changed from 3.2 × 1.8 m to 4.0 × 2.0 m, the FOV rule now states actual per-orientation values rather than asserting a false constant, and the framing targets in §F are derived arithmetically for three reference viewports. Sections A, C, D, F, I and K changed; B, E, G, H and the six standard sections are otherwise as drafted.
 
 ---
 
@@ -38,7 +41,7 @@ Declared values (all multiples of 4). These formalize the rhythm already shipped
 | Token | Value | Usage |
 |-------|-------|-------|
 | xs | 4px | Glyph gaps, hairline offsets |
-| sm | 8px | Compact chip padding, contract-label gaps |
+| sm | 8px | Compact chip padding, contract-label gaps, arrow-nav container padding |
 | md | 16px | Default element spacing, overlay inner padding |
 | lg | 24px | Exhibit overlay block padding, portrait sheet padding |
 | xl | 32px | Desktop arrow-nav inset from the viewport bottom |
@@ -48,16 +51,19 @@ Declared values (all multiples of 4). These formalize the rhythm already shipped
 
 `--gutter` stays exactly as shipped: `clamp(1.25rem, 5vw, 5rem)` = `clamp(20px, 5vw, 80px)`. Both endpoints are multiples of 4.
 
-**Exceptions (deliberate, each justified):**
+**Exceptions — this list is exhaustive:**
 
 | Exception | Value | Why |
 |-----------|-------|-----|
+| `:focus-visible` outline offset | **5px** | **Inherited unchanged from shipped `global.css`.** Deliberately off-scale; re-tokenizing it would change the shipped focus ring, which ACCESS-02 already passed on. Referenced in §E.3 and §J. |
 | Arrow control hit target, desktop | 56 × 56 px | NAV-03 requires ≥ 44 × 44; 56 gives comfortable one-handed margin |
 | Arrow control hit target, portrait | 64 × 64 px | D-16 thumb reach on an iPhone 12 Pro (390 × 844 CSS px) |
 | Still-view toggle hit target | 44 × 44 px | NAV-03 floor; it is a secondary control that must not steal thumb-band space |
 | Gap between the two arrows | 12 px | Prevents mis-taps while keeping the pair under 140 px total width |
-| Exhibit overlay bottom padding, portrait | 104 px | Clears the 64 px arrow pair plus its 24 px inset plus 16 px breathing room |
+| Exhibit overlay bottom padding, portrait | 104 px | = 64 (arrow) + 24 (`bottom` inset) + 16 (clearance). See §F for the `env()` note. |
 | Scene geometry | **metres, not pixels** | World-space distances below are metres. The 4px scale does not apply inside the WebGL scene; the scene uses a 0.5 m module. |
+
+The arrow-nav container's internal padding is **8px** (token `sm`, on-scale) so the 5px focus outline is never clipped.
 
 ---
 
@@ -78,15 +84,24 @@ Family and treatment per role:
 |------|--------|-----------|----------|
 | Label | `--mono` | `text-transform: uppercase; letter-spacing: 0.1em` | Arrow labels (`BACK` / `FORWARD`), the three contract labels, the still-view toggle, exhibit index (`EXHIBIT 01`), in-scene annotation tags, endpoint status text |
 | Body | `--sans` | none | Exhibit introduction, failure copy, reduced-motion notice, catalogue prose |
-| Heading | `--sans` | none | Exhibit title in the portrait bottom sheet; failure-state heading |
-| Display | `--serif` | `letter-spacing: -0.035em` | Exhibit nameplate at ≥ 768px; the landing invitation |
+| Heading | `--sans` | none | Exhibit title in the overlay; failure-state heading |
+| Display | `--serif` | `letter-spacing: -0.035em` | The landing invitation |
 
-Rules:
+### Mandatory overrides — the shipped clamps would otherwise win
+
+The shipped stylesheet sets `h2 { font-size: clamp(2.4rem, 4.5vw, 4rem) }` (38.4–64px, `--serif`) and `.editorial-title { font-size: clamp(2rem, 4vw, 3.5rem) }` (32–56px, `--serif`). Left alone, the exhibit heading and the landing invitation would render at those sizes and the phase would ship **more than four effective sizes**. Therefore:
+
+| Element | Required class | Declaration |
+|---------|---------------|-------------|
+| Exhibit heading (`<h2>` inside `#exhibit-{slug}`) | `.exhibit-title` | `font: 400 20px/1.2 var(--sans)` — a single class beats the bare `h2` element selector, so no `!important` is needed |
+| Landing invitation | `.landing-invitation` | `font: 400 40px/1.2 var(--serif); letter-spacing: -0.035em` — **used instead of `.editorial-title`, never alongside it.** Two single-class selectors would tie on specificity and resolve by source order, which is not a contract. Reuse the *copy*, not the class. |
+
+Other rules:
 
 - `font-weight: 600` appears **only** on the Label role. Everything else is 400. `font-synthesis: none` is already set globally, so no faux bolding.
 - No text is ever rendered as a texture inside the WebGL scene. All exhibition text is DOM text. This is both an accessibility contract and a zoom contract (ACCESS-03 stays intact for free).
 - The exhibit nameplate uses `text-wrap: balance` and is capped at 3 lines below 768px.
-- The exhibit introduction is `project.data.summary`, capped at **200 characters** by a schema addition (`summary: nonBlank.max(200)`). The shipped featured-client summary is 148 characters, so no content edit is required.
+- The exhibit introduction is `project.data.summary`, capped at **200 characters** by a schema addition (`summary: nonBlank.max(200)`). The shipped featured-client summary is **149 characters**, so no content edit is required.
 
 ---
 
@@ -103,7 +118,7 @@ Rules:
 
 1. The `:focus-visible` outline (already shipped: `3px solid var(--rust)`, `outline-offset: 5px`). Do not restyle it.
 2. The `→` glyph in the exhibit's `Read case study →` link.
-3. The construction-line annotation leader that runs from the exhibit panel to that link, plus its 3 px dot terminator.
+3. The construction-line annotation leader that runs from the exhibit panel toward that link, plus its 3 px dot terminator.
 4. The chevron fill inside the forward/back arrow buttons.
 5. The current-exhibit marker in the arrow nav (a 4 px rust square between the two buttons).
 6. The 35°/7px hatch on mid-transformation surfaces, at 0.35 opacity.
@@ -147,8 +162,8 @@ Contrast floor: any shadowed ivory surface that sits behind DOM text must not re
 
 | Surface | Exact copy | Accessible name / notes |
 |---------|-----------|-------------------------|
-| Exhibit link (in-scene and in catalogue) | `Read case study →` | `aria-label` omitted; the link text plus the exhibit heading is sufficient. D-09 locks this exact string. |
-| Phase 1 catalogue card link | `Read the case study ↗` | **Unchanged.** The existing `src/pages/index.astro` string stays as shipped; only the exhibit overlay uses the D-09 string. |
+| Exhibit link (in-scene overlay and still catalogue) | `Read case study →` | `aria-label` omitted; the link text plus the exhibit heading is sufficient. D-09 locks this exact string. |
+| Phase 1 catalogue card link `Read the case study ↗` | **Retired in this phase.** | The shipped `.project-card` block in `src/pages/index.astro` is **replaced** by the `<section id="exhibit-{slug}">` blocks of §A.6/§D.2. Exactly one link wording per route: the home route carries only `Read case study →`. Shipping both would put two differently-worded links to the same URL on one page. |
 | Contract label 1 | `Website` | Derived from `contract.id === 'website'` |
 | Contract label 2 | `Manual Wi-Fi planner` | Derived from `contract.id === 'manual-planner'` |
 | Contract label 3 | `AI planner MVP` | Derived from `contract.id === 'ai-mvp'` |
@@ -160,7 +175,7 @@ Contrast floor: any shadowed ivory surface that sits behind DOM text must not re
 | Auto-still notice | `Still view is on because your device requests reduced motion.` | Body role, rendered next to the toggle |
 | Context-loss notice | `The exhibition stopped rendering. Everything is still here to read.` | Followed by the single `Try the exhibition again` button |
 | Return link on project routes | `← Back to the exhibition` | Replaces the shipped `← Back to projects`; `href="/#exhibit-{slug}"` |
-| Landing invitation | `What could we build together?` | Reuses the shipped `.editorial-title` copy — do not write a new one |
+| Landing invitation | `What could we build together?` | Reuses the shipped copy string; uses the `.landing-invitation` class, not `.editorial-title` |
 | Landing actions | `Open my resume ↗` and the raw email address | Reuse shipped strings from `index.astro` |
 | Entrance eyebrow | `A portfolio of things taking shape` | Shipped string, reused as the entrance stop's eyebrow |
 
@@ -205,33 +220,43 @@ The six sections above are the standard contract. Phase 2 is a WebGL2 spatial sc
 
 - Units are **metres**. The scene module is **0.5 m**.
 - Travel runs along **−Z**. The camera looks down −Z. `+X` is the visitor's right, `+Y` is up. The walkway centreline is `x = 0`, the reflective plane is `y = 0`, the walkway surface is `y = 0.12`.
-- The scene is **bounded**. The camera is clamped to `z ∈ [0, landingStopZ]`. There is no free look, no orbit, no pointer lock, and no lateral camera movement whatsoever — `camera.position.x` is permanently `0`.
+- The walkway is **6.0 m wide and completely unobstructed for its whole length** (`x ∈ [−3.0, +3.0]`). Nothing solid ever stands on the travel axis. Every arch and portal has its piers at `x = ±3.4`, outside the walkway. This is what allows the camera to stay locked on `x = 0`.
+- The scene is **bounded**. `cameraZ = clamp(rawZ, landingStopZ, 0)` — note the ordering: `landingStopZ` is negative (`−46` at N = 1), so it is the interval's *lower* bound.
+- There is no free look, no orbit, no pointer lock, and no lateral or vertical camera movement. `camera.position.x` is permanently `0`, `camera.position.y` is permanently `1.62`, and `camera.rotation.x` is permanently `0`.
 
 ### A.2 Stop table (derived from published content)
 
 `N` = number of published projects. With the currently shipped content, `N = 1`.
 
+Camera stops are defined first; geometry is placed relative to them.
+
 ```
-lastBayZ    = -24 - 18 * (N - 1)          // -24 at N = 1
-exhibitBayZ(n) = -24 - 18 * (n - 1)        // n = 1..N
+stopZ[0]          = 0                                 // entrance
+stopZ[n]          = -18 - 18 * (n - 1)   for n = 1..N // exhibit stops
+stopZ[N+1]        = stopZ[N] - 18                     // about
+stopZ[N+2]        = stopZ[N] - 28                     // landing
+
+thresholdArchZ    = -12
+exhibitPortalZ(n) = stopZ[n] - 12                     // 12 m standoff, see A.4
+landingArchZ      = stopZ[N+2] - 18
 ```
 
-| Stop # | Stop id | DOM section | Camera z | Notes |
-|--------|---------|-------------|----------|-------|
-| 0 | `entrance` | `#entrance` | `0` | Hero: name + introduction |
-| 1..N | `exhibit-{slug}` | `#exhibit-{slug}` | `exhibitBayZ(n) + 6` → `−18` at n=1 | Camera halts 6 m short of the bay wall |
-| N+1 | `about` | `#about` | `lastBayZ − 12` → `−36` | Open gallery, no exhibit; the approach to the landing |
-| N+2 | `landing` | `#landing` | `lastBayZ − 22` → `−46` | Final stop. Landing arch at `lastBayZ − 28` = `−52` |
+| Stop # | Stop id | DOM section | Camera z (N = 1) | Geometry it frames |
+|--------|---------|-------------|------------------|--------------------|
+| 0 | `entrance` | `#entrance` | `0` | Threshold arch 12 m ahead at `−12`; exhibit portal 1 visible through it at `−30` |
+| 1..N | `exhibit-{slug}` | `#exhibit-{slug}` | `−18` at n = 1 | Exhibit portal `n` 12 m ahead at `−30` |
+| N+1 | `about` | `#about` | `−36` | Open gallery, 6 m past portal 1 |
+| N+2 | `landing` | `#landing` | `−46` | Landing arch 18 m ahead at `−64` |
 
-Total stops = `N + 3` (four at N = 1). Total camera travel at N = 1 = **46 m**.
+Total stops = `N + 3` (four at N = 1). Total camera travel = `18N + 28` m = **46 m at N = 1**. Exhibit portal spacing is a constant **18 m**.
 
-Appending a project inserts a stop before `about` and pushes `about`/`landing` 18 m further along. Earlier exhibit z values never change (GROW-04 is preserved by construction).
+Appending a project inserts a stop before `about` and pushes `about`/`landing` 18 m further along. Earlier exhibit stop and portal z values never change (GROW-04 is preserved by construction).
 
 ### A.3 Scroll units
 
 - The exhibition wrapper `#exhibition` contains one `<section>` per stop. **Each stop section has `min-height: 100svh`** (`svh`, not `vh` — mobile browser chrome must not resize the corridor).
 - Total exhibition scroll span = `(N + 3) × 100svh`. At N = 1 on an iPhone 12 Pro (844 CSS px `svh`) that is **3376 CSS px** of travel; on a 900 px-tall laptop viewport, 3600 px.
-- Camera z is derived **only** from measured DOM geometry: for each stop, `offsetTop = rect.top + scrollY`. Given `scrollY`, find the bracketing pair, compute `localProgress ∈ [0, 1]`, and `cameraZ = lerp(stopZ[k], stopZ[k+1], localProgress)`. Clamp at both ends. Guard `N = 0` and any zero-length segment by returning `localProgress = 0`.
+- Camera z is derived **only** from measured DOM geometry: for each stop, `offsetTop = rect.top + scrollY`. Given `scrollY`, find the bracketing pair, compute `localProgress ∈ [0, 1]`, and `cameraZ = lerp(stopZ[k], stopZ[k+1], localProgress)`, then clamp per §A.1. Guard `N = 0` and any zero-length segment by returning `localProgress = 0`.
 - The mapping is **scoped to `#exhibition`**. Scrolling the site header or footer must not move the camera.
 - The camera is a pure function of `scrollY`. There is no easing state, no inertia, no second scroll engine, and no `ScrollControls` container. This is what makes reduced motion trivially correct: freeze the scroll and the scene is frozen.
 
@@ -242,21 +267,36 @@ Appending a project inserts a stop before `about` and pushes `about`/`landing` 1
 | Type | `PerspectiveCamera` |
 | Eye height | `y = 1.62` (constant; no bob, no sway, no parallax) |
 | Lateral | `x = 0` (constant) |
-| Look target | `(0, 1.50, cameraZ − 12)` → an effective pitch of `−0.5°` |
+| Look target | `(0, 1.62, cameraZ − 12)` — **pitch exactly 0°**, so the framing arithmetic in §F is exact |
 | Roll | `0` |
-| Vertical FOV | Derived to hold a **constant 52° horizontal FOV**: `fovY = 2 · atan( tan(26°) / aspect )`, clamped to `[38°, 70°]`. At a 16:9 laptop this yields ≈ 31°; in portrait (390 × 844) it clamps upward and holds the horizontal framing so one exhibit fills the frame (D-16). |
+| Exhibit standoff | **12.0 m** from the camera stop to the exhibit portal plane |
 | Near / far | `0.1` / `300` |
 | Fog | `Fog(--horizon #efe4cf, 60, 240)` — the gallery dissolves into the horizon rather than ending at a visible edge |
+
+**Field of view rule:**
+
+```
+fovY = clamp( 2 · atan( tan(32°) / aspect ),  36°,  68° )
+fovX = 2 · atan( tan(fovY / 2) · aspect )            // the resulting horizontal field
+```
+
+The `32°` reference half-angle targets a **64° horizontal field in landscape**. The clamp deliberately gives that up in portrait, because an unclamped constant horizontal field would demand a 107° vertical field on a 390 × 844 screen — unusable distortion. **The horizontal field is therefore NOT constant**; §F states its actual value at each reference viewport. Portrait framing is instead guaranteed by placing the exhibit panel **on the travel axis**, where a narrow horizontal field costs nothing.
+
+| Reference viewport | aspect | raw `fovY` | clamped `fovY` | resulting `fovX` |
+|---|---|---|---|---|
+| 16:9 laptop (Chrome, D-18 desktop target) | 1.77778 | 38.73° | **38.73°** (unclamped) | **64.00°** |
+| iPhone 12 Pro portrait, 390 × 844 (D-18 mobile target) | 0.46209 | 107.03° | **68.00°** (clamped down) | **34.62°** |
+| iPhone 12 Pro landscape, 844 × 390 | 2.16410 | 32.21° | **36.00°** (clamped up) | **70.23°** |
 
 ### A.5 Waypoints — what the visitor actually sees
 
 | At | Composition |
 |----|-------------|
-| **Stop 0 — Entrance** (`z = 0`) | Partly enclosed ivory vestibule: side walls 4.0 m tall at `x = ±4.5`, a coffered partial ceiling at `y = 5.0` spanning `z = 0 → −8` that **stops abruptly** with an exposed, drawn-only rib grid continuing past it. Continuous `--stone-floor` slab. Ahead, framed dead-centre, the threshold arch and, through it, exhibit 1 already visible (D-11). Overlay: `William Castle`, the shipped introduction sentence, and the shipped eyebrow. |
-| **Threshold** (`z = −12`) | A solid ivory arch, **6.0 m tall × 5.0 m span**, springing at `y = 3.2`. Passing it the ceiling is gone (roofless, D-01), the floor narrows to a 6.0 m walkway, and the reflective plane (60 × 200 m, `y = 0`) appears on both sides. First reflection is visible here. |
-| **Stops 1..N — Exhibit bays** | A transverse ivory wall, **7.5 m wide × 5.5 m tall**, at `exhibitBayZ(n)`, facing `+Z` (toward the arriving visitor). A **3.0 m × 4.2 m** arched opening centred at `x = −1.9` carries the walkway through it — travel stays straight (D-12). The screenshot panel is mounted at `x = +1.6, y = 2.0`. Flanking each bay: drawn-only colonnades at `x = ±5.8`, 4.6 m tall, dashed. Variation per exhibit is governed by §D.4. |
-| **Stop N+1 — About** (`z = −36` at N=1) | No exhibit wall. The widest part of the gallery: the walkway runs across open water with only drawn-only arcade outlines at `x = ±7.5` and a single solid cornice block floating at `y = 5.2` held by four dashed construction lines (the clearest statement of D-03). Overlay: the shipped About copy. |
-| **Stop N+2 — Landing** (`z = −46` at N=1) | A quiet terminus (D-13). The landing arch at `z = −52`, **7.0 m tall × 6.0 m span**, frames the reflective horizon and nothing else — no further architecture, only fog and the mirrored sky. Its **left pier is solid ivory; its right pier is drawn-only**, so the arch stands on a drawing. Overlay: the shipped `What could we build together?` invitation, the email link, the resume link, and the profile links. |
+| **Stop 0 — Entrance** (`z = 0`) | Partly enclosed ivory vestibule: side walls 4.0 m tall at `x = ±4.5`, a coffered partial ceiling at `y = 5.0` spanning `z = 0 → −8` that **stops abruptly** with an exposed, drawn-only rib grid continuing past it. Continuous `--stone-floor` slab. Dead ahead, the threshold arch, and through it exhibit portal 1 already visible 30 m away (D-11). Overlay: `William Castle`, the shipped introduction sentence, and the shipped eyebrow. |
+| **Threshold arch** (`z = −12`) | A solid ivory arch, **5.6 m tall × 6.8 m span**, piers at `x = ±3.4`, springing at `y = 3.2`. From stop 0 its crown sits 18.35° above the sight line and its piers 15.82° off-axis — contained in every reference viewport. Passing it, the ceiling is gone (roofless, D-01) and the reflective plane (60 × 200 m, `y = 0`) opens on both sides. First reflection is visible here. |
+| **Stops 1..N — Exhibit portals** | An **open portal frame straddling the walkway**: two solid ivory piers, 1.0 × 1.0 m section, 5.2 m tall, at `x = ±3.4`; a lintel 8.8 × 0.8 × 1.0 m spanning `x ∈ [−4.4, +4.4]` at `y ∈ [5.2, 6.0]`. Clear opening **6.8 m wide × 5.2 m tall** — the walkway runs straight through it and the camera passes beneath (D-12: travel stays straight). The screenshot panel hangs on-axis in the upper portal, `4.0 × 2.0 m`, centred `(0, 4.1)`, bottom edge at `y = 3.1` (3.1 m headroom). Flanking each portal: drawn-only colonnades at `x = ±5.8`, 4.6 m tall, dashed. Per-exhibit variation is governed by §D.4. |
+| **Stop N+1 — About** (`z = −36` at N = 1) | No portal. The widest part of the gallery, 6 m past portal 1: the walkway runs across open water with only drawn-only arcade outlines at `x = ±7.5` and a single solid cornice block floating at `y = 5.2` held by four dashed construction lines (the clearest statement of D-03). Overlay: the shipped About copy. |
+| **Stop N+2 — Landing** (`z = −46` at N = 1) | A quiet terminus (D-13). The landing arch 18 m ahead at `z = −64`, **7.0 m tall × 6.8 m span**, piers at `x = ±3.4` — crown 16.64° above the sight line, piers 10.70° off-axis, so the whole arch is framed with margin in every reference viewport. It frames the reflective horizon and nothing else: no further architecture, only fog and the mirrored sky. Its **left pier is solid ivory; its right pier is drawn-only**, so the arch stands on a drawing. Overlay: the shipped `What could we build together?` invitation, the email link, the resume link, and the profile links. |
 
 ### A.6 The document ships as the scene's source of truth
 
@@ -274,7 +314,19 @@ Appending a project inserts a stop before `about` and pushes `about`/`landing` 1
 ```
 
 - `#resume` and `#contact` anchors are retained inside `#landing` so the shipped primary nav (`/#projects`, `/#about`, `/#resume`, `/#contact`) keeps working unchanged. **Breaking any shipped anchor fails NAV-01 and is not permitted.**
-- The canvas is `position: fixed; inset: 0; z-index: 0`, `aria-hidden="true"`, and `inert`. Overlays sit at `z-index: 1`; the arrow nav at `z-index: 2`; the skip link keeps its shipped `z-index: 1` behaviour and must remain reachable — give the skip link `z-index: 3`.
+- The exhibit sections **replace** the shipped `.project-card` list (see the Copywriting inventory).
+
+**Canvas semantics.** The canvas is `aria-hidden="true"` and **is not `inert`**. ARCHITECTURE.md permits hiding the canvas from assistive technology when the HTML carries equivalent content, and `aria-hidden` alone achieves that. `inert` would additionally suppress hit-testing (an inert subtree behaves as `pointer-events: none` and dispatches no `click`), which would make the mesh-tap path of §E.2 unimplementable and contradict NAV-05. The canvas has no focusable descendants, so `inert` would buy nothing. **No section of this contract may declare the canvas inert.**
+
+**Stacking contract.** The shipped `.site-header`, `.primary-nav` and `.site-footer` are non-positioned and would paint *beneath* a `position: fixed; inset: 0; z-index: 0` canvas — burying the primary navigation that NAV-01 protects. One rule prevents this:
+
+| Element | Declaration |
+|---------|-------------|
+| Canvas container | `position: fixed; inset: 0; z-index: 0` |
+| `.page-frame` (already wraps header, `<main>` and footer) | `position: relative; z-index: 1` — lifts the shipped header, nav, content overlays and footer above the canvas in a single rule |
+| Arrow nav | `position: fixed; z-index: 2` |
+| Still-view toggle | `position: fixed; z-index: 2` |
+| Skip link | `z-index: 3` (raised from the shipped `1`, which would now tie with `.page-frame`) |
 
 ---
 
@@ -292,15 +344,15 @@ Ink lines are rendered with `Line2` / `LineMaterial` (`three/examples/jsm/lines`
 | Drawn-only member | **1.3 px** | `--edge-unbuilt` `#8b877b` | `5 on / 5 off` px | Unbuilt colonnades, missing roof ribs, upper storeys, arches beyond the landing |
 | Construction / datum | **1.0 px** | `--construction` `#b9b3a4` | `4 on / 7 off` px | Long diagonals, setting-out lines, dimension lines |
 | Construction arc | **1.0 px** | `--construction` `#b9b3a4` | `2 on / 6 off` px | Radius and swing arcs around arches |
-| Registration mark | **1.0 px** | `--registration` `#656256` | solid | 14 px `+` crosses at bay corners |
-| Annotation leader | **1.4 px** | `--rust` `#8e4935` | solid | The single line from the exhibit panel to its `Read case study →` link, terminating in a 3 px rust dot at the panel end |
+| Registration mark | **1.0 px** | `--registration` `#656256` | solid | 14 px `+` crosses at portal corners |
+| Annotation leader | **1.4 px** | `--rust` `#8e4935` | solid | The single line from the exhibit panel toward its `Read case study →` link, with a 3 px rust dot at the panel end |
 
 Every one of these widths, colours and dash patterns is lifted from the shipped `Fig. 01` drawing. The scene and the hero drawing must read as the same hand.
 
 ### B.3 Which elements are solid vs. drawn vs. mid-transformation
 
-**Solid ivory** (opaque `MeshStandardMaterial`, `roughness: 0.92`, `metalness: 0.0`, albedo `--stone-lit`, plus a built structural edge):
-the floor and walkway, the entrance walls and partial ceiling, the threshold arch, every exhibit bay wall, every exhibit frame, and the landing arch's left pier. **Rule: anything the visitor needs in order to read the space, or anything that carries an exhibit, is solid.** A visitor must never be unsure where the walkway is.
+**Solid ivory** (opaque `MeshStandardMaterial`, `roughness: 0.92`, `metalness: 0.0`, albedo via vertex colours, plus a built structural edge):
+the floor and walkway, the entrance walls and partial ceiling, the threshold arch, every exhibit portal (piers, lintel, panel reveal, sill), and the landing arch's left pier. **Rule: anything the visitor needs in order to read the space, or anything that carries an exhibit, is solid.** A visitor must never be unsure where the walkway is.
 
 **Drawn-only** (no mesh at all — dashed `--edge-unbuilt` lines only):
 flanking colonnades, the missing roof ribs above the gallery, all upper storeys, the arcade at the About stop, the architecture beyond the landing arch, and the landing arch's right pier.
@@ -309,14 +361,14 @@ flanking colonnades, the missing roof ribs above the gallery, all upper storeys,
 
 1. The floating cornice block at the About stop: a solid `4.0 × 0.6 × 1.2` m ivory block at `y = 5.2, x = 0` supported only by four dashed construction lines running down to the water.
 2. The landing arch's right pier is drawn-only while it carries a solid arch ring.
-3. At `N ≥ 2`, exhibit bay 2's wall rests on a drawn-only colonnade rather than on the floor. At `N = 1` this instance is absent — the contract requires the first two, which exist at every content count. **No fake exhibit is ever added to satisfy this.**
+3. At `N ≥ 2`, exhibit portal 2's **right pier is drawn-only while carrying the solid lintel and panel**. At `N = 1` this instance is absent — the contract requires the first two, which exist at every content count. **No fake exhibit is ever added to satisfy this.**
 
 **Mid-transformation (D-06) — exactly three elements, all approach-driven:**
 
 | # | Element | Location |
 |---|---------|----------|
 | 1 | An arch gaining depth: a 4.0 m-span arch that is a flat dashed outline at distance and a full extruded ring up close | 3 m before the threshold, at `x = +5.0` |
-| 2 | A supporting structure assembling: a four-column bay | flanking exhibit 1's bay |
+| 2 | A supporting structure assembling: a four-column bay | flanking exhibit portal 1 |
 | 3 | A stair flight resolving from setting-out lines into solid treads | at the About stop, `x = −6.2`, descending to the water |
 
 Transformation rule (this is the whole animation model):
@@ -344,9 +396,11 @@ progress = smoothstep(16, 8, d)        // 0 at 16 m away, 1 at 8 m away
 
 | Light | Settings |
 |-------|----------|
-| `DirectionalLight` (sun) | colour `--sun` `#fff4e0`, intensity `2.6`. Position, per frame, relative to the camera: `(−26, 9, cameraZ + 12)`; target `(0, 1.5, cameraZ − 10)`. Elevation ≈ **17.5°** above the horizon, azimuth ≈ **34°** off the travel axis from the visitor's left. Low sun ⇒ long shadows (D-02). Following the camera keeps shadow direction consistent along 46 m of corridor with one 1024² shadow map. |
+| `DirectionalLight` (sun) | colour `--sun` `#fff4e0`, intensity `2.6`. **Target** `(0, 1.5, cameraZ − 10)`; **position** `target + (−16.8, 9.5, +24.9)` = `(−16.8, 11.0, cameraZ + 14.9)`. That offset has horizontal magnitude `√(16.8² + 24.9²) = 30.04 m`, giving **elevation `atan(9.5 / 30.04) = 17.55°`** and **azimuth `atan(16.8 / 24.9) = 34.00°` off the travel axis, from the visitor's left**. Low sun ⇒ long shadows (D-02). Following the camera keeps shadow direction consistent along 46 m of corridor with one 1024² shadow map. |
 | `HemisphereLight` (fill) | sky `--paper` `#f4f0e6`, ground `--water` `#e3e5d8`, intensity `0.55`. Guarantees no shadowed ivory ever reads below `--construction` `#b9b3a4`. |
 | `AmbientLight` | intensity `0.12`, colour `--horizon` `#efe4cf`. Lifts the deepest interior of the entrance vestibule only. |
+
+The stated angles describe the **shadow direction** (the light→target vector), which is the quantity that governs the image. Position, target and angles above are mutually consistent; changing any one requires recomputing the others.
 
 Renderer: `toneMapping = ACESFilmicToneMapping`, `toneMappingExposure = 1.0`, `outputColorSpace = SRGBColorSpace`.
 
@@ -378,7 +432,7 @@ The reflective plane shows the **completed** architecture, not the fragmentary a
 - `completedGroup` — assigned to **layer 2**, invisible to the main camera. It contains the *finished* form of every drawn-only and mid-transformation element (solid ivory, no dashes, `progress = 1`), plus the solid mass.
 - A `Reflector`-style plane at `y = 0` renders `completedGroup` through a mirrored camera (`layers.set(2)`) into a `WebGLRenderTarget`.
 - Render target: `min(1024, viewportWidth · dpr) × min(1024, viewportHeight · dpr) × 0.5`, `depthBuffer: true`, `generateMipmaps: false`. **One reflection render per rendered frame, maximum.**
-- Composite: reflection tinted toward `--water` `#e3e5d8`, strength **0.42** at the walkway edge, fading linearly to **0.0** by 34 m out from the centreline. Above the reflection, the plane is flat `--water`.
+- Composite: reflection tinted toward `--water` `#e3e5d8`, strength **0.42** at the walkway edge (`|x| = 3.0`), fading linearly to **0.0 at `|x| = 26 m`**. The plane is 60 m wide (`|x| ≤ 30`), so the fade completes 4 m inside the plane's edge and the outermost band is flat `--water` before fog takes over.
 - Verification hook: the reflection camera's layer mask must be `2`, and `completedGroup.layers` must not include `0`. A reflection that simply mirrors `builtGroup` fails this contract.
 
 **Cheap fallback — required, not optional.** Triggered when any of: viewport width × dpr < 700; the quality policy has degraded (§I); two consecutive frames exceed 33 ms; `WebGLRenderTarget` creation fails.
@@ -393,16 +447,19 @@ The reflective plane shows the **completed** architecture, not the fragmentary a
 
 ### D.1 Anatomy of one exhibit
 
-Mounted on the bay wall (§A.5), centred at `x = +1.6`:
+An **open portal frame** straddling the walkway at `exhibitPortalZ(n)`, viewed head-on from 12 m (§A.4):
 
 | Part | Geometry | Treatment |
 |------|----------|-----------|
-| Screenshot frame | `3.2 m × 1.8 m` (16:9), centre at `y = 2.0`, face at `z = bayZ + 0.06` | Solid ivory reveal 0.12 m deep, built structural edge (1.4 px `--edge`), screenshot texture inset flush |
-| Frame plinth | `3.6 × 0.3 × 0.4` m at `y = 0.95` | Solid `--stone-deep` |
-| Drawn surround | A dashed pediment and two dashed pilasters framing the panel | `--edge-unbuilt`, 1.3 px, `5/5` — the "partly solid, partly drawn" of D-07 |
-| Nameplate zone | `x +1.6, y 0.55` | Nothing is drawn in 3D here — the DOM overlay occupies the corresponding screen region |
-| Annotation leader | From the panel's lower-right corner `(x +3.2, y 1.1)` to `(x +4.3, y 0.9)` | 1.4 px solid `--rust` + 3 px rust dot at the panel end. Terminates at the screen position of the DOM link. |
-| Contract markers | Three 0.16 m rust registration ticks along the plinth at `x = +0.4, +1.6, +2.8` | `--rust`, aligned under the three DOM contract labels |
+| Piers | Two, `1.0 × 1.0` m section, 5.2 m tall, at `x = ±3.4` (outside the 6.0 m walkway) | Solid ivory, built structural edge (1.4 px `--edge`) |
+| Lintel | `8.8 × 0.8 × 1.0` m, `x ∈ [−4.4, +4.4]`, `y ∈ [5.2, 6.0]` | Solid ivory, built edge |
+| Screenshot panel | **`4.0 × 2.0` m (2 : 1)**, centre `(0, 4.1, portalZ + 0.06)`, face `+Z`; spans `y ∈ [3.1, 5.1]`, `x ∈ [−2.0, +2.0]` | Solid ivory reveal 0.12 m deep, built edge, screenshot texture inset flush. 3.1 m headroom below; 0.1 m clear of the lintel soffit above. |
+| Sill | `4.4 × 0.2 × 0.3` m at `y = 3.0` | Solid `--stone-deep` |
+| Drawn surround | Dashed pediment above the lintel rising to `y = 7.4` across `x = ±4.4`; dashed pilasters outboard of each pier at `x = ±5.0` | `--edge-unbuilt`, 1.3 px, `5/5` — the "partly solid, partly drawn" of D-07 |
+| Annotation leader | From the panel's lower-right corner `(+2.0, 3.1)` down-right to `(+3.3, 2.3)`, terminating on the right pier's face | 1.4 px solid `--rust` + 3 px rust dot at the panel end. Its screen endpoint (72.0% × 41.9% in landscape; 94.1% × 45.8% in portrait) sits immediately above/left of the DOM overlay, so it reads as pointing into it. |
+| Contract markers | Three 0.16 m rust registration ticks on the lintel face at `x = −1.4, 0, +1.4`, `y = 5.6` | `--rust`, aligned with the three DOM contract labels |
+
+Nothing in the portal is pickable except the screenshot panel (§E.2 condition 6). Piers, lintel, sill and all ink have `raycast = () => {}`.
 
 ### D.2 Text is DOM, always
 
@@ -411,17 +468,19 @@ The exhibit's `<section id="exhibit-{slug}">` always contains, in the initial HT
 ```
 <figure>  <img alt=… width=… height=…>  <figcaption>…</figcaption>  </figure>
 <p class="eyebrow">EXHIBIT 01</p>
-<h2>{data.title}</h2>
+<h2 class="exhibit-title">{data.title}</h2>
 <p>{data.summary}</p>
 <ul>  Website · Manual Wi-Fi planner · AI planner MVP  </ul>
 <a href="/projects/{slug}/">Read case study →</a>
 ```
 
+- **The exhibit image is `data.screenshots[0]`** — that single entry is both the 3D panel texture and the one visible `<figure>` in the exhibit section. The remaining `screenshots[]` entries appear only on the canonical case-study route, exactly as they already do.
+- **Aspect reconciliation (the shipped assets are ultrawide).** `clientScreenshot1.jpg` is 1901 × 927 (2.05 : 1), `clientscreenshot2.jpg` 1917 × 922 (2.08 : 1), `clientScreenshot3.jpg` 1915 × 871 (2.20 : 1); the panel is 2.00 : 1. Rule: **cover-crop horizontally, anchored centre**, removing at most **10% of source width** (2.4% for the shipped `screenshots[0]`; 9.1% would be needed for the 2.20 : 1 asset). If a future asset would require more than 10%, it is **letterboxed** into the 2 : 1 frame with `--stone-lit` bars instead of being cropped further. The DOM `<img>` uses `aspect-ratio: 2 / 1; object-fit: cover; object-position: center` so the still view and the 3D panel show the identical crop.
 - The overlay is laid out by **ordinary CSS inside its own section**. It scrolls with the document. **Per-frame DOM transforms driven by the render loop are forbidden** — they jitter, they break at zoom, and they are motion that reduced-motion users cannot escape.
 - When the scene is live, the island sets `data-scene="active"` on `<html>`. That attribute hides **only the `<figure>`** (`visibility: hidden` plus `aria-hidden="true"`) — the 3D panel is showing the same image. The eyebrow, heading, summary, contract labels and link stay visible and focusable at all times.
-- The `<img>` and the panel texture are **the same asset URL** — one network download, never two.
+- The `<img>` and the panel texture are **the same asset URL**, resized to ≤ 1600 px on the long edge — one network download, never two.
 - The link is a real `<a>`. Clicking the mesh calls that anchor's `.click()`. `location.href = …` is forbidden, so there is exactly one navigation path (NAV-05).
-- Desktop (≥ 768px): the overlay is a right-aligned column, `width: min(36rem, 42vw)`, vertically centred, `padding: 24px`, plate background `color-mix(in srgb, var(--paper) 88%, transparent)`, `1px solid var(--line)` border, `backdrop-filter: blur(6px)`. It sits under the 3D panel's screen position so the rust leader line reads as pointing into it.
+- Desktop (≥ 768px): the overlay is right-aligned within `.page-frame`, `width: min(34rem, 40vw)`, with its top edge at **46% of viewport height** — directly below and left of the leader's screen endpoint, and clear of the panel, which occupies 8.75%–32.46% of viewport height (§F).
 
 ### D.3 Contract labels
 
@@ -429,19 +488,19 @@ Rendered as a horizontal `<ul>` of three Label-role chips: `8px 12px` padding, `
 
 ### D.4 Variation rules for future exhibits (D-10)
 
-Every exhibit **must** share, unchanged: the `3.2 × 1.8` frame, the built-edge stroke, the rust leader + dot, the three-tick plinth, the `x = +1.6` panel position, the `x = −1.9` walkway opening, and the 18 m bay spacing. That constant set is what keeps navigation familiar.
+Every exhibit **must** share, unchanged: the `4.0 × 2.0` panel, its on-axis centre `(0, 4.1)`, the 12 m standoff, the `x = ±3.4` pier spacing, the built-edge stroke, the rust leader + dot, the three lintel ticks, and the 18 m portal spacing. That constant set is what keeps navigation familiar and what keeps the §F framing arithmetic valid for every exhibit.
 
 Every exhibit **must** vary at least two of the following, selected deterministically from `exhibitionOrder` (`order % k`) so the same project always gets the same silhouette:
 
 | Varying element | Options |
 |-----------------|---------|
-| Opening head | round arch (r 1.5) / segmental (rise 0.9) / flat lintel |
+| Lintel profile | flat / stepped / drawn-only pediment above |
+| Pier treatment | plain / fluted / drawn-only pilaster outboard |
 | Flanking members | drawn colonnade / drawn buttress pair / drawn half-vault |
-| Bay wall top | straight parapet / stepped parapet / drawn-only pediment |
 | Which flank is drawn-only | left / right / both |
-| Plinth depth | 0.4 m / 0.6 m |
+| Sill depth | 0.3 m / 0.5 m |
 
-Forbidden: varying the frame size, the panel side, the walkway side, or the link treatment. Forbidden: any variation that requires new geometry authored per project (GROW-01 — adding a project must not touch renderer code).
+Forbidden: varying the panel size, the panel position, the standoff, the pier spacing, or the link treatment. Forbidden: any variation that requires new geometry authored per project (GROW-01 — adding a project must not touch renderer code).
 
 ---
 
@@ -453,9 +512,9 @@ This is the phase's hardest constraint. NAV-02, NAV-03, NAV-04, ACCESS-04 and AC
 
 - **Native document scroll only.** Wheel, trackpad, scrollbar, single-finger swipe, Space/PageDown/Home/End, and browser find-in-page all move the same `scrollY`, and the camera is derived from it.
 - The island **never** calls `preventDefault()` on `wheel`, `touchstart`, `touchmove`, `pointerdown` or `pointermove`. Verifiable by grep.
-- `touch-action` stays `auto` on the canvas, the canvas container, and `#exhibition`. `overscroll-behavior` is never set. `user-scalable=no` and `maximum-scale` are never added — the shipped viewport meta (`width=device-width, initial-scale=1`) stays exactly as is. Browser pan and pinch-zoom therefore survive (NAV-02).
+- `touch-action` stays `auto` on the canvas, the canvas container, and `#exhibition`. `overscroll-behavior` is never set. `user-scalable=no` and `maximum-scale` are never added — the shipped viewport meta (`width=device-width, initial-scale=1`) stays as is, subject only to the optional `viewport-fit=cover` permission in §F. Browser pan and pinch-zoom therefore survive (NAV-02).
 - No pointer lock. No drag. No hold. No chord. No second scroll container. No `ScrollControls`.
-- The canvas keeps `pointer-events: auto` (it must be pickable), but because nothing is ever `preventDefault`ed, a touch that starts on the canvas still scrolls the page.
+- The canvas keeps `pointer-events: auto` and is **not** `inert` (§A.6), so the panel mesh is hit-testable. Because nothing is ever `preventDefault`ed, a touch that starts on the canvas still scrolls the page.
 
 ### E.2 Tap-versus-swipe disambiguation (D-18)
 
@@ -468,7 +527,7 @@ A pointer interaction activates an exhibit **only if every condition holds**:
 | 3 | Change in `window.scrollY` between `pointerdown` and `pointerup` | **≤ 4 px** |
 | 4 | Number of simultaneously active pointers | **exactly 1** (`event.isPrimary === true`; a second `pointerdown` cancels the candidate) |
 | 5 | Any `scroll` event fires during the candidate window | **cancels immediately** |
-| 6 | The `pointerup` ray hits the exhibit panel mesh | required |
+| 6 | The `pointerup` ray hits the **screenshot panel mesh** (the only pickable object in the portal) | required |
 
 On success: `panel.userData.linkEl.click()`. On any failure: silently discard — no visual feedback, no "almost tapped" state.
 
@@ -484,14 +543,14 @@ Rationale for the numbers: 10 px is below the platform tap slop on both target d
 |----------|---------|---------|
 | Hit target | **56 × 56 px** | **64 × 64 px** |
 | Gap between the pair | 12 px | 12 px |
-| Position | `position: fixed`, pair horizontally centred, `bottom: 32px` | pair horizontally centred, `bottom: max(24px, env(safe-area-inset-bottom) + 16px)` |
+| Position | `position: fixed`, pair horizontally centred, `bottom: 32px` | pair horizontally centred, `bottom: max(24px, env(safe-area-inset-bottom, 0px) + 16px)` |
 | Clearance from any other interactive element | ≥ 16 px | ≥ 16 px |
 
 - Markup: `<nav class="exhibition-controls" aria-label="Exhibition travel">` containing two buttons and one `role="status" aria-live="polite"` region.
 - Contents of each button: a **24 × 24 px inline SVG ground arrow** — a foreshortened chevron drawn in the ink language (1.4 px `--edge` outline, `--rust` fill at 0.9 opacity, aligned with the walkway's vanishing direction, echoing D-14's "ground-inspired") — above a Label-role caption (`BACK` / `FORWARD`, 12px/600/uppercase/0.1em, `--ink`).
 - Plate: `--paper` at 92% opacity, `1px solid var(--line)`, no shadow.
 - A 4 px `--rust` square sits between the buttons as the current-exhibit marker, with `aria-hidden="true"`.
-- **Focus:** the shipped `:focus-visible { outline: 3px solid var(--rust); outline-offset: 5px; }` applies unchanged. `outline-offset: 5px` must not be clipped — the nav container needs `overflow: visible` and ≥ 8 px internal padding.
+- **Focus:** the shipped `:focus-visible { outline: 3px solid var(--rust); outline-offset: 5px; }` applies unchanged. The 5 px offset must not be clipped — the nav container has `overflow: visible` and 8 px internal padding.
 - **Keyboard:** native `<button>`, activated by Enter and Space. They are in normal tab order, after the exhibit link of the current stop. No key is ever held, and no arrow/Page key is intercepted — native scrolling keys keep working.
 - **Action:** `window.scrollTo({ top: stopOffset[k ± 1], behavior: (prefersReducedMotion || stillView) ? 'auto' : 'smooth' })`. Buttons **never** call `pushState`, never write `location.hash`, and never create a history entry.
 - **Endpoints (NAV-03 "clear endpoint behavior"):** at stop 0 the Back button gets `aria-disabled="true"` and class `is-endpoint` (`opacity: 0.45`); it stays focusable (never `disabled`, which would drop it from the tab order mid-journey), activating it does nothing, and the status region reads `Entrance — the exhibition starts here.` At the last stop, Forward behaves identically with `End of the exhibition.`
@@ -510,14 +569,67 @@ enter → swipe/scroll or tap `Forward` → tap the exhibit panel **or** tap `Re
 - **Breakpoint: `48rem` (768px).** This is the breakpoint already shipped in `global.css` — do not introduce a second one. The existing `30rem` (480px) breakpoint also stays.
 - Reference device: iPhone 12 Pro, **390 × 844 CSS px**, Safari expected (D-18 — confirm during implementation testing).
 - Canvas fills `100svh`. Never `100vh` — the address-bar collapse would resize the corridor mid-swipe.
-- **One exhibit framed at a time:** with the constant 52° horizontal FOV (§A.4), the panel at `x = +1.6` seen from 6 m is 15° off-axis and its `3.2 m` width subtends comfortably inside the frame. Verifiable target: **the panel occupies 46–62% of viewport width at its stop**, with the walkway opening visible to its left. If a future FOV change pushes it outside that band, the FOV is wrong, not the band.
+
+### F.1 Exhibit framing — derived, per orientation
+
+The panel is **on the travel axis** (§D.1), so a narrow horizontal field costs nothing. Geometry, measured from the camera at `(0, 1.62, portalZ + 12)` with pitch 0°:
+
+```
+half-width angle   = atan(2.00 / 12) =  9.4623°
+top-edge angle     = atan(3.48 / 12) = 16.1722°     (panel top y = 5.10)
+bottom-edge angle  = atan(1.48 / 12) =  7.0310°     (panel bottom y = 3.10)
+
+screen fraction    = tan(angle) / tan(fov/2)        (normalised device coords)
+```
+
+| Reference viewport | `fovY` | `fovX` | Panel **width** (% of viewport width) | Panel **top** (% from viewport top) | Panel **bottom** |
+|---|---|---|---|---|---|
+| 16:9 laptop (1.77778) | 38.73° | 64.00° | **26.67%** (spans 36.66%–63.34%) | 8.75% | 32.46% |
+| 390 × 844 portrait (0.46209) | 68.00° | 34.62° | **53.47%** (spans 23.26%–76.74%) | 28.50% | 40.86% |
+| 844 × 390 landscape (2.16410) | 36.00° | 70.23° | **23.70%** | 5.37% | 31.02% |
+
+**Verifiable acceptance bands, stated per orientation:**
+
+| Orientation | Band for rendered panel width |
+|---|---|
+| Landscape (`aspect ≥ 1.4`) | **23–31%** of viewport width |
+| Portrait (`aspect ≤ 0.75`) | **50–58%** of viewport width |
+| Intermediate aspects (0.75 < aspect < 1.4) | no band asserted; only the top-margin floor applies |
+
+**Top-margin floor, all aspects:** the panel's top edge must sit **≥ 5% of viewport height** below the viewport top. The binding case is a phone in landscape (5.37%); the laptop has 8.75% and portrait 28.50%. Any change to `fovY`, panel height, panel centre height or standoff must be re-checked against this floor.
+
+In portrait, the panel (28.50%–40.86% vertically) clears the bottom sheet's top edge at 48% by **7.1 percentage points** — one exhibit and its readable label are framed clearly at a time, with neither obscuring the other (D-16).
+
+### F.2 Layout below 768px
+
 - **Exhibit overlay becomes a bottom sheet:** full width, `padding: 24px var(--gutter) 104px`, `max-height: 52svh`, top border `1px solid var(--line)`, plate `color-mix(in srgb, var(--paper) 88%, transparent)` with `backdrop-filter: blur(6px)`. The sheet never scrolls internally — the 200-character summary cap guarantees it fits at 200% text size on a 390 px viewport.
-- **Safe areas:** `padding-inline: max(var(--gutter), env(safe-area-inset-left), env(safe-area-inset-right))` on the overlay; `env(safe-area-inset-bottom)` in the arrow nav's `bottom`; `env(safe-area-inset-top)` on the still-view toggle.
-- **Thumb-reach zone (concrete):** both arrow buttons must lie entirely inside the rectangle from `y = 0.70 × 100svh` to `y = 100svh − env(safe-area-inset-bottom)`, horizontally centred. On a 390 × 844 device that is the bottom 253 px — reachable by a right or left thumb without a grip change.
+- **Thumb-reach zone (concrete):** both arrow buttons must lie entirely inside the rectangle from `y = 0.70 × 100svh` to the bottom of the viewport, horizontally centred. On a 390 × 844 device that is the bottom 253 px — reachable by a right or left thumb without a grip change.
 - **`Read case study →` sits directly above that band**, between 30% and 48% of viewport height from the bottom, never underneath an arrow.
-- The still-view toggle is pinned **top-right** (`top: max(12px, env(safe-area-inset-top))`, right gutter, 44 × 44) so it never competes for the thumb band and never sits where a swipe begins.
+- The still-view toggle is pinned **top-right** (`top: max(12px, env(safe-area-inset-top, 0px))`, right gutter, 44 × 44) so it never competes for the thumb band and never sits where a swipe begins.
 - **Zoom / enlarged text (ACCESS-03 regression):** at 320 CSS px width and 200% zoom, the overlay and controls must reflow with no horizontal scrolling and no clipped control. The canvas is decorative and may crop. At 400% zoom the still view is an acceptable presentation, but the overlays must remain readable either way.
-- Landscape phones: treated as `< 768px` by width, but if `100svh < 420px` the arrow pair drops to 56 × 56 and the bottom sheet caps at `40svh`.
+
+### F.3 Safe-area insets are currently no-ops — say so plainly
+
+The shipped viewport meta is `width=device-width, initial-scale=1`. **Without `viewport-fit=cover`, every `env(safe-area-inset-*)` resolves to `0`.** The `env()` expressions above are retained as forward-compatible declarations, but the **operative values today are the fallbacks**:
+
+| Declaration | Value today |
+|---|---|
+| Arrow nav `bottom` (portrait) | `max(24px, 0 + 16px)` → **24px** |
+| Still-view toggle `top` | `max(12px, 0)` → **12px** |
+| Overlay `padding-inline` | `max(var(--gutter), 0, 0)` → **`var(--gutter)`** |
+| Overlay `padding-block-end` | **104px** = 64 (arrow) + 24 (`bottom`) + 16 (clearance) — exact at `env = 0` |
+
+Adding `viewport-fit=cover` to the viewport meta **is permitted** in this phase. If it is added, the overlay's bottom padding must be re-derived as `calc(104px + env(safe-area-inset-bottom, 0px))`, and every `env()` above becomes live. Either choice is a valid implementation of this contract; the plan must state which one it takes.
+
+### F.4 Phones in landscape
+
+A 390 × 844 device rotated to landscape is **844 CSS px wide — above the 48rem (768px) breakpoint — so the desktop layout rules apply** (56 × 56 arrows, `bottom: 32px`, right-aligned overlay). Width-based rules are therefore *not* the mechanism here. The only orientation-specific clause that fires is a height clause:
+
+```
+@media (max-height: 420px) { arrows drop to 56 × 56; bottom sheet caps at 40svh }
+```
+
+Its FOV and framing are the third row of the §F.1 table (`fovY` clamped **up** to 36°, `fovX` 70.23°, panel 23.70% wide, top margin 5.37% — the tightest top margin of any supported viewport).
 
 ---
 
@@ -587,7 +699,7 @@ The illustrated exhibition catalogue (D-17):
 
 - `history.scrollRestoration` stays `'auto'`. The island must **not** set `'manual'` and must **not** call `scrollTo` on mount. Running a browser restorer and an application restorer at the same time is the specific bug this rule prevents.
 - Camera derivation happens on the `requestAnimationFrame` following `load`, so images (which already carry explicit `width`/`height` from Phase 1) have reserved their space and the measured stop offsets are final.
-- On `resize` and on any view/breakpoint change, re-measure stop offsets and preserve `{stopIndex, localProgress}` — never a percentage of total document height.
+- On `resize` and on any view/breakpoint/orientation change, re-measure stop offsets and preserve `{stopIndex, localProgress}` — never a percentage of total document height.
 - On `pageshow` with `event.persisted === true` (bfcache), re-derive the camera from the current `scrollY` without scrolling.
 
 ### H.3 Arrival rules
@@ -618,17 +730,30 @@ Phase 3 owns final performance acceptance. These are **design guardrails** that 
 | Screenshot texture | ≤ 1600 px long edge, ≤ 180 KB, one download shared with the DOM `<img>` | +1 |
 | Draw calls | ≤ 90 | +12 |
 | Triangles | ≤ 120,000 | +18,000 |
-| Shared materials | ≤ 8 | 0 (reuse only) |
+| **Materials** | **≤ 18** | **+1** (its panel texture material only) |
 | Textures | ≤ 1 per exhibit + 2 shared | +1 |
 | `Line2` segments | ≤ 1,200 | +400 |
 | Shadow-casting lights | exactly 1 | 0 |
 | Render-target renders per frame | ≤ 1 | 0 |
 
+**Material budget breakdown and sharing mechanism** (the earlier "≤ 8, reuse only" was unreachable — §B.2 alone needs six):
+
+| Group | Count | How sharing is achieved |
+|-------|-------|------------------------|
+| `LineMaterial` — one per stroke kind in §B.2 | 6 | Shared across the whole scene; width/colour/dash differ per kind, which is why they cannot be merged |
+| `LineMaterial` — the three mid-transformation elements | 3 | Per-element instances are unavoidable: each needs an independent lerped colour and shrinking `dashSize` |
+| `MeshStandardMaterial` — **all solid ivory** | 1 | **`vertexColors: true`.** `--stone-lit`, `--stone-shade`, `--stone-deep` and `--stone-floor` are baked as vertex colours, so every piece of architecture shares one material |
+| Transparent clone for the three transformation meshes | 3 | Per-element `opacity` forces separate instances |
+| Hatch overlay | 1 | Shared; `--rust` at ≤ 0.35 opacity |
+| Reflector / water | 1 | Shared |
+| Panel texture material | 1 per exhibit | Geometry shared; only the map differs |
+| **Total at N = 1** | **16** | Budget 18 leaves headroom for one fallback material and one debug material |
+
 Rendering policy:
 
 - `frameloop="demand"`. Invalidate on: scroll, resize, media-query change, texture load, view toggle, and while any transformation `progress` is changing. Because every animated quantity is a pure function of `scrollY`, the scene is provably idle when the page is idle. **Assertion the planner can turn into a test: zero animation frames after 1 second without scrolling.**
 - DPR cap: `min(devicePixelRatio, 2)` at ≥ 768px, `min(devicePixelRatio, 1.75)` below. Never `devicePixelRatio` uncapped.
-- Stop rendering when the canvas leaves the viewport (`IntersectionObserver`) or when `document.hidden`.
+- **Stop rendering when `#exhibition` leaves the viewport** (`IntersectionObserver` observing `#exhibition`, the element that actually scrolls) or when `document.hidden`. Observing the canvas is useless — it is `position: fixed; inset: 0` and can never leave the viewport.
 - Quality ladder on sustained frame cost (applied in order, each step reversible): reflection → cheap fallback; shadow map 1024 → 512; DPR cap → 1.25; shadows off (hemisphere fill only). The still-view toggle remains available throughout.
 - Teardown releases every geometry, material, texture and render target the scene owns, and removes every listener. Repeat visits must not accumulate resources (PERF-02, verified in Phase 3).
 
@@ -640,9 +765,9 @@ Every interactive Phase 2 surface must implement all applicable states. There is
 
 | Surface | Default | Hover | Focus-visible | Active / pressed | Disabled / endpoint | Notes |
 |---------|---------|-------|---------------|------------------|---------------------|-------|
-| `Read case study →` link | `--ink` text, `--rust` glyph | `--rust` text (shipped `a:hover`) | shipped 3px rust outline | browser default | n/a | Always visible; never hover-revealed |
-| Exhibit panel mesh | static | none (no hover highlight — it would be invisible on touch and would imply hover-only affordance) | n/a (not focusable; the DOM link is the focusable equivalent) | none | n/a | Activation only via the §E.2 tap test |
-| Back / Forward buttons | plate + chevron + label | plate → `--paper` 100% | shipped 3px rust outline, offset 5px, unclipped | chevron fill `--rust` 1.0 | `aria-disabled`, `opacity: 0.45`, focusable, inert action | Status region announces the endpoint |
+| `Read case study →` link | `--ink` text, `--rust` glyph | `--rust` text (shipped `a:hover`) | shipped 3px rust outline, 5px offset | browser default | n/a | Always visible; never hover-revealed |
+| Exhibit panel mesh | static | none (no hover highlight — it would be invisible on touch and would imply a hover-only affordance) | n/a (not focusable; the DOM link is the focusable equivalent) | none | n/a | Activation only via the §E.2 tap test. The only pickable mesh in the portal. |
+| Back / Forward buttons | plate + chevron + label | plate → `--paper` 100% | shipped 3px rust outline, 5px offset, unclipped (8px container padding) | chevron fill `--rust` 1.0 | `aria-disabled`, `opacity: 0.45`, focusable, inert action | Status region announces the endpoint |
 | Still-view toggle | Label text + 1px `--line` border | border → `--rust` | shipped outline | `aria-pressed` flips | n/a | 44 × 44 minimum |
 | `Try the exhibition again` | Label text button | border → `--rust` | shipped outline | — | disappears after one use | Deliberate retry only |
 | Exhibit overlay plate | 88% paper + blur | — | — | — | — | Text contrast never depends on scene state |
@@ -655,18 +780,21 @@ Values in this contract that are directly checkable, for the planner's acceptanc
 
 1. `import('./scene')` occurs only inside the motion-permitted branch (SC4).
 2. No `preventDefault()` on `wheel` / `touchstart` / `touchmove` / `pointermove` anywhere in the island (NAV-02).
-3. `touch-action`, `overscroll-behavior`, `user-scalable` never set; shipped viewport meta unchanged (NAV-02).
-4. Arrow buttons computed box ≥ 56 × 56 px desktop and ≥ 64 × 64 px below 768px (NAV-03).
-5. Both arrow buttons fully inside the bottom 30% of `100svh` in portrait (D-16).
-6. Reflection camera `layers.mask` targets layer 2 and `completedGroup` is excluded from layer 0 (D-05).
-7. `LineMaterial` `linewidth` values match §B.2 exactly; no `LineBasicMaterial` used for architectural ink (D-04).
-8. Camera `position.x === 0` and `position.y === 1.62` for every scroll position (one-handed, motion-safety).
-9. Every `progress` value derives from `cameraZ` only; no `clock`/`elapsedTime` in the transformation path (D-06, ACCESS-04).
-10. `history.scrollRestoration === 'auto'` and no `scrollTo` on mount (NAV-06).
-11. Exhibit `<a>` `.click()` is the only navigation path from a mesh (NAV-05).
-12. Zero animation frames 1 s after the last scroll event (PERF-02 precursor).
-13. Shipped anchors `#projects`, `#about`, `#resume`, `#contact` still resolve (NAV-01 regression).
-14. `Read case study →` present in the initial HTML for every published project, with JavaScript disabled (ACCESS-01 regression).
+3. `touch-action`, `overscroll-behavior`, `user-scalable` never set (NAV-02).
+4. The canvas has `aria-hidden="true"` and **does not** have the `inert` attribute; `.page-frame` carries `position: relative; z-index: 1` and the skip link `z-index: 3` (NAV-01, NAV-05).
+5. Arrow buttons' computed box ≥ 56 × 56 px at ≥ 768px and ≥ 64 × 64 px below 768px (NAV-03).
+6. **Exhibit panel framing (SC1, D-16):** rendered panel width is **26.7% ± 4 pp** of viewport width at 16:9, **53.5% ± 4 pp** at 390 × 844 portrait, and the panel's top edge sits **≥ 5% of viewport height** below the viewport top at every supported aspect.
+7. Both arrow buttons lie entirely inside the bottom 30% of `100svh` in portrait (D-16).
+8. Reflection camera `layers.mask` targets layer 2 and `completedGroup` is excluded from layer 0 (D-05).
+9. `LineMaterial` `linewidth` values match §B.2 exactly; no `LineBasicMaterial` is used for architectural ink (D-04).
+10. `camera.position.x === 0`, `camera.position.y === 1.62`, `camera.rotation.x === 0` at every scroll position.
+11. `fovY` equals `clamp(2·atan(tan32°/aspect), 36°, 68°)` at the three reference aspects in §A.4.
+12. Every `progress` value derives from `cameraZ` only; no `clock` / `elapsedTime` in the transformation path (D-06, ACCESS-04).
+13. `history.scrollRestoration === 'auto'` and no `scrollTo` on mount (NAV-06).
+14. The exhibit `<a>`'s `.click()` is the only navigation path from a mesh (NAV-05).
+15. Zero animation frames 1 s after the last scroll event; the `IntersectionObserver` target is `#exhibition` (PERF-02 precursor).
+16. Shipped anchors `#projects`, `#about`, `#resume`, `#contact` still resolve (NAV-01 regression).
+17. `Read case study →` is present in the initial HTML for every published project with JavaScript disabled, and `Read the case study ↗` is absent from the home route (ACCESS-01 regression, copy consistency).
 
 ---
 
@@ -681,7 +809,7 @@ Values in this contract that are directly checkable, for the planner's acceptanc
 | Target sizes, scroll ownership, return table, failure table, budgets framing | `.planning/research/ARCHITECTURE.md` |
 | `Line2`, WebGL2-only renderer, demand rendering, DPR caps | `.planning/research/STACK.md` |
 | Colours, fonts, spacing rhythm, focus ring, breakpoints, ink strokes, dash patterns, registration marks, hatch | Shipped `src/styles/global.css` and the `Fig. 01` drawing in `src/pages/index.astro` |
-| Exhibit data fields (`slug`, `title`, `summary`, `exhibitionOrder`, `contracts[].id`, `screenshots[]`) | Shipped `src/content.config.ts`, `src/lib/project-schema.ts` |
+| Exhibit data fields (`slug`, `title`, `summary`, `exhibitionOrder`, `contracts[].id`, `screenshots[]`), asset pixel dimensions | Shipped `src/content.config.ts`, `src/lib/project-schema.ts`, `src/content/projects/featured-client/` |
 | Reused copy strings | Shipped `src/pages/index.astro`, `src/data/profile.ts` |
 
 Dimensions, FOV, stroke widths, light angles, thresholds, breakpoint usage and budgets were chosen by this agent under the discretion granted in `02-CONTEXT.md` ("exact architectural dimensions, camera framing, ink stroke widths, color values, typography, asset formats, scene graph organization, and transition timing").
@@ -689,4 +817,4 @@ Dimensions, FOV, stroke widths, light angles, thresholds, breakpoint usage and b
 ---
 
 *Phase: 02-one-handed-surreal-exhibition*
-*UI contract drafted: 2026-09-20*
+*UI contract drafted: 2026-09-20 · revised 2026-09-20 after UI checker review*

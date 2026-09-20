@@ -2,6 +2,9 @@ import { buildStopTable } from '../../lib/exhibition/stops';
 import { motionPermitted, readStoredChoice, reduceQuery, writeChoice, type ViewMode } from './policy';
 import { measureStops, progressFor, type MeasuredStop } from './scroll';
 import { createControls } from './controls';
+import { registerTap, type SceneHandle } from './tap';
+
+let sceneHandle: SceneHandle | null = null;
 
 export function enterMovingView(): void {
   if (!motionPermitted()) return;
@@ -11,6 +14,7 @@ export function enterMovingView(): void {
 export function start(): void {
   const exhibition = document.getElementById('exhibition');
   if (!exhibition) return;
+  registerTap(() => sceneHandle);
 
   // Decide motion policy before scheduling any work or requesting scene code.
   let mode: ViewMode = motionPermitted() ? 'moving' : 'still';

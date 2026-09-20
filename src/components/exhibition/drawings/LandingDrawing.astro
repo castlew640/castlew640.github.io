@@ -1,0 +1,34 @@
+<div class="architectural-study stop-drawing" aria-hidden="true">
+  <div class="drawing-label"><span>Fig. 05</span><span>Beyond, a possibility.</span></div>
+  <svg class="exhibition-horizon" viewBox="0 0 520 620" fill="none" focusable="false">
+    <defs>
+      <g id="landing-built" stroke="var(--edge)" stroke-width="1.4">
+        <path d="M166 320V191H194V320Z" fill="var(--stone-lit)" />
+        <path d="M166 191 178 183V312L166 320Z" fill="var(--stone-shade)" />
+        <path d="M166 191C166 66 354 66 354 191H326C326 103 194 103 194 191Z" fill="var(--stone-lit)" />
+        <path d="M178 183C178 56 366 56 366 183L354 191C354 66 166 66 166 191Z" fill="var(--stone-shade)" />
+        <path d="M166 191C166 66 354 66 354 191" />
+      </g>
+      <path id="landing-right-pier" d="M326 191H354V320H326ZM354 191 366 183V312L354 320" />
+      <g id="landing-completed">
+        <use href="#landing-built" />
+        <use href="#landing-right-pier" fill="var(--stone-lit)" stroke="var(--edge)" stroke-width="1.4" />
+      </g>
+    </defs>
+    <path d="M24 320H496V602H24Z" fill="var(--water)" />
+    <path d="M152 191C152 44 380 44 380 191" stroke="var(--construction)" stroke-width="1" stroke-dasharray="2 6" />
+    <path d="M260 32V320M142 191H390" stroke="var(--construction)" stroke-width="1" stroke-dasharray="4 7" />
+    <use href="#landing-built" />
+    <use href="#landing-right-pier" stroke="var(--edge-unbuilt)" stroke-width="1.3" stroke-dasharray="5 5" />
+    <g transform="translate(0 640) scale(1 -1)" opacity="0.35">
+      <use href="#landing-completed" />
+    </g>
+    <path d="M24 320H496" stroke="var(--line)" stroke-width="1" />
+    <path d="M25 32h14m-7-7v14M481 32h14m-7-7v14M25 602h14m-7-7v14M481 602h14m-7-7v14" stroke="var(--registration)" stroke-width="1" />
+  </svg>
+  <p class="drawing-caption"><span>An open ending</span><span>Structure → horizon</span></p>
+</div>
+
+<style>
+  .exhibition-horizon { background-size: 100% 51.62%; background-repeat: no-repeat; }
+</style>

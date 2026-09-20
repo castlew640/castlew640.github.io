@@ -4,6 +4,8 @@ import ExhibitionShell from '../components/exhibition/ExhibitionShell.astro';
 import StopSection from '../components/exhibition/StopSection.astro';
 import ExhibitSection from '../components/exhibition/ExhibitSection.astro';
 import EntranceDrawing from '../components/exhibition/drawings/EntranceDrawing.astro';
+import AboutDrawing from '../components/exhibition/drawings/AboutDrawing.astro';
+import LandingDrawing from '../components/exhibition/drawings/LandingDrawing.astro';
 import { profile } from '../data/profile';
 import { getPublishedProjects } from '../lib/projects';
 
@@ -85,9 +87,11 @@ const projects = await getPublishedProjects();
       <p class="large-copy">{profile.background}</p>
       <p>I was the sole developer across those engagements. My work starts with understanding the client’s goal, then making practical decisions about what to build and how to deliver it.</p>
     </div>
+    <AboutDrawing />
   </StopSection>
 
   <StopSection id="landing" labelledBy="resume-title contact-title">
+  <LandingDrawing />
   <section id="resume" class="catalogue-section" aria-labelledby="resume-title">
     <div class="section-heading"><p class="eyebrow">03 / The background</p><h2 id="resume-title">Resume</h2></div>
     <div class="section-body">

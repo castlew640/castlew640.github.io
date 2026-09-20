@@ -2,6 +2,7 @@
 import { getImage } from 'astro:assets';
 import type { CollectionEntry } from 'astro:content';
 import StopSection from './StopSection.astro';
+import ExhibitDrawing from './drawings/ExhibitDrawing.astro';
 
 interface Props {
   project: CollectionEntry<'projects'>;
@@ -24,6 +25,7 @@ const labels = {
     <img src={panel.src} width={panel.attributes.width} height={panel.attributes.height} alt={shot.alt} decoding="async" />
     <figcaption>{shot.caption}</figcaption>
   </figure>
+  <ExhibitDrawing variant={index} />
   <p class="eyebrow">Exhibit {String(index + 1).padStart(2, '0')}</p>
   <h2 class="exhibit-title" id={`exhibit-${slug}-title`}>{project.data.title}</h2>
   <p>{project.data.summary}</p>

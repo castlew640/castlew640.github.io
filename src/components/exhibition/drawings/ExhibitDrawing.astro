@@ -1,0 +1,59 @@
+---
+interface Props {
+  variant?: number;
+}
+
+const { variant = 0 } = Astro.props;
+const profile = variant % 3;
+const prefix = `exhibit-drawing-${variant}`;
+const lintelProfiles = [
+  'M158 116H362V126H158Z',
+  'M158 116H183V104H208V92H312V104H337V116H362V126H158Z',
+  'M158 126 260 65 362 126Z',
+];
+---
+
+<div class="architectural-study stop-drawing" aria-hidden="true">
+  <div class="drawing-label"><span>Fig. 03</span><span>A frame for useful things.</span></div>
+  <svg viewBox="0 0 520 620" fill="none" focusable="false">
+    <defs>
+      <path id={`${prefix}-left-flank`} d="M78 316V167H132V316H122V179H88V316ZM72 157H138V167H72Z" />
+      <path id={`${prefix}-right-flank`} d="M388 316V167H442V316H432V179H398V316ZM382 157H448V167H382Z" />
+      <path id={`${prefix}-profile`} d={lintelProfiles[profile]} />
+      <g id={`${prefix}-built`} stroke="var(--edge)" stroke-width="1.4">
+        <path d="M186 302H334L365 320H155Z" fill="var(--stone-floor)" />
+        <path d="M158 316V148H183V316ZM337 316V148H362V316Z" fill="var(--stone-lit)" />
+        <path d="M175 148V316M354 148V316" />
+        <path d="M158 126H362V148H158Z" fill="var(--stone-shade)" />
+        <path d="M158 126H362V137H158Z" fill="var(--stone-lit)" />
+        <path d="M203 156H317V220H203Z" fill="var(--stone-shade)" />
+        <path d="M210 163H310V213H210Z" fill="var(--stone-lit)" />
+        <path d="M200 220H320V230H200Z" fill="var(--stone-deep)" />
+      </g>
+      <g id={`${prefix}-completed`}>
+        <use href={`#${prefix}-built`} />
+        <g fill="var(--stone-lit)" stroke="var(--edge)" stroke-width="1.4">
+          <use href={`#${prefix}-profile`} />
+          <use href={`#${prefix}-left-flank`} />
+          <use href={`#${prefix}-right-flank`} />
+        </g>
+      </g>
+    </defs>
+    <path d="M24 320H496V602H24Z" fill="var(--water)" />
+    <path d="M260 32V602M24 148H496M24 302H496" stroke="var(--construction)" stroke-width="1" stroke-dasharray="4 7" />
+    <use href={`#${prefix}-built`} />
+    <use href={`#${prefix}-profile`} stroke="var(--edge-unbuilt)" stroke-width="1.3" stroke-dasharray="5 5" />
+    <use href={`#${prefix}-left-flank`} fill={profile === 1 ? 'var(--stone-lit)' : 'none'} stroke={profile === 1 ? 'var(--edge)' : 'var(--edge-unbuilt)'} stroke-width={profile === 1 ? '1.4' : '1.3'} stroke-dasharray={profile === 1 ? undefined : '5 5'} />
+    <use href={`#${prefix}-right-flank`} fill={profile === 0 ? 'var(--stone-lit)' : 'none'} stroke={profile === 0 ? 'var(--edge)' : 'var(--edge-unbuilt)'} stroke-width={profile === 0 ? '1.4' : '1.3'} stroke-dasharray={profile === 0 ? undefined : '5 5'} />
+    <g stroke="var(--rust)" stroke-width="1.4">
+      <path d="M225 221V229M260 221V229M295 221V229M310 213 375 269H412" />
+    </g>
+    <circle cx="310" cy="213" r="3" fill="var(--rust)" />
+    <g transform="translate(0 640) scale(1 -1)" opacity="0.35">
+      <use href={`#${prefix}-completed`} />
+    </g>
+    <path d="M24 320H496" stroke="var(--line)" stroke-width="1" />
+    <path d="M25 32h14m-7-7v14M481 32h14m-7-7v14M25 602h14m-7-7v14M481 602h14m-7-7v14" stroke="var(--registration)" stroke-width="1" />
+  </svg>
+  <p class="drawing-caption"><span>Work, held in view</span><span>Outline → evidence</span></p>
+</div>

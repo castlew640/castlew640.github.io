@@ -3,6 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import ExhibitionShell from '../components/exhibition/ExhibitionShell.astro';
 import StopSection from '../components/exhibition/StopSection.astro';
 import ExhibitSection from '../components/exhibition/ExhibitSection.astro';
+import EntranceDrawing from '../components/exhibition/drawings/EntranceDrawing.astro';
 import { profile } from '../data/profile';
 import { getPublishedProjects } from '../lib/projects';
 
@@ -58,6 +59,8 @@ const projects = await getPublishedProjects();
       </svg>
       <p class="drawing-caption"><span>Study in becoming</span><span>Drawing → structure</span></p>
     </div>
+
+    <EntranceDrawing />
 
     <div class="hero-footnote"><span>Ideas, considered. Software, delivered.</span><span aria-hidden="true">↓</span></div>
   </StopSection>

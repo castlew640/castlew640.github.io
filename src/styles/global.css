@@ -153,6 +153,12 @@
   .exhibition-error p { margin-top: 16px; }
   .exhibition-error button { min-height: 44px; margin-top: 16px; padding: 8px 16px; border: 1px solid var(--line); color: var(--ink); background: var(--paper); font: inherit; cursor: pointer; }
   .page-frame { position: relative; z-index: 1; }
+  html[data-scene="active"] .page-frame { pointer-events: none; }
+  html[data-scene="active"] :is(.site-header, .site-footer, .view-preferences, .exhibition-controls) { pointer-events: auto; }
+  html[data-scene="active"] :is(.site-header, .site-footer, .hero-copy, .hero-footnote, .section-heading, .section-body),
+  html[data-scene="active"] [data-stop] > :is(p, h2, ul, a, figure) { background: color-mix(in srgb, var(--paper) 88%, transparent); pointer-events: auto; }
+  /* Preserve the catalogue's measured boxes during lazy mount and browser Back. */
+  html[data-scene="active"] :is(.architectural-study, .stop-drawing) { visibility: hidden; }
   html[data-scene="active"] #exhibition { pointer-events: none; }
   html[data-scene="active"] #exhibition a,
   html[data-scene="active"] #exhibition button,

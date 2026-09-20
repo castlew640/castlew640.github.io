@@ -3,6 +3,8 @@ import {
   PCFSoftShadowMap, PerspectiveCamera, Raycaster, Scene, SRGBColorSpace, Vector2, WebGLRenderer,
 } from 'three';
 import { createQualityPolicy, qualityFor } from './quality';
+import { createInkMaterials } from './ink';
+import { createArchitecture } from './architecture';
 
 export interface SceneHandle {
   setCameraZ(z: number): void;
@@ -72,6 +74,9 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
 
   const quality = createQualityPolicy();
   const size = new Vector2();
+  const inks = createInkMaterials(size);
+  const architecture = createArchitecture(inks, options.landingStopZ);
+  scene.add(architecture.group);
   const pointer = new Vector2();
   const raycaster = new Raycaster();
   raycaster.layers.set(1);
@@ -82,8 +87,19 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
   const debug: Record<string, number | boolean> = {
     mounted: true, renderCount: 0, lights: 3, shadowLights: 1,
     cameraX: 0, cameraY: 1.62, cameraRotationX: 0, cameraZ: camera.position.z,
+    materials: Object.keys(inks).length + 2, walkwayObstructions: architecture.walkwayObstructions,
   };
+  architecture.drawn.traverse((object) => {
+    if ('geometry' in object) {
+      const geometry = object.geometry as import('three').BufferGeometry;
+      debug.lineSegments = Number(debug.lineSegments ?? 0) + (geometry.getAttribute('instanceStart')?.count ?? 0);
+    }
+  });
   window.__exhibition = debug;
+  Object.values(inks).forEach((ink, index) => {
+    debug[`ink${index}Width`] = ink.linewidth;
+    debug[`ink${index}Color`] = ink.color.getHex();
+  });
 
   const updateCamera = (): void => {
     camera.lookAt(0, 1.62, camera.position.z - 12);
@@ -100,6 +116,8 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
     const policy = qualityFor(size.x, window.devicePixelRatio, quality.level);
     renderer.setPixelRatio(policy.pixelRatio);
     renderer.setSize(size.x, size.y, false);
+    const cssSize = renderer.getSize(new Vector2());
+    for (const ink of Object.values(inks)) ink.resolution.copy(cssSize);
     if (sun.shadow.mapSize.x !== policy.shadowMapSize) {
       sun.shadow.map?.dispose();
       sun.shadow.map = null;
@@ -131,6 +149,8 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
       debug.triangles = renderer.info.render.triangles;
       debug.geometries = renderer.info.memory.geometries;
       debug.textures = renderer.info.memory.textures;
+      debug.inkCssResolution = Object.values(inks).every((ink) => ink.resolution.equals(size));
+      debug.inkScreenSpace = Object.values(inks).every((ink) => !ink.worldUnits);
       if (renderCount > 1 && quality.sample(performance.now() - started)) applyQuality();
     });
   };
@@ -168,6 +188,8 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
     window.removeEventListener('resize', queueResize);
     canvas.removeEventListener('webglcontextlost', contextLost);
     canvas.removeEventListener('webglcontextcreationerror', creationError);
+    architecture.dispose();
+    for (const ink of Object.values(inks)) ink.dispose();
     sun.shadow.dispose();
     renderer.dispose();
     container.remove();

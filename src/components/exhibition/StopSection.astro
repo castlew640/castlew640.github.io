@@ -1,0 +1,20 @@
+---
+interface Props {
+  id: string;
+  labelledBy?: string;
+  slug?: string;
+  class?: string;
+}
+
+const { id, labelledBy, slug, class: className = '' } = Astro.props;
+---
+
+<section
+  id={id}
+  class:list={['exhibition-stop', className]}
+  data-stop
+  data-stop-id={id}
+  data-slug={slug}
+  tabindex="-1"
+  aria-labelledby={labelledBy}
+><slot /></section>

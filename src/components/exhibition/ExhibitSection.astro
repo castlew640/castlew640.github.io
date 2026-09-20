@@ -1,0 +1,34 @@
+---
+import { getImage } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+import StopSection from './StopSection.astro';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+  index: number;
+}
+
+const { project, index } = Astro.props;
+const { slug } = project.data;
+const shot = project.data.screenshots[0];
+const panel = await getImage({ src: shot.src, width: 1600, format: 'webp' });
+const labels = {
+  website: 'Website',
+  'manual-planner': 'Manual Wi-Fi planner',
+  'ai-mvp': 'AI planner MVP',
+};
+---
+
+<StopSection id={`exhibit-${slug}`} slug={slug} labelledBy={`exhibit-${slug}-title`}>
+  <figure data-panel-source>
+    <img src={panel.src} width={panel.attributes.width} height={panel.attributes.height} alt={shot.alt} decoding="async" />
+    <figcaption>{shot.caption}</figcaption>
+  </figure>
+  <p class="eyebrow">Exhibit {String(index + 1).padStart(2, '0')}</p>
+  <h2 class="exhibit-title" id={`exhibit-${slug}-title`}>{project.data.title}</h2>
+  <p>{project.data.summary}</p>
+  <ul class="contract-labels">
+    {project.data.contracts.map((contract) => <li>{labels[contract.id]}</li>)}
+  </ul>
+  <a class="text-link exhibit-link" href={`/projects/${slug}/`}>Read case study <span>→</span></a>
+</StopSection>

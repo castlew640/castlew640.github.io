@@ -1,5 +1,8 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import ExhibitionShell from '../components/exhibition/ExhibitionShell.astro';
+import StopSection from '../components/exhibition/StopSection.astro';
+import ExhibitSection from '../components/exhibition/ExhibitSection.astro';
 import { profile } from '../data/profile';
 import { getPublishedProjects } from '../lib/projects';
 
@@ -7,7 +10,8 @@ const projects = await getPublishedProjects();
 ---
 
 <BaseLayout>
-  <section class="introduction" aria-labelledby="introduction-title">
+  <ExhibitionShell>
+  <StopSection id="entrance" class="introduction" labelledBy="introduction-title">
     <div class="hero-copy">
       <p class="eyebrow"><span class="registration-mark" aria-hidden="true">+</span> A portfolio of things taking shape</p>
       <h1 id="introduction-title">{profile.displayName}</h1>
@@ -56,30 +60,31 @@ const projects = await getPublishedProjects();
     </div>
 
     <div class="hero-footnote"><span>Ideas, considered. Software, delivered.</span><span aria-hidden="true">↓</span></div>
-  </section>
+  </StopSection>
 
   <section id="projects" class="catalogue-section" aria-labelledby="projects-title">
     <div class="section-heading"><p class="eyebrow">01 / The work</p><h2 id="projects-title">Projects</h2></div>
-    <div class="section-body project-list">
-      {projects.map((project) => (
-        <article class="project-card">
-          <p class="eyebrow">Exhibit {String(project.data.exhibitionOrder).padStart(2, '0')}</p>
-          <h3>{project.data.title}</h3>
-          <p>{project.data.summary}</p>
-          <a class="text-link" href={`/projects/${project.data.slug}/`}>Read the case study <span aria-hidden="true">↗</span></a>
-        </article>
-      ))}
-    </div>
+    {projects.length > 0 ? (
+      <div class="exhibit-list">
+        {projects.map((project, index) => <ExhibitSection project={project} index={index} />)}
+      </div>
+    ) : (
+      <div class="section-body">
+        <h3>The exhibition is still under construction.</h3>
+        <p>No projects are published yet. You can still read about William Castle, open his resume, and get in touch below.</p>
+      </div>
+    )}
   </section>
 
-  <section id="about" class="catalogue-section" aria-labelledby="about-title">
+  <StopSection id="about" class="catalogue-section" labelledBy="about-title">
     <div class="section-heading"><p class="eyebrow">02 / The person</p><h2 id="about-title">About</h2></div>
     <div class="section-body">
       <p class="large-copy">{profile.background}</p>
       <p>I was the sole developer across those engagements. My work starts with understanding the client’s goal, then making practical decisions about what to build and how to deliver it.</p>
     </div>
-  </section>
+  </StopSection>
 
+  <StopSection id="landing" labelledBy="contact-title">
   <section id="resume" class="catalogue-section" aria-labelledby="resume-title">
     <div class="section-heading"><p class="eyebrow">03 / The background</p><h2 id="resume-title">Resume</h2></div>
     <div class="section-body">
@@ -91,11 +96,13 @@ const projects = await getPublishedProjects();
   <section id="contact" class="catalogue-section contact-section" aria-labelledby="contact-title">
     <div class="section-heading"><p class="eyebrow">04 / A conversation</p><h2 id="contact-title">Contact</h2></div>
     <div class="section-body">
-      <p class="editorial-title">What could we<br /><em>build together?</em></p>
+      <p class="landing-invitation">What could we<br /><em>build together?</em></p>
       <a class="email-link" href={`mailto:${profile.email}`}>{profile.email}<span aria-hidden="true">↗</span></a>
       <ul class="profile-links" aria-label="Find me elsewhere">
         {profile.profileLinks.map(({ label, url }) => <li><a class="text-link" href={url}>{label} <span aria-hidden="true">↗</span></a></li>)}
       </ul>
     </div>
   </section>
+  </StopSection>
+  </ExhibitionShell>
 </BaseLayout>

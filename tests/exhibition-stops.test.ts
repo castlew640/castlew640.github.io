@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 // @ts-expect-error Node test module types are intentionally not a production dependency.
 import test from 'node:test';
 import { buildStopTable } from '../src/lib/exhibition/stops.ts';
+import { progressFor } from '../src/scripts/exhibition/scroll.ts';
 
 const slugs = () => ['featured-client', 'second-project', 'third-project'];
 
@@ -39,4 +40,18 @@ test('exhibit ids preserve the supplied published slug order', () => {
   assert.deepEqual(table.stops.map((stop) => stop.id), [
     'entrance', 'exhibit-third-project', 'exhibit-featured-client', 'exhibit-second-project', 'about', 'landing',
   ]);
+});
+
+test('measured scroll segments interpolate camera depth and clamp travel endpoints', () => {
+  const stops = [{ offsetTop: 120, z: 0 }, { offsetTop: 1500, z: -18 }, { offsetTop: 2400, z: -36 }];
+  assert.deepEqual(progressFor(810, stops), { stopIndex: 0, localProgress: 0.5, z: -9 });
+  assert.deepEqual(progressFor(1950, stops), { stopIndex: 1, localProgress: 0.5, z: -27 });
+  assert.deepEqual(progressFor(0, stops), { stopIndex: 0, localProgress: 0, z: 0 });
+  assert.deepEqual(progressFor(3000, stops), { stopIndex: 2, localProgress: 0, z: -36 });
+});
+
+test('empty and collapsed scroll segments return finite progress without motion', () => {
+  assert.deepEqual(progressFor(500, []), { stopIndex: 0, localProgress: 0, z: 0 });
+  assert.deepEqual(progressFor(50, [{ offsetTop: 100, z: 0 }, { offsetTop: 100, z: -18 }]),
+    { stopIndex: 0, localProgress: 0, z: 0 });
 });

@@ -258,6 +258,9 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
       debug.panelTextureReady = Boolean(current.material.map);
       debug.panelTextureSRGB = current.material.map?.colorSpace === SRGBColorSpace;
       debug.panelReusesImage = current.material.map?.image === (current.userData.stop as HTMLElement).querySelector('figure img');
+      debug.panelEvidenceFit = current.userData.evidenceFit;
+      debug.panelImageScaleX = current.userData.imageScale.x;
+      debug.panelImageScaleY = current.userData.imageScale.y;
     };
 
     const applyQuality = (): void => {

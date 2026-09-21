@@ -27,14 +27,32 @@ Every published entry feeds the same canonical project page, catalogue exhibit, 
 
 ## Evidence and links
 
-Each published personal project needs at least one real local still with nonblank `alt` and `caption` text. Choose `kind` from `screenshot`, `terminal`, `diagram`, or `illustration`; choose `fit: contain` when cropping would hide important terminal text or diagram details, otherwise use `cover`.
+Each published personal project needs at least one real local still with nonblank `alt` and `caption` text. Choose `kind` from `screenshot`, `terminal`, `diagram`, or `illustration`. Set `fit: contain` whenever the whole image matters. Terminal and diagram evidence is always contained even if `cover` was requested. A screenshot marked `cover` is cropped only when no more than 10% of either dimension is lost in the exhibition's 2:1 frame; otherwise it is contained. Stone-coloured letterboxing is intentional. The canonical page keeps the whole still readable. The first still becomes the gallery preview, including when a page also has video.
+
+Still images are optimized to at most 1600 px on their long edge. Keep each exhibit preview at or below 180,000 bytes after optimization; recompress an oversized original rather than raising the budget. Provide meaningful alt text and a caption that names what the evidence proves.
 
 External `repositoryUrl` and `liveUrl` values are optional, but every supplied URL must use HTTPS—even on a draft. A non-hosted CLI or library can publish with terminal or diagram evidence plus a repository link; do not invent a live demo.
 
 The featured client is intentionally stricter: it retains its HTTPS live URL, three approved screenshots, and exactly one `website`, `manual-planner`, and `ai-mvp` contract.
 
-## Optional page video (completed by plan 03-02)
+## Optional page video
 
-Still-only projects are complete and publishable now. Plan 03-02 adds an optional page-only `video` record with `src`, local `poster`, `description`, `hasAudio`, and caption records (`src`, `language`, `label`) when audio is meaningful. Video will remain click-to-play with a still in the exhibition; do not add video fields or public media until that contract is implemented and this section is finalized.
+Still-only projects are complete and publishable. If a demonstration genuinely helps, add one optional `video` record to the entry:
 
-Draft media belongs beside the draft entry, not in `public/`. Never copy fixtures or the starter into the public media directory.
+```yaml
+video:
+  src: /media/my-stable-slug/demo.mp4
+  poster: ./video-poster.png
+  description: The command produces a report, then highlights the failed checks.
+  hasAudio: true
+  captions:
+    src: /media/my-stable-slug/demo.vtt
+    language: en
+    label: English
+```
+
+Place the poster beside `index.md` and provide a still `evidence` entry for the gallery. Place the MP4 and, when needed, WebVTT captions at `public/media/<stable-slug>/` with exactly the paths declared above. Media filenames use letters, digits, dots, underscores and hyphens; the slug must match the project. Do not use external URLs, query strings or encoded paths. Each media file must exist and be no larger than 25,000,000 bytes. Captions need a nonempty WebVTT cue. Set `hasAudio: false` and omit `captions` for a silent demo, but keep a useful visible `description`. Meaningful audio requires `hasAudio: true` and captions with language and label.
+
+The page offers native controls, a poster, text description and a download link. It does not autoplay, and the exhibition always uses the still rather than a video texture. Test the actual supplied file on the real target browsers, including iPhone Safari and Windows Chrome, before publishing; the artificial Chromium fixture only proves the test asset works in Chromium.
+
+Draft media belongs beside the draft entry, not in `public/`. Every file under `public/media/` must be referenced by a published project; an orphan, draft-only file, missing caption or path escape stops the build. Never copy fixtures or the starter into public media.

@@ -3,6 +3,7 @@ import { render } from 'astro:content';
 import { getImage } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getPublishedProjects } from '../../lib/projects';
+import { evidenceFit, imageSize } from '../../lib/evidence-fit';
 
 export async function getStaticPaths() {
   const projects = await getPublishedProjects();
@@ -15,9 +16,14 @@ export async function getStaticPaths() {
 const { project, rendered } = Astro.props;
 const { Content } = rendered;
 const { data } = project;
-const poster = data.video ? await getImage({ src: data.video.poster, width: Math.min(data.video.poster.width, 1600), format: 'webp' }) : undefined;
+const poster = data.video ? await getImage({ src: data.video.poster, ...imageSize(data.video.poster.width, data.video.poster.height), format: 'webp' }) : undefined;
 const client = data.kind === 'client';
-const evidence = client ? data.screenshots.map((item) => ({ ...item, kind: 'screenshot' as const, fit: 'cover' as const })) : data.evidence;
+const evidence = await Promise.all((client ? data.screenshots.map((item) => ({ ...item, kind: 'screenshot' as const, fit: 'cover' as const })) : data.evidence)
+  .map(async (item) => ({
+    ...item,
+    fit: evidenceFit(item.kind, item.fit, item.src.width, item.src.height),
+    optimized: await getImage({ src: item.src, ...imageSize(item.src.width, item.src.height), format: 'webp' }),
+  })));
 const formatLabel = {
   'case-study': 'Case study',
   showcase: 'Project showcase',
@@ -73,7 +79,7 @@ const formatLabel = {
       <div class="evidence-grid">
         {evidence.map((item) => (
           <figure data-evidence-kind={item.kind} data-evidence-fit={item.fit}>
-            <img src={item.src.src} alt={item.alt} width={item.src.width} height={item.src.height} loading="lazy" />
+            <img src={item.optimized.src} alt={item.alt} width={item.optimized.attributes.width} height={item.optimized.attributes.height} loading="lazy" />
             <figcaption>{item.caption}</figcaption>
           </figure>
         ))}

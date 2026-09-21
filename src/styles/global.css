@@ -107,6 +107,7 @@
   .evidence-grid { display: grid; gap: 2rem; margin-top: 2rem; }
   figure { min-width: 0; margin: 0; }
   figure img { display: block; width: 100%; max-width: 100%; height: auto; border: 1px solid var(--line); }
+  figure[data-evidence-fit="contain"] img { object-fit: contain; background: var(--stone-lit); }
   figcaption { margin-top: 0.7rem; color: var(--muted); font-size: 0.9rem; }
   .project-return { margin-top: 2rem; }
   .publication-status { font-family: var(--mono); font-size: 0.75rem; }
@@ -239,6 +240,7 @@
   .contract-labels { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
   .contract-labels li { padding: 8px 12px; border: 1px solid var(--line); background: var(--paper); color: var(--muted); font: 600 12px/1.4 var(--mono); text-transform: uppercase; letter-spacing: 0.1em; }
   #exhibition figure img { aspect-ratio: 2 / 1; object-fit: cover; object-position: center; width: 100%; height: auto; }
+  #exhibition figure[data-evidence-fit="contain"] img { object-fit: contain; background: var(--stone-lit); }
   .exhibition-horizon { background: linear-gradient(to bottom, #f4f0e6 0%, #efe4cf 72%, #e9dcc4 100%); }
   .stop-drawing { display: block; width: 100%; max-width: 40rem; margin-inline: auto; }
   .stop-drawing .drawing-label, .stop-drawing .drawing-caption { font-family: var(--mono); font-size: 0.625rem; color: var(--muted); }

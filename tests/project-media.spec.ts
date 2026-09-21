@@ -42,3 +42,21 @@ test('wide terminal and portrait diagram keep all four corners in the HTML prese
   await expect(figure).toHaveAttribute('data-evidence-fit', 'contain');
   await expect(figure.locator('img')).toHaveCSS('object-fit', 'contain');
 });
+
+test('route-mounted panel reuses the optimized still without cropping or changing pick corners', async ({ page }) => {
+  await page.goto('/#exhibit-fixture-personal-01');
+  await expect.poll(() => page.evaluate(() => window.__exhibition?.panelTextureReady)).toBe(true);
+  const data = await page.evaluate(() => ({ ...window.__exhibition! }));
+  expect(data.panelStopId).toBe('exhibit-fixture-personal-01');
+  expect(data.panelEvidenceFit).toBe('contain');
+  expect(data.panelReusesImage).toBe(true);
+  expect(data.panelImageScaleX).toBe(1);
+  expect(data.panelImageScaleY).toBeCloseTo(0.4);
+  expect(data.panelFacingCamera).toBe(true);
+  for (let corner = 0; corner < 4; corner++) {
+    expect(Number(data[`panelCorner${corner}X`])).toBeGreaterThanOrEqual(0);
+    expect(Number(data[`panelCorner${corner}X`])).toBeLessThanOrEqual(1);
+    expect(Number(data[`panelCorner${corner}Y`])).toBeGreaterThanOrEqual(0);
+    expect(Number(data[`panelCorner${corner}Y`])).toBeLessThanOrEqual(1);
+  }
+});

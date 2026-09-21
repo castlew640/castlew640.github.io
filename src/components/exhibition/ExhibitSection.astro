@@ -3,6 +3,7 @@ import { getImage } from 'astro:assets';
 import type { CollectionEntry } from 'astro:content';
 import StopSection from './StopSection.astro';
 import ExhibitDrawing from './drawings/ExhibitDrawing.astro';
+import { evidenceFit, imageSize } from '../../lib/evidence-fit';
 
 interface Props {
   project: CollectionEntry<'projects'>;
@@ -15,8 +16,9 @@ const clientData = project.data.kind === 'client' ? project.data : undefined;
 const personalData = project.data.kind === 'personal' ? project.data : undefined;
 const shot = clientData ? clientData.screenshots[0] : personalData!.evidence[0];
 const evidenceKind = clientData ? 'screenshot' : personalData!.evidence[0].kind;
-const evidenceFit = clientData ? 'cover' : personalData!.evidence[0].fit;
-const panel = await getImage({ src: shot.src, width: 1600, format: 'webp' });
+const requestedFit = clientData ? 'cover' : personalData!.evidence[0].fit;
+const resolvedFit = evidenceFit(evidenceKind, requestedFit, shot.src.width, shot.src.height);
+const panel = await getImage({ src: shot.src, ...imageSize(shot.src.width, shot.src.height), format: 'webp' });
 const labels = {
   website: 'Website',
   'manual-planner': 'Manual Wi-Fi planner',
@@ -25,8 +27,8 @@ const labels = {
 ---
 
 <StopSection id={`exhibit-${slug}`} slug={slug} labelledBy={`exhibit-${slug}-title`}>
-  <figure data-panel-source data-evidence-kind={evidenceKind} data-evidence-fit={evidenceFit}>
-    <img src={panel.src} width={panel.attributes.width} height={panel.attributes.height} alt={shot.alt} decoding="async" data-evidence-fit={evidenceFit} />
+  <figure data-panel-source data-evidence-kind={evidenceKind} data-evidence-fit={resolvedFit}>
+    <img src={panel.src} width={panel.attributes.width} height={panel.attributes.height} alt={shot.alt} decoding="async" loading={index === 0 ? 'eager' : 'lazy'} fetchpriority={index === 0 ? 'high' : 'auto'} data-evidence-fit={resolvedFit} />
     <figcaption>{shot.caption}</figcaption>
   </figure>
   <ExhibitDrawing variant={index} />

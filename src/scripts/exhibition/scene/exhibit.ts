@@ -1,9 +1,10 @@
 import {
   BoxGeometry, BufferGeometry, Color, EdgesGeometry, Float32BufferAttribute, Group,
-  Mesh, MeshBasicMaterial, type MeshStandardMaterial, PlaneGeometry, SRGBColorSpace, Texture,
+  Mesh, MeshBasicMaterial, type MeshStandardMaterial, PlaneGeometry, SRGBColorSpace, Texture, Vector2,
 } from 'three';
 import { polyline, segments, type Inks } from './ink';
 import { routeBounds, routeMatrix } from './path';
+import { containedScale } from '../../../lib/evidence-fit';
 
 export function createExhibits(stops: HTMLElement[], inks: Inks, stone: MeshStandardMaterial,
   anisotropy: number, requestRender: () => void, landingStation: number) {
@@ -31,6 +32,8 @@ export function createExhibits(stops: HTMLElement[], inks: Inks, stone: MeshStan
     const variant = index % 3;
     const figure = stop.querySelector<HTMLElement>('figure[data-panel-source]')!;
     const img = figure.querySelector('img')!;
+    const contain = figure.dataset.evidenceFit === 'contain';
+    const imageScale = new Vector2(1, 1);
 
     const box = (w: number, h: number, d: number, x: number, y: number, z = 0, deep = false): Mesh => {
       const geometry = new BoxGeometry(w, h, d).translate(x, y, z);
@@ -99,12 +102,35 @@ export function createExhibits(stops: HTMLElement[], inks: Inks, stone: MeshStan
     portal.add(dot);
 
     const material = new MeshBasicMaterial({ color: '#f4f0e6', toneMapped: false });
+    if (contain) {
+      // Keep one pickable 4x2 panel and one GPU texture: shade the unused UV
+      // area in stone instead of cropping the decoded DOM image or adding a mesh.
+      material.onBeforeCompile = (shader) => {
+        shader.uniforms.evidenceScale = { value: imageScale };
+        shader.uniforms.evidenceStone = { value: colors.lit };
+        shader.fragmentShader = shader.fragmentShader.replace('void main() {',
+          'uniform vec2 evidenceScale; uniform vec3 evidenceStone;\nvoid main() {');
+        shader.fragmentShader = shader.fragmentShader.replace('#include <map_fragment>', `
+          #ifdef USE_MAP
+            vec2 evidenceUv = (vMapUv - vec2(0.5)) / evidenceScale + vec2(0.5);
+            if (any(lessThan(evidenceUv, vec2(0.0))) || any(greaterThan(evidenceUv, vec2(1.0)))) {
+              diffuseColor.rgb = evidenceStone;
+            } else {
+              diffuseColor *= texture2D(map, evidenceUv);
+            }
+          #endif
+        `);
+      };
+      material.customProgramCacheKey = () => 'contained-evidence-v1';
+    }
     const panel = new Mesh(panelGeometry, material);
     panel.position.set(0, 4.1, 0.06);
     panel.layers.enable(1);
     panel.userData.stop = stop;
     panel.userData.stopId = stop.dataset.stopId ?? stop.id;
     panel.userData.variant = variant;
+    panel.userData.evidenceFit = contain ? 'contain' : 'cover';
+    panel.userData.imageScale = imageScale;
     panels.push(panel);
     portal.add(panel);
     const hatchPoints: number[] = [];
@@ -144,7 +170,10 @@ export function createExhibits(stops: HTMLElement[], inks: Inks, stone: MeshStan
         texture.anisotropy = Math.min(8, anisotropy);
         texture.generateMipmaps = true;
         const ratio = img.naturalWidth / img.naturalHeight;
-        if (ratio > 2) { texture.repeat.x = 2 / ratio; texture.offset.x = (1 - texture.repeat.x) / 2; }
+        if (contain) {
+          const scale = containedScale(img.naturalWidth, img.naturalHeight);
+          imageScale.set(scale.x, scale.y);
+        } else if (ratio > 2) { texture.repeat.x = 2 / ratio; texture.offset.x = (1 - texture.repeat.x) / 2; }
         else { texture.repeat.y = ratio / 2; texture.offset.y = (1 - texture.repeat.y) / 2; }
         texture.needsUpdate = true;
         material.map = texture;

@@ -4,7 +4,8 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../dist/', import.meta.url));
 const requiredFiles = ['index.html', 'projects/featured-client/index.html', 'resume/william-castle-resume.pdf'];
-const forbiddenTokens = ['verification-draft', 'Verification Draft', 'sample@example.com', 'example.com'];
+const forbiddenTokens = ['verification-draft', 'Verification Draft', 'sample@example.com', 'example.com',
+  'GROWTH_FIXTURE_DO_NOT_PUBLISH', 'GROWTH_DRAFT_DO_NOT_PUBLISH', 'fixture-personal-', 'project-starter'];
 
 async function filesIn(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -22,6 +23,9 @@ const names = new Set(files.map((file) => relative(root, file)));
 const missing = requiredFiles.filter((file) => !names.has(file));
 if (missing.length) throw new Error(`Built artifact is missing required files: ${missing.join(', ')}`);
 if (names.has('projects/verification-draft/index.html')) throw new Error('Unpublished verification draft has a route');
+if ([...names].some((name) => /^media\/.*(?:fixture|draft|starter)/i.test(name))) {
+  throw new Error('Fixture, draft or starter media reached the public artifact');
+}
 
 const textFiles = files.filter((file) => /\.(html|json|txt|xml|js|css)$/.test(file));
 for (const file of textFiles) {
@@ -34,6 +38,22 @@ for (const file of textFiles) {
 }
 
 const html = await readFile(join(root, 'index.html'), 'utf8');
+if (/<video\b|<source\b[^>]*\.mp4|\/media\//i.test(html)) throw new Error('Home must contain only still evidence');
+const mediaWhitelist = new Set();
+for (const file of files.filter((candidate) => /^projects\/.*\/index\.html$/.test(relative(root, candidate)))) {
+  const page = await readFile(file, 'utf8');
+  for (const match of page.matchAll(/<(?:source|track)\b[^>]*\bsrc="([^"]+)"/g)) {
+    const source = match[1];
+    if (!source.startsWith('/media/') || source.includes('%') || source.includes('?') || source.includes('#')) {
+      throw new Error(`Invalid page media source: ${source}`);
+    }
+    mediaWhitelist.add(source.slice(1));
+  }
+}
+for (const name of mediaWhitelist) if (!names.has(name)) throw new Error(`Published page media missing from artifact: ${name}`);
+for (const name of names) {
+  if (name.startsWith('media/') && !mediaWhitelist.has(name)) throw new Error(`Unreferenced media in artifact: ${name}`);
+}
 const project = await readFile(join(root, 'projects/featured-client/index.html'), 'utf8');
 for (const identifier of ['website', 'manual-planner', 'ai-mvp', 'castlew640@gmail.com']) {
   if (!html.includes(identifier) && !project.includes(identifier)) throw new Error(`Missing required content identifier: ${identifier}`);

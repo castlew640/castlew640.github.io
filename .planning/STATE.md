@@ -4,17 +4,17 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 03
 current_phase_name: growth-and-release-polish
-status: ready_to_execute
-stopped_at: Phase 03 planning complete
-last_updated: "2026-09-21T03:57:24.000Z"
+status: executing
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-09-21T04:23:29.567Z"
 last_activity: 2026-09-21
-last_activity_desc: "Phase 03 planning verified: 8 plans in 6 waves; earlier human acceptance pending"
+last_activity_desc: Plan 03-01 completed; flexible project publishing and isolated growth proof shipped
 progress:
   total_phases: 3
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 19
-  completed_plans: 11
-  percent: 33
+  completed_plans: 12
+  percent: 63
 ---
 
 # Project State
@@ -28,12 +28,12 @@ See: .planning/PROJECT.md (updated 2026-09-19)
 
 ## Current Position
 
-Phase: 03 (growth-and-release-polish) — READY TO EXECUTE
-Plan: 0 of 8 implemented; 8 plans verified
-Status: Ready to execute
-Last activity: 2026-09-21 — Research and pattern mapping complete; independent plan review passed after one targeted revision
+Phase: 03 (growth-and-release-polish) — EXECUTING
+Plan: 2 of 8
+Status: Ready for Plan 03-02
+Last activity: 2026-09-21 — Plan 03-01 completed with N=0/1/10 growth verification
 
-**Progress:** [░░░░░░░░░░] 0% of Phase 03 implementation. Eleven earlier implementation plans have summaries; earlier human acceptance remains pending.
+**Progress:** [██████░░░░] 63%
 
 Next action: `$gsd-execute-phase 3`. Eight plans contain 24 tasks in six waves; all six assigned requirements and all 28 context decisions are covered. The independent review's omitted multi-exhibit regression task was added to 03-06 and its recheck passed with no blockers or warnings.
 
@@ -47,9 +47,9 @@ Outstanding from Phase 01: verification status is `human_needed` and 01-UAT.md i
 
 ## Performance Metrics
 
-- Total plans completed: 11
-- Average duration: 47 min
-- Total recorded execution time: 518 min (including waits and review)
+- Total plans completed: 12
+- Average duration: 44 min
+- Total recorded execution time: 530 min (including waits and review)
 
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
@@ -64,6 +64,7 @@ Outstanding from Phase 01: verification status is `human_needed` and 01-UAT.md i
 | Phase 02 P06 | 33 min | 3 tasks | 8 files |
 | Phase 02 P07 | 17 min | 3 tasks | 7 files |
 | Phase 02 P08 | 330 min | 3 tasks | 11 files |
+| Phase 03 P01 | 12min | 3 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -95,6 +96,9 @@ Decisions are logged in PROJECT.md.
 - [Phase 02]: Plan 02-05 keeps travel controls in one stable DOM position, delegates validated taps to canonical anchors, and recognizes native fractional-pixel stop arrivals. — Preserves one-handed focus and history; isolated pointer regressions prove tap gates before the real renderer arrives.
 - [Phase 02]: Plan 02-06 uses a shared warm stone bounce term with the exact light rig, layout-preserving active text plates, and a counts-only demand-rendering lifecycle. — Visual review exposed dark physical shading and asynchronous layout changes; the final gate proves recovery, idle suspension, native restoration, resource cleanup, and lazy loading.
 - [Phase 02]: Plan 02-07 uses a title/CTA-first mobile sheet with complete readable text continuing in native document flow; the impossible 52svh content cap becomes a minimum height while preserving the full plate and104px bottom padding.
+- [Phase 03]: Default omitted project kind to client and format to case-study. — The approved client entry remains backward compatible while personal projects opt into their own branch.
+- [Phase 03]: Require described local still evidence for personal projects while allowing repository-only publication. — Non-hosted tools can publish honest evidence without inventing a demo or client contracts.
+- [Phase 03]: Run artificial growth catalogues only in OS temporary checkout copies guarded by content and dist hashes. — Fixtures prove N=0/1/10 behavior without becoming public accomplishments or deployable artifacts.
 
 ### Pending Todos
 
@@ -130,6 +134,6 @@ Remaining publication inputs and environment notes:
 
 ## Session Continuity
 
-Last session: 2026-09-21T03:57:24.000Z
-Stopped at: Phase 03 planning complete — next: $gsd-execute-phase 3
-Resume file: .planning/phases/03-growth-and-release-polish/03-01-PLAN.md
+Last session: 2026-09-21T04:23:29.562Z
+Stopped at: Completed 03-01-PLAN.md
+Resume file: None

@@ -44,10 +44,10 @@ The first milestone includes both an early readable release and the finished ini
 
 ### Ongoing Project Growth
 
-- [ ] **GROW-01**: The owner can add a completed project through a documented content entry and its assets, producing its page, index entry, and corridor exhibit without editing renderer or navigation code.
+- [x] **GROW-01**: The owner can add a completed project through a documented content entry and its assets, producing its page, index entry, and corridor exhibit without editing renderer or navigation code.
 - [x] **GROW-02**: The owner receives build-time feedback for invalid project metadata, duplicate route identifiers, and missing referenced local assets before publication.
 - [x] **GROW-03**: The owner can keep draft projects excluded from public pages, indexes, and the serialized exhibition content.
-- [ ] **GROW-04**: The owner can append completed work farther along the exhibition while preserving existing project URLs and the ordering of earlier exhibits.
+- [x] **GROW-04**: The owner can append completed work farther along the exhibition while preserving existing project URLs and the ordering of earlier exhibits.
 
 ### Performance
 
@@ -121,10 +121,10 @@ Every v1 requirement is owned by exactly one phase. Later phases preserve and re
 | ACCESS-03 | Phase 1 | Complete |
 | ACCESS-04 | Phase 2 | Complete |
 | ACCESS-05 | Phase 2 | Complete |
-| GROW-01 | Phase 3 | Pending |
+| GROW-01 | Phase 3 | Complete |
 | GROW-02 | Phase 1 | Complete |
 | GROW-03 | Phase 1 | Complete |
-| GROW-04 | Phase 3 | Pending |
+| GROW-04 | Phase 3 | Complete |
 | PERF-01 | Phase 3 | Pending |
 | PERF-02 | Phase 3 | Pending |
 | SHIP-01 | Phase 1 | Complete |

@@ -5,16 +5,16 @@ milestone_name: milestone
 current_phase: 03
 current_phase_name: growth-and-release-polish
 status: executing
-stopped_at: Completed 03-01-PLAN.md
-last_updated: "2026-09-21T04:23:29.567Z"
+stopped_at: Completed 03-03-PLAN.md
+last_updated: "2026-09-21T05:06:00.547Z"
 last_activity: 2026-09-21
-last_activity_desc: Plan 03-01 completed; flexible project publishing and isolated growth proof shipped
+last_activity_desc: Plan 03-03 completed; stable winding route and route-aware regressions shipped
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 19
-  completed_plans: 12
-  percent: 63
+  completed_plans: 13
+  percent: 68
 ---
 
 # Project State
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-09-19)
 ## Current Position
 
 Phase: 03 (growth-and-release-polish) — EXECUTING
-Plan: 2 of 8
+Plan: 3 of 8
 Status: Ready for Plan 03-02
-Last activity: 2026-09-21 — Plan 03-01 completed with N=0/1/10 growth verification
+Last activity: 2026-09-21 — Plan 03-03 completed with stable route frames, transformed evidence, and full regression coverage
 
-**Progress:** [██████░░░░] 63%
+**Progress:** [███████░░░] 68%
 
 Next action: `$gsd-execute-phase 3`. Eight plans contain 24 tasks in six waves; all six assigned requirements and all 28 context decisions are covered. The independent review's omitted multi-exhibit regression task was added to 03-06 and its recheck passed with no blockers or warnings.
 
@@ -47,9 +47,9 @@ Outstanding from Phase 01: verification status is `human_needed` and 01-UAT.md i
 
 ## Performance Metrics
 
-- Total plans completed: 12
-- Average duration: 44 min
-- Total recorded execution time: 530 min (including waits and review)
+- Total plans completed: 13
+- Average duration: 43 min
+- Total recorded execution time: 560 min (including waits and review)
 
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
@@ -65,6 +65,7 @@ Outstanding from Phase 01: verification status is `human_needed` and 01-UAT.md i
 | Phase 02 P07 | 17 min | 3 tasks | 7 files |
 | Phase 02 P08 | 330 min | 3 tasks | 11 files |
 | Phase 03 P01 | 12min | 3 tasks | 12 files |
+| Phase 03 P03 | 30min | 3 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -99,6 +100,9 @@ Decisions are logged in PROJECT.md.
 - [Phase 03]: Default omitted project kind to client and format to case-study. — The approved client entry remains backward compatible while personal projects opt into their own branch.
 - [Phase 03]: Require described local still evidence for personal projects while allowing repository-only publication. — Non-hosted tools can publish honest evidence without inventing a demo or client contracts.
 - [Phase 03]: Run artificial growth catalogues only in OS temporary checkout copies guarded by content and dist hashes. — Fixtures prove N=0/1/10 behavior without becoming public accomplishments or deployable artifacts.
+- [Phase 03]: Plan 03-03 keeps signed stop.z values as native-scroll scalars and converts once to positive scene station. — Preserves existing stop/layout contracts while isolating Three.js world geometry.
+- [Phase 03]: Plan 03-03 uses fixed 12m-line plus 6m-cubic segments so appended work cannot move earlier route frames. — Fixed piecewise anchors preserve GROW-04 append invariance.
+- [Phase 03]: Plan 03-03 selects panels by stable DOM stop ID and projects all four transformed corners. — Navigation identity and visual bounds stay correct on the winding route.
 
 ### Pending Todos
 
@@ -134,6 +138,6 @@ Remaining publication inputs and environment notes:
 
 ## Session Continuity
 
-Last session: 2026-09-21T04:23:29.562Z
-Stopped at: Completed 03-01-PLAN.md
+Last session: 2026-09-21T05:06:00.542Z
+Stopped at: Completed 03-03-PLAN.md
 Resume file: None

@@ -107,13 +107,13 @@ Planning notes: create the visual/interaction contract before extensive asset wo
 4. Production smoke checks verify HTTPS, direct project refresh, images, resume, contact destinations, and navigation on the actual chosen host.
 5. The owner can recover a prior known-good release using the documented rollback procedure, and any public description of this site's rendering or CI/CD reflects demonstrated behavior.
 
-**Plans:** 1/8 plans executed
+**Plans:** 2/8 plans executed
 
 Plans:
 **Wave 1**
 
 - [x] 03-01-PLAN.md — Flexible projects, copyable starter, and isolated content-growth verification.
-- [ ] 03-03-PLAN.md — Stable winding route frames, calm exhibits, and native-scroll navigation.
+- [x] 03-03-PLAN.md — Stable winding route frames, calm exhibits, and native-scroll navigation.
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -146,7 +146,7 @@ Execution order: Phase 1 → Phase 2 → Phase 3.
 |-------|----------------|--------|-----------|
 | 1. Publishable Portfolio and Delivery | 3/3 | Complete   | 2026-09-19 |
 | 2. One-Handed Surreal Exhibition | 8/8 | Awaiting human verification | - |
-| 3. Growth and Release Polish | 1/8 | In Progress|  |
+| 3. Growth and Release Polish | 2/8 | In Progress|  |
 
 ## Coverage
 

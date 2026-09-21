@@ -1,0 +1,32 @@
+# Publish and check the portfolio
+
+The public destination is `https://castlew640.github.io/` from `master`. `.github/workflows/pages.yml` runs `npm run check`, uploads that exact `dist`, and deploys only after the build job succeeds. The build job has read-only repository access; only the deploy job has Pages/OIDC permissions.
+
+## Publish
+
+1. Run `npm ci` on a new checkout, then `npx playwright install chromium`. Run `npm run check`; expect all content, artifact, unit, browser and isolated growth gates to pass. Review `git diff` and the published project copy.
+2. Commit the reviewed change and `git push origin master`. Use `gh run list --workflow Pages --limit 5` to get the new run ID; `gh run watch RUN_ID` must end with successful build **and** deploy jobs. `gh run view RUN_ID --json headSha,conclusion,jobs,url` records the checked SHA, job results and run URL. `gh api repos/castlew640/castlew640.github.io/actions/runs/RUN_ID/artifacts` identifies the uploaded `github-pages` artifact ID.
+3. Download the **successful run’s** `github-pages` artifact and extract it into a run-specific directory. For example, `gh run download RUN_ID --name github-pages --dir /tmp/phase03-release/intended/download`, then `mkdir -p /tmp/phase03-release/intended/checked-dist` and `tar -xf /tmp/phase03-release/intended/download/artifact.tar -C /tmp/phase03-release/intended/checked-dist`. Do not use a local rebuild as the expected live bytes.
+4. Run `npm run smoke:production -- --base-url https://castlew640.github.io/ --dist /tmp/phase03-release/intended/checked-dist --output /tmp/phase03-release/intended/smoke.json`. Expect exact SHA-256 matches for each published route and asset, including the PDF, plus direct/return/navigation/contact/no-JavaScript/phone journeys. Record the SHA, run URL, artifact ID, deployment ID/time and smoke report path in the release evidence. A failure means the release is not yet verified.
+
+The smoke runner accepts plain HTTP only for a loopback test server. It follows redirects only inside the checked origin. It reads contact destinations without sending email or submitting anything.
+
+## Restore a known-good release
+
+Keep a successful run’s downloaded artifact and SHA-256 manifest. If a reviewed change `C` needs reversal, use `git revert C`, run `npm run check`, push the new commit normally, wait for both workflow jobs, download that run’s artifact and run the live smoke against it. Compare the live content and hashes to the retained known-good artifact. When restoring the intended content after a drill, revert the recovery commit normally, check/push/watch/smoke again and verify the intended sentence/content is live. Never reset or force-push release history. An old failed-build test proved that a failed build preserves the prior site; it did not prove this live restoration procedure.
+
+## Independent visitor checklist
+
+Keep results for the **actual device/browser/version** and note any failures. Earlier unresolved checks remain in [Phase 01 UAT](../.planning/phases/01-publishable-portfolio-and-delivery/01-UAT.md) and [Phase 02 UAT](../.planning/phases/02-one-handed-surreal-exhibition/02-UAT.md); [Phase 03 measurements](../.planning/phases/03-growth-and-release-polish/03-MEASUREMENTS.md) keeps the performance fields.
+
+- Windows Chrome: travel with mouse only and then keyboard only; inspect the winding gallery, readable labels and completed-structure reflection. Open **both** project pages, return to the same exhibit, then reach resume and contact. Check 200% and 400% browser zoom with visible focus.
+- Physical iPhone Safari: confirm the first view is illustrated and readable; tap **Enter 3D exhibition** deliberately. Swipe both ways with one finger, use the arrows with one thumb, tap a panel to open its page and return; pinch-zoom/pan and check the address bar retracting/reappearing. Test still view again and confirm resume/contact remain reachable.
+- Record any issue with device, OS/browser version, viewport/zoom, project/stop and a screenshot or short screen recording. These visitor observations do not provide frame-time percentiles.
+
+## Separate physical timing evidence
+
+The fixed thresholds and headless lab results are in [03-PERFORMANCE-TARGETS.md](../.planning/phases/03-growth-and-release-polish/03-PERFORMANCE-TARGETS.md) and [03-MEASUREMENTS.md](../.planning/phases/03-growth-and-release-polish/03-MEASUREMENTS.md). On a normal-power 60 Hz Windows laptop, use Chrome’s Performance panel to record at least three complete forward/back journeys **after** first usable presentation for both real N=2 and local N=10; capture cold startup separately, keep failed recordings, save each trace and note Chrome/Windows/GPU/viewport/DPR. Chrome documents [recording](https://developer.chrome.com/docs/devtools/performance/overview) and [saving traces](https://developer.chrome.com/docs/devtools/performance/save-trace). Do not substitute the headless `npm run measure:exhibition` intervals for displayed-frame evidence.
+
+For local N=10, run `node scripts/check-project-growth.mjs --count 10 --suite performance` from the checked repository and use the printed `Growth fixture root` (not the main `dist`). From that folder run `npm run preview -- --host 0.0.0.0 --port 4322 --ignore-lock`. Open `http://localhost:4322/` in Windows Chrome; on a phone on the same Wi-Fi use `http://LAPTOP_IPV4:4322/` from `ipconfig`. Serve real N=2 analogously from the repository with `npm run preview -- --host 0.0.0.0 --port 4321 --ignore-lock`. Temporary fixture content is marked and must never be pushed or published.
+
+A physical iPhone Safari rendering timeline ordinarily uses [Web Inspector on a connected Mac](https://developer.apple.com/documentation/safari-developer-tools/inspecting-ios). The owner currently has no Mac, so its frame percentiles remain pending even if the iPhone visitor checks pass. Record that limit plainly; do not count a Windows trace or emulated touch as Safari evidence.

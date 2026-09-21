@@ -11,7 +11,7 @@ Every published entry feeds the same canonical project page, catalogue exhibit, 
    - `case-study` for the usual What / Why / Decisions / Results / Evidence story.
    - `showcase` for a compact or playful project; remove sections that do not help.
    - `deep-dive` for Architecture, Tradeoffs, Experiments, and Lessons when those details are useful.
-5. Set `exhibitionOrder` greater than the current published maximum (currently `1`). Preserve that value on later edits so existing exhibits do not move.
+5. Set `exhibitionOrder` greater than the current published maximum (currently `2`). Preserve that value on later edits so existing exhibits do not move.
 6. Keep `published: false` while drafting. Run `npm run check`; expect a successful build and test run with no draft route.
 7. Review `git diff -- src/content/projects/` for placeholder text, unsupported claims, private material, and accidental files.
 8. Change to `published: true`, run `npm run check` again, and open the generated page and exhibition locally.
@@ -23,7 +23,7 @@ Every published entry feeds the same canonical project page, catalogue exhibit, 
    git push origin master
    ```
 
-   The push should start the checked-artifact Pages workflow. The production verification and recovery steps live in `docs/RELEASE.md` once Phase 3 plan 03-08 creates it.
+   The push should start the checked-artifact Pages workflow. Follow `docs/RELEASE.md` for production verification and recovery.
 
 ## Evidence and links
 

@@ -328,6 +328,7 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
           return;
         }
         debug.renderCount = ++renderCount;
+        debug.lastSubmissionMs = submissionCost;
         debug.drawCalls = renderer.info.render.calls;
         debug.triangles = renderer.info.render.triangles;
         debug.geometries = renderer.info.memory.geometries;
@@ -397,6 +398,7 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
     cleanups.push(() => window.removeEventListener('resize', queueResize));
     canvas.addEventListener('webglcontextlost', contextLost);
     cleanups.push(() => canvas.removeEventListener('webglcontextlost', contextLost));
+    exhibits.setActiveStation(station);
     updateCamera();
     resize();
 
@@ -408,6 +410,7 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
         if (next === station && nextStopId === currentStopId) return;
         station = next;
         currentStopId = nextStopId;
+        exhibits.setActiveStation(station);
         updateCamera();
         // Publish projection and camera together, even before the scheduled draw.
         // Otherwise readers can observe the new pose with the previous frame's panel.

@@ -5,6 +5,7 @@ import {
 import { polyline, segments, type Inks } from './ink';
 import { routeBounds, routeMatrix } from './path';
 import { containedScale } from '../../../lib/evidence-fit';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 export function createExhibits(stops: HTMLElement[], inks: Inks, stone: MeshStandardMaterial,
   anisotropy: number, requestRender: () => void, landingStation: number) {
@@ -15,6 +16,7 @@ export function createExhibits(stops: HTMLElement[], inks: Inks, stone: MeshStan
   const panels: Mesh<PlaneGeometry, MeshBasicMaterial>[] = [];
   const geometries: BufferGeometry[] = [panelGeometry];
   const cleanups: (() => void)[] = [];
+  const textureWindows: { station: number; setActive(active: boolean): void }[] = [];
   let disposed = false;
   let walkwayObstructions = 0;
   inks.leader.transparent = true;
@@ -147,7 +149,28 @@ export function createExhibits(stops: HTMLElement[], inks: Inks, stone: MeshStan
     portal.add(hatch);
     portal.add(segments(edges, inks.built, false), segments(drawn, inks.unbuilt, true), segments(marks, inks.leader, false));
 
+    // Every portal uses one stone draw instead of one draw per structural
+    // member. Keep the separate panel and ink so picking and construction
+    // strokes still behave independently as the catalogue grows.
+    const stones = portal.children.filter((object): object is Mesh<BufferGeometry, MeshStandardMaterial> =>
+      object instanceof Mesh && object.material === stone);
+    const mergedStone = mergeGeometries(stones.map((mesh) => mesh.geometry));
+    if (!mergedStone) throw new Error('Portal stone geometry could not be merged');
+    for (const mesh of stones) {
+      portal.remove(mesh);
+      const geometryIndex = geometries.indexOf(mesh.geometry);
+      if (geometryIndex !== -1) geometries.splice(geometryIndex, 1);
+      mesh.geometry.dispose();
+    }
+    const portalStone = new Mesh(mergedStone, stone);
+    portalStone.castShadow = portalStone.receiveShadow = true;
+    portalStone.raycast = noRaycast;
+    portal.add(portalStone);
+    geometries.push(mergedStone);
+
     let failed = false;
+    let active = false;
+    let generation = 0;
     const fail = (): void => {
       if (disposed || failed) return;
       failed = true;
@@ -161,10 +184,10 @@ export function createExhibits(stops: HTMLElement[], inks: Inks, stone: MeshStan
       requestRender();
     };
     img.addEventListener('error', fail);
-    void (async () => {
+    const prepare = async (token: number): Promise<void> => {
       try {
         await img.decode();
-        if (disposed || failed) return;
+        if (disposed || failed || !active || token !== generation) return;
         const texture = new Texture(img);
         texture.colorSpace = SRGBColorSpace;
         texture.anisotropy = Math.min(8, anisotropy);
@@ -179,11 +202,34 @@ export function createExhibits(stops: HTMLElement[], inks: Inks, stone: MeshStan
         material.map = texture;
         material.color.set('#ffffff');
         material.needsUpdate = true;
+        hatch.visible = false;
         figure.removeAttribute('aria-hidden');
         requestRender();
-      } catch { fail(); }
-    })();
+      } catch { if (active && token === generation) fail(); }
+    };
+    textureWindows.push({
+      station: portalStation,
+      setActive(next) {
+        if (active === next || disposed) return;
+        active = next;
+        generation++;
+        if (active) {
+          if (!failed) {
+            hatch.visible = !material.map;
+            void prepare(generation);
+          }
+        } else {
+          material.map?.dispose();
+          material.map = null;
+          material.color.set('#f4f0e6');
+          material.needsUpdate = true;
+          hatch.visible = false;
+        }
+        requestRender();
+      },
+    });
     cleanups.push(() => {
+      generation++;
       img.removeEventListener('error', fail);
       figure.removeAttribute('aria-hidden');
       material.map?.dispose();
@@ -193,6 +239,14 @@ export function createExhibits(stops: HTMLElement[], inks: Inks, stone: MeshStan
 
   return {
     group, completed, panels, walkwayObstructions,
+    setActiveStation(station: number) {
+      if (disposed || !Number.isFinite(station) || textureWindows.length === 0) return;
+      let nearest = 0;
+      for (let index = 1; index < textureWindows.length; index++) {
+        if (Math.abs(textureWindows[index].station - station) < Math.abs(textureWindows[nearest].station - station)) nearest = index;
+      }
+      textureWindows.forEach((window, index) => window.setActive(Math.abs(index - nearest) <= 1));
+    },
     dispose() {
       disposed = true;
       cleanups.forEach((cleanup) => cleanup());

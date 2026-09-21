@@ -2,6 +2,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
+import { createHash } from 'node:crypto';
 
 const project = fileURLToPath(new URL('../', import.meta.url));
 const dist = join(project, 'dist');
@@ -38,6 +39,7 @@ const controllers = essentialScripts.filter(({ bytes }) => bytes.includes('exhib
 if (controllers.length !== 1) throw new Error(`Expected one always-loaded exhibition controller; found ${controllers.length}`);
 const controllerBytes = gzipSync(controllers[0].bytes, { level: 9 }).length;
 const essentialBytes = essentialScripts.reduce((total, { bytes }) => total + gzipSync(bytes, { level: 9 }).length, 0);
+const allScriptBytes = scripts.reduce((total, { bytes }) => total + gzipSync(bytes, { level: 9 }).length, 0);
 
 function webpDimensions(bytes) {
   if (bytes.toString('ascii', 0, 4) !== 'RIFF' || bytes.toString('ascii', 8, 12) !== 'WEBP') throw new Error('Exhibit asset is not WebP');
@@ -56,11 +58,17 @@ function webpDimensions(bytes) {
 const panels = [...html.matchAll(/<figure\b[^>]*data-panel-source[^>]*>\s*<img\b[^>]*src="([^"]+)"/g)];
 if (!panels.length) throw new Error('No published exhibit image to measure');
 const images = [];
+const unique = new Map();
 for (const [, url] of panels) {
   if (!url.startsWith('/_astro/') || !url.endsWith('.webp') || url.includes('..')) throw new Error(`Unexpected exhibit asset URL: ${url}`);
   const bytes = await readFile(join(dist, url));
   const [width, height] = webpDimensions(bytes);
   if (Math.max(width, height) > 1600 || bytes.length > SCREENSHOT_BUDGET) throw new Error(`Screenshot budget exceeded: ${bytes.length} bytes, ${width}x${height} (${url})`);
-  images.push(`${bytes.length} B / ${width}x${height}`);
+  const sha256 = createHash('sha256').update(bytes).digest('hex');
+  unique.set(url, { url, sha256, bytes: bytes.length, width, height });
+  images.push(`${bytes.length} B / ${width}x${height} / ${url}`);
 }
-console.log(`Scene budget: scene gzip ${sceneBytes}/${SCENE_BUDGET} B; controller gzip ${controllerBytes} B; essential scripts gzip ${essentialBytes} B; screenshots ${images.join(', ')} (<=1600px, <=${SCREENSHOT_BUDGET} B each); no-clock source guard passed.`);
+if (unique.size !== panels.length || new Set([...unique.values()].map((image) => image.sha256)).size !== panels.length) {
+  throw new Error(`Published preview images must have distinct optimized URLs and hashes: ${unique.size}/${panels.length}`);
+}
+console.log(`Scene budget: scene gzip ${sceneBytes}/${SCENE_BUDGET} B; controller gzip ${controllerBytes} B; essential scripts gzip ${essentialBytes} B; all JS gzip ${allScriptBytes} B; ${unique.size} unique previews / ${[...unique.values()].reduce((total, image) => total + image.bytes, 0)} B encoded; screenshots ${images.join(', ')} (<=1600px, <=${SCREENSHOT_BUDGET} B each); route-station no-clock source guard passed.`);

@@ -4,8 +4,11 @@ import {
 } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { polyline, segments, type Inks } from './ink';
+import { routeBounds, routeMatrix, routePoint } from './path';
 
-export function createArchitecture(inks: Inks, landingStopZ: number) {
+export function createArchitecture(inks: Inks, landingStation: number) {
+  const landingStopZ = -landingStation;
+  const bounds = routeBounds(landingStation + 24);
   const group = new Group();
   group.name = 'architecture';
   const built = new Group();
@@ -33,7 +36,8 @@ export function createArchitecture(inks: Inks, landingStopZ: number) {
   const geometries: BufferGeometry[] = [];
   let walkwayObstructions = 0;
 
-  function solid(geometry: BufferGeometry, floor = false): Mesh {
+  function solid(geometry: BufferGeometry, floor = false, station?: number, outline = true): Mesh {
+    if (station !== undefined) geometry.applyMatrix4(routeMatrix(station, bounds));
     const normals = geometry.getAttribute('normal');
     const colorsArray: number[] = [];
     for (let i = 0; i < normals.count; i++) {
@@ -43,24 +47,28 @@ export function createArchitecture(inks: Inks, landingStopZ: number) {
     }
     geometry.setAttribute('color', new Float32BufferAttribute(colorsArray, 3));
     geometry.computeBoundingBox();
-    const box = geometry.boundingBox!;
-    // The floor is the path itself, not an obstruction above its y=.12 surface.
-    if (!floor && box.min.y < 3 && box.max.y > 0.12 && box.min.x < 3 && box.max.x > -3) walkwayObstructions++;
     const mesh = new Mesh(geometry, stone);
     mesh.castShadow = mesh.receiveShadow = true;
     built.add(mesh);
     geometries.push(geometry);
-    const outline = new EdgesGeometry(geometry, 20);
-    edges.push(...outline.getAttribute('position').array);
-    outline.dispose();
+    if (outline) {
+      const edgeGeometry = new EdgesGeometry(geometry, 20);
+      edges.push(...edgeGeometry.getAttribute('position').array);
+      edgeGeometry.dispose();
+    }
     return mesh;
   }
 
   function box(width: number, height: number, depth: number, x: number, y: number, z: number, floor = false): void {
-    solid(new BoxGeometry(width, height, depth).translate(x, y, z), floor);
+    if (!floor && y - height / 2 < 3 && y + height / 2 > 0.12 && x - width / 2 < 3 && x + width / 2 > -3) walkwayObstructions++;
+    solid(new BoxGeometry(width, height, depth).translate(x, y, 0), floor, -z);
   }
   const end = landingStopZ - 20;
-  box(6, 0.12, 4 - end, 0, 0.06, (4 + end) / 2, true);
+  // Fixed route samples form one continuous local six-metre walkway. The
+  // slight overlap closes sample seams without changing local clearance.
+  for (let station = 1; station <= landingStation + 20; station += 2) {
+    solid(new BoxGeometry(6, 0.12, 2.04).translate(0, 0.06, 0), true, station, false);
+  }
   for (const x of [-4.5, 4.5]) box(0.5, 4, 8, x, 2, -4);
   // A continuous roof ends abruptly at z=-8. Shallow ribs make its underside
   // coffered; beyond the break the same grid is ink alone.
@@ -89,10 +97,17 @@ export function createArchitecture(inks: Inks, landingStopZ: number) {
   for (const point of outer.slice(1)) arch.lineTo(...point);
   for (const point of inner) arch.lineTo(...point);
   arch.closePath();
-  solid(new ExtrudeGeometry(arch, { depth: 1, bevelEnabled: false, steps: 1 }).translate(0, 0, -12.5));
+  solid(new ExtrudeGeometry(arch, { depth: 1, bevelEnabled: false, steps: 1 }).translate(0, 0, -0.5), false, 12);
   for (const x of [-3.9, 3.9]) box(1, 3.2, 1, x, 1.6, -12);
+  const worldLines = (points: number[]): number[] => {
+    const transformed: number[] = [];
+    for (let index = 0; index < points.length; index += 3) {
+      transformed.push(...routePoint(-points[index + 2], points[index], points[index + 1], bounds).toArray());
+    }
+    return transformed;
+  };
   const swing = arcPoints(4.9, 2.3).flatMap(([x, y]) => [x, y, -11.48]);
-  drawn.add(polyline(swing, inks.arc, true));
+  drawn.add(polyline(worldLines(swing), inks.arc, true));
   for (const x of [-4.4, 4.4]) {
     for (const y of [0.12, 5]) registration.push(x - 0.073, y, -11.48, x + 0.073, y, -11.48, x, y - 0.073, -11.48, x, y + 0.073, -11.48);
   }
@@ -108,12 +123,12 @@ export function createArchitecture(inks: Inks, landingStopZ: number) {
   const aboutZ = landingStopZ + 10;
   // Place the subject ahead of the stop, rather than directly over the camera.
   const corniceZ = aboutZ - 12;
-  const cornice = solid(new BoxGeometry(4, 0.6, 1.2).translate(0, 5.2, corniceZ));
+  const cornice = solid(new BoxGeometry(4, 0.6, 1.2).translate(0, 5.2, 0), false, -corniceZ);
   cornice.name = 'floating-cornice';
   const corniceLines: number[] = [];
   for (const x of [-2, 2]) for (const z of [corniceZ - 0.6, corniceZ + 0.6]) {
     corniceLines.push(x, 0, z, x, 4.9, z);
-    const geometry = new BoxGeometry(0.15, 4.9, 0.15).translate(x, 2.45, z);
+    const geometry = new BoxGeometry(0.15, 4.9, 0.15).translate(x, 2.45, 0).applyMatrix4(routeMatrix(-z, bounds));
     const values = Array.from({ length: geometry.getAttribute('position').count }, () => colors.lit.toArray()).flat();
     geometry.setAttribute('color', new Float32BufferAttribute(values, 3));
     completed.add(new Mesh(geometry, stone)); geometries.push(geometry);
@@ -136,12 +151,12 @@ export function createArchitecture(inks: Inks, landingStopZ: number) {
   landingShape.moveTo(...landingOuter[0]);
   for (const point of [...landingOuter.slice(1), ...landingInner]) landingShape.lineTo(...point);
   landingShape.closePath();
-  const landingRing = solid(new ExtrudeGeometry(landingShape, { depth: 1, bevelEnabled: false }).translate(0, 0, landingArchZ - 0.5));
+  const landingRing = solid(new ExtrudeGeometry(landingShape, { depth: 1, bevelEnabled: false }).translate(0, 0, -0.5), false, -landingArchZ);
   landingRing.name = 'landing-ring';
   const landingLeft = solid(new BoxGeometry(1, 3.2, 1).translate(-3.9, 1.6, landingArchZ));
   landingLeft.name = 'landing-left-pier';
   // There is deliberately no right-pier mesh in the visible architecture.
-  const rightGeometry = new BoxGeometry(1, 3.2, 1).translate(3.9, 1.6, landingArchZ);
+  const rightGeometry = new BoxGeometry(1, 3.2, 1).translate(3.9, 1.6, 0).applyMatrix4(routeMatrix(-landingArchZ, bounds));
   const rightEdges = new EdgesGeometry(rightGeometry);
   const landingRight = new Group();
   const rightDrawing = segments(Array.from(rightEdges.getAttribute('position').array), inks.unbuilt, true);
@@ -158,8 +173,8 @@ export function createArchitecture(inks: Inks, landingStopZ: number) {
   }).length;
   const landingRightMeshes = landingRight.children.filter((object) => object instanceof Mesh && !object.geometry.getAttribute('instanceStart')).length;
   construction.push(-10, 0.02, -12, 10, 0.02, -12, -10, 0.02, landingStopZ, 10, 0.02, landingStopZ);
-  drawn.add(segments(edges, inks.built, false), segments(unbuilt, inks.unbuilt, true),
-    segments(construction, inks.construction, true), segments(registration, inks.registration, false));
+  drawn.add(segments(edges, inks.built, false), segments(worldLines(unbuilt), inks.unbuilt, true),
+    segments(worldLines(construction), inks.construction, true), segments(worldLines(registration), inks.registration, false));
   return {
     group, built, drawn, completed, stone, walkwayObstructions,
     cornice, landingLeft, landingRing, corniceSupports: corniceLines.length / 6, corniceSolidSupports, landingRightMeshes,

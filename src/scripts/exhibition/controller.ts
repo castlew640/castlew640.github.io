@@ -99,10 +99,11 @@ export function start(): void {
       delete document.documentElement.dataset.scene;
     } else if (!sceneHandle) {
       failure.hidden = true;
-      void enterMovingView({ landingStopZ: table.stops[table.stops.length - 1].z, cameraZ: progress.z, onFailure: fail }, () => {
+      const travel = { station: -progress.z, stopId: stops[progress.stopIndex]?.id ?? 'entrance' };
+      void enterMovingView({ landingStation: -table.stops[table.stops.length - 1].z, travel, onFailure: fail }, () => {
         // Active-scene CSS can change stop sizes; retain the native scroll projection.
         queue(true);
-        sceneHandle?.setCameraZ(progress.z);
+        sceneHandle?.setTravel(-progress.z, stops[progress.stopIndex]?.id ?? 'entrance');
       });
     }
   };
@@ -124,7 +125,7 @@ export function start(): void {
   const derive = (): void => {
     progress = progressFor(window.scrollY, stops);
     controls.update(progress);
-    sceneHandle?.setCameraZ(progress.z);
+    sceneHandle?.setTravel(-progress.z, stops[progress.stopIndex]?.id ?? 'entrance');
   };
 
   const remeasure = (): void => {

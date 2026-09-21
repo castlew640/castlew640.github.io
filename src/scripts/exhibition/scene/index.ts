@@ -8,23 +8,24 @@ import { createArchitecture } from './architecture';
 import { createExhibits } from './exhibit';
 import { createCompletedGroup, createReflection } from './reflection';
 import { createTransformations } from './transformations';
+import { routeBounds, sampleRoute } from './path';
 
 export interface SceneHandle {
-  setCameraZ(z: number): void;
+  setTravel(station: number, stopId: string): void;
   hitPanel(x: number, y: number): string | null;
   resize(): void;
   dispose(): void;
 }
 
 export interface SceneOptions {
-  landingStopZ: number;
-  cameraZ: number;
+  landingStation: number;
+  travel: { station: number; stopId: string };
   onFailure(reason: 'start' | 'context'): void;
   measureRender?: (render: () => void) => number;
 }
 
 declare global {
-  interface Window { __exhibition?: Record<string, number | boolean> }
+  interface Window { __exhibition?: Record<string, number | boolean | string> }
 }
 
 export async function createScene(options: SceneOptions): Promise<SceneHandle | null> {
@@ -52,7 +53,7 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
   let disposed = false;
   let frame = 0;
   let resizeTimer = 0;
-  let diagnostics: Record<string, number | boolean> | null = null;
+  let diagnostics: Record<string, number | boolean | string> | null = null;
   // Register ownership immediately after acquisition. Setup can fail before a
   // handle exists; the same partial-safe teardown also owns normal disposal.
   const cleanups: (() => void)[] = [
@@ -91,7 +92,11 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
     const scene = new Scene();
     scene.fog = new Fog(0xefe4cf, 60, 240);
     const camera = new PerspectiveCamera(36, 1, 0.1, 300);
-    camera.position.set(0, 1.62, Math.max(options.landingStopZ, Math.min(0, options.cameraZ)));
+    const bounds = routeBounds(options.landingStation);
+    let station = Math.max(bounds.minStation, Math.min(bounds.maxStation,
+      Number.isFinite(options.travel.station) ? options.travel.station : bounds.minStation));
+    const initialFrame = sampleRoute(station, bounds);
+    camera.position.copy(initialFrame.position).addScaledVector(initialFrame.up, 1.62);
     const sun = new DirectionalLight('#fff4e0', 2.6);
     cleanups.push(() => sun.shadow.dispose());
     sun.castShadow = true;
@@ -115,7 +120,7 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
     const size = new Vector2();
     const inks = createInkMaterials(size);
     for (const ink of Object.values(inks)) cleanups.push(() => ink.dispose());
-    const architecture = createArchitecture(inks, options.landingStopZ);
+    const architecture = createArchitecture(inks, options.landingStation);
     cleanups.push(() => architecture.dispose());
     scene.add(architecture.group);
     const pointer = new Vector2();
@@ -127,20 +132,23 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
     const initialBounds = exhibition.getBoundingClientRect();
     let inViewport = initialBounds.bottom > 0 && initialBounds.top < window.innerHeight;
     let suspended = document.hidden || !inViewport;
-    const debug: Record<string, number | boolean> = {
+    const stopIds = new Set(Array.from(exhibition.querySelectorAll<HTMLElement>('[data-stop]'))
+      .map((element) => element.dataset.stopId ?? element.id));
+    let currentStopId = stopIds.has(options.travel.stopId) ? options.travel.stopId : 'entrance';
+    const debug: Record<string, number | boolean | string> = {
       mounted: true, suspended, renderCount: 0, lights: 0, shadowLights: 0,
       cameraX: 0, cameraY: 1.62, cameraRotationX: 0, cameraZ: camera.position.z,
-      walkwayObstructions: architecture.walkwayObstructions,
+      station, currentStopId, walkwayObstructions: architecture.walkwayObstructions,
     };
     diagnostics = debug;
     const exhibits = createExhibits(Array.from(exhibition.querySelectorAll<HTMLElement>('[data-stop][data-slug]')),
-      inks, architecture.stone, renderer.capabilities.getMaxAnisotropy(), () => requestRender());
+      inks, architecture.stone, renderer.capabilities.getMaxAnisotropy(), () => requestRender(), options.landingStation);
     cleanups.push(() => exhibits.dispose());
     scene.add(exhibits.group);
-    const transformations = createTransformations(inks, architecture.stone, options.landingStopZ + 10);
+    const transformations = createTransformations(inks, architecture.stone, -options.landingStation + 10);
     cleanups.push(() => transformations.dispose());
     scene.add(transformations.group);
-    const completed = createCompletedGroup([architecture.group, architecture.completed, exhibits.group, transformations.completed], architecture.stone, inks);
+    const completed = createCompletedGroup([architecture.group, architecture.completed, exhibits.group, exhibits.completed, transformations.completed], architecture.stone, inks);
     let releaseCompleted = () => completed.dispose();
     cleanups.push(() => releaseCompleted());
     architecture.batch();
@@ -187,15 +195,26 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
     });
 
     const updateCamera = (): void => {
-      camera.lookAt(0, 1.62, camera.position.z - 12);
-      sun.position.set(-16.8, 11, camera.position.z + 14.9);
-      sun.target.position.set(0, 1.5, camera.position.z - 10);
+      const route = sampleRoute(station, bounds);
+      camera.position.copy(route.position).addScaledVector(route.up, 1.62);
+      camera.up.copy(route.up);
+      camera.lookAt(camera.position.clone().addScaledVector(route.forward, 12));
+      sun.position.copy(route.position).addScaledVector(route.right, -16.8)
+        .addScaledVector(route.up, 11).addScaledVector(route.forward, -14.9);
+      sun.target.position.copy(route.position).addScaledVector(route.up, 1.5).addScaledVector(route.forward, 10);
       sun.shadow.camera.updateProjectionMatrix();
+      debug.station = station;
+      debug.currentStopId = currentStopId;
       debug.cameraZ = camera.position.z;
       debug.cameraX = camera.position.x;
       debug.cameraY = camera.position.y;
-      debug.cameraRotationX = camera.rotation.x;
-      transformations.update(camera.position.z);
+      debug.cameraRotationX = Math.abs(camera.rotation.x) < 1e-12 ? 0 : camera.rotation.x;
+      debug.cameraYaw = camera.rotation.y;
+      debug.cameraRoll = Math.abs(camera.rotation.z) < 1e-12 ? 0 : camera.rotation.z;
+      debug.cameraUpX = camera.up.x;
+      debug.cameraUpY = camera.up.y;
+      debug.cameraUpZ = camera.up.z;
+      transformations.update(-station);
       transformations.elements.forEach((element, index) => {
         debug[`transformation${index}Z`] = element.z;
         debug[`transformation${index}Progress`] = element.progress;
@@ -205,19 +224,30 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
     };
 
     const updatePanels = (): void => {
+      scene.updateMatrixWorld(true);
       camera.updateMatrixWorld();
-      const current = exhibits.panels.reduce<typeof exhibits.panels[number] | undefined>((nearest, panel) =>
-        !nearest || Math.abs(panel.position.z - camera.position.z + 11.94) < Math.abs(nearest.position.z - camera.position.z + 11.94) ? panel : nearest, undefined);
-      if (!current) return;
-      const topLeft = new Vector3(-2, 5.1, current.position.z).project(camera);
-      const bottomRight = new Vector3(2, 3.1, current.position.z).project(camera);
-      debug.panelLeft = (topLeft.x + 1) / 2;
-      debug.panelTop = (1 - topLeft.y) / 2;
-      debug.panelRight = (bottomRight.x + 1) / 2;
-      debug.panelBottom = (1 - bottomRight.y) / 2;
+      const current = exhibits.panels.find((panel) => panel.userData.stopId === currentStopId);
+      if (!current) { debug.panelStopId = ''; return; }
+      current.updateMatrixWorld(true);
+      const localCorners = [new Vector3(-2, 1, 0), new Vector3(2, 1, 0), new Vector3(2, -1, 0), new Vector3(-2, -1, 0)];
+      const worldCorners = localCorners.map((corner) => current.localToWorld(corner.clone()));
+      const projected = worldCorners.map((corner) => corner.clone().project(camera));
+      const screen = projected.map((corner) => ({ x: (corner.x + 1) / 2, y: (1 - corner.y) / 2 }));
+      screen.forEach((corner, index) => {
+        debug[`panelCorner${index}X`] = corner.x;
+        debug[`panelCorner${index}Y`] = corner.y;
+      });
+      debug.panelLeft = Math.min(...screen.map((corner) => corner.x));
+      debug.panelTop = Math.min(...screen.map((corner) => corner.y));
+      debug.panelRight = Math.max(...screen.map((corner) => corner.x));
+      debug.panelBottom = Math.max(...screen.map((corner) => corner.y));
       debug.panelMinX = -2; debug.panelMaxX = 2;
       debug.panelMinY = 3.1; debug.panelMaxY = 5.1;
-      debug.panelZ = current.position.z;
+      const centre = current.getWorldPosition(new Vector3());
+      const normal = new Vector3(0, 0, 1).transformDirection(current.matrixWorld);
+      debug.panelFacingCamera = normal.dot(camera.position.clone().sub(centre)) > 0;
+      debug.panelStopId = currentStopId;
+      debug.panelZ = centre.z;
       debug.panelVariant = current.userData.variant;
       debug.panelTextureReady = Boolean(current.material.map);
       debug.panelTextureSRGB = current.material.map?.colorSpace === SRGBColorSpace;
@@ -346,11 +376,13 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
     resize();
 
     return {
-      setCameraZ(z) {
-        if (disposed || !Number.isFinite(z)) return;
-        const next = Math.max(options.landingStopZ, Math.min(0, z));
-        if (next === camera.position.z) return;
-        camera.position.z = next;
+      setTravel(nextStation, stopId) {
+        if (disposed || !Number.isFinite(nextStation)) return;
+        const next = Math.max(bounds.minStation, Math.min(bounds.maxStation, nextStation));
+        const nextStopId = stopIds.has(stopId) ? stopId : currentStopId;
+        if (next === station && nextStopId === currentStopId) return;
+        station = next;
+        currentStopId = nextStopId;
         updateCamera();
         // Publish projection and camera together, even before the scheduled draw.
         // Otherwise readers can observe the new pose with the previous frame's panel.
@@ -360,6 +392,7 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
       hitPanel(x, y) {
         if (disposed) return null;
         const bounds = canvas.getBoundingClientRect();
+        scene.updateMatrixWorld(true);
         camera.updateMatrixWorld();
         pointer.set((x - bounds.left) / bounds.width * 2 - 1, -(y - bounds.top) / bounds.height * 2 + 1);
         raycaster.setFromCamera(pointer, camera);

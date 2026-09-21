@@ -25,7 +25,10 @@ test('native travel follows a winding, rising route with a level horizon', async
     elements.map((element) => (element as HTMLElement).dataset.stopId ?? element.id));
   const samples = [];
   for (const id of stops) samples.push(await visitStop(page, id));
-  expect(samples.map((sample) => sample.station)).toEqual(samples.map((_, index) => index === samples.length - 1 ? (samples.length - 3) * 18 + 28 : index * 18));
+  samples.forEach((sample, index) => {
+    const expected = index === samples.length - 1 ? (samples.length - 3) * 18 + 28 : index * 18;
+    expect(Number(sample.station)).toBeCloseTo(expected, 2);
+  });
   expect(samples.some((sample) => Math.abs(Number(sample.cameraX)) > 0.01)).toBe(true);
   expect(samples.some((sample) => Math.abs(Number(sample.cameraY) - 1.62) > 0.01)).toBe(true);
   for (const sample of samples) {
@@ -72,9 +75,12 @@ test('the actual panel opens its matching canonical route and browser return res
   await page.mouse.click(x, y);
   await expect(page).toHaveURL(new RegExp(`/projects/${slug}/?$`));
   await page.goBack();
+  await expect(page).toHaveURL(/\/$/);
+  await expect.poll(() => page.evaluate(() => window.__exhibition?.currentStopId)).toBe(id);
+  await expect.poll(() => page.evaluate(() => Number(window.__exhibition?.station))).toBeCloseTo(18, 1);
+  await page.mouse.click(x, y);
+  await page.getByRole('link', { name: '← Back to the exhibition' }).click();
   await expect(page).toHaveURL(new RegExp(`#${id}$`));
   await expect(exhibit).toBeFocused();
-  await expect.poll(() => page.evaluate(() => window.__exhibition?.currentStopId)).toBe(id);
   await context.close();
 });
-

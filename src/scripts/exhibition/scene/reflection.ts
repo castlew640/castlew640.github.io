@@ -108,17 +108,18 @@ export function createCompletedGroup(sources: Group[], stone: MeshStandardMateri
 
 export function createReflection(scene: Scene, camera: PerspectiveCamera, renderer: WebGLRenderer,
   completed: ReturnType<typeof createCompletedGroup>, inks: Inks) {
-  scene.add(completed.group);
-  const geometry = new PlaneGeometry(60, 200);
-  const fallbackMaterial = new MeshBasicMaterial({ color: '#e3e5d8', transparent: true, opacity: 0.65, depthWrite: false, toneMapped: false });
   const canvas = document.createElement('canvas');
   canvas.width = 64; canvas.height = 256;
-  const context = canvas.getContext('2d')!;
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('Reflection texture could not be created');
   const gradient = context.createLinearGradient(0, 0, 0, 256);
   gradient.addColorStop(0, '#e9dcc4'); gradient.addColorStop(0.28, '#efe4cf'); gradient.addColorStop(1, '#f4f0e6');
   context.fillStyle = gradient; context.fillRect(0, 0, 64, 256);
   const texture = new CanvasTexture(canvas);
   texture.colorSpace = SRGBColorSpace;
+  scene.add(completed.group);
+  const geometry = new PlaneGeometry(60, 200);
+  const fallbackMaterial = new MeshBasicMaterial({ color: '#e3e5d8', transparent: true, opacity: 0.65, depthWrite: false, toneMapped: false });
   fallbackMaterial.map = texture;
   const fallback = new Mesh(geometry, fallbackMaterial);
   fallback.rotation.x = -Math.PI / 2; fallback.position.z = -90;
@@ -146,6 +147,11 @@ export function createReflection(scene: Scene, camera: PerspectiveCamera, render
       const width = Math.min(1024, Math.round(size.x * deviceDpr));
       const height = Math.max(1, Math.round(Math.min(1024, size.y * deviceDpr) * 0.5));
       try {
+        // Reflector allocates an RGBA HalfFloat target. Initialization can leave
+        // an unusable attachment without throwing, so validate the actual FBO.
+        if (!renderer.extensions.has('EXT_color_buffer_float') && !renderer.extensions.has('EXT_color_buffer_half_float')) {
+          throw new Error('Reflection colour attachment is unavailable');
+        }
         if (!reflector) {
           reflector = new Reflector(geometry, { textureWidth: width, textureHeight: height,
             multisample: deviceDpr > 1.5 ? 0 : 4, shader: waterShader, color: '#e3e5d8' });
@@ -161,7 +167,20 @@ export function createReflection(scene: Scene, camera: PerspectiveCamera, render
           };
           scene.add(reflector);
         } else reflector.getRenderTarget().setSize(width, height);
-        renderer.initRenderTarget(reflector.getRenderTarget());
+        const previousTarget = renderer.getRenderTarget();
+        const previousFace = renderer.getActiveCubeFace();
+        const previousMip = renderer.getActiveMipmapLevel();
+        try {
+          const target = reflector.getRenderTarget();
+          renderer.initRenderTarget(target);
+          renderer.setRenderTarget(target);
+          const gl = renderer.getContext();
+          if (!gl.getParameter(gl.FRAMEBUFFER_BINDING) || gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
+            throw new Error('Reflection framebuffer is incomplete');
+          }
+        } finally {
+          renderer.setRenderTarget(previousTarget, previousFace, previousMip);
+        }
       } catch { failed = true; releaseTarget(); }
     }
     fallback.visible = drawing.visible = !reflector;

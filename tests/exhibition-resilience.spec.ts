@@ -405,6 +405,96 @@ test('a blocked renderer chunk retains the catalogue with one retry', async ({ b
   await context.close();
 });
 
+test('a post-construction setup failure releases every scene canvas and context before retry', async ({ browser }) => {
+  const context = await browser.newContext({ reducedMotion: 'no-preference' });
+  await context.addInitScript(() => {
+    const contexts: WebGL2RenderingContext[] = [];
+    Object.defineProperty(window, '__setupContexts', { value: contexts });
+    const original = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, type: string, ...args: unknown[]) {
+      if (type === '2d') return null;
+      const result = Reflect.apply(original, this, [type, ...args]);
+      if (type === 'webgl2' && result && !contexts.includes(result)) contexts.push(result);
+      return result;
+    } as typeof original;
+  });
+  const page = await context.newPage();
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto('/');
+  const failure = page.getByRole('heading', { name: 'The exhibition could not start.', exact: true });
+  const retry = page.getByRole('button', { name: 'Try the exhibition again', exact: true });
+  for (const attempt of [1, 2]) {
+    await expect(failure).toBeVisible();
+    await expect(page.locator('.exhibition-canvas, .exhibition-canvas canvas')).toHaveCount(0);
+    await expect(page.locator('html')).toHaveAttribute('data-view', 'still');
+    const resources = await page.evaluate(() => {
+      const contexts = (window as unknown as { __setupContexts: WebGL2RenderingContext[] }).__setupContexts;
+      return { created: contexts.length, live: contexts.filter((gl) => !gl.isContextLost()).length };
+    });
+    expect(resources).toEqual({ created: attempt, live: 0 });
+    await expect(page.getByRole('link', { name: 'Read case study →' })).toHaveCount(1);
+    await expect(page.getByRole('link', { name: 'Open my resume' })).toHaveAttribute('href', /\.pdf$/);
+    if (attempt === 1) await retry.click();
+  }
+  await expect(retry).toHaveCount(0);
+  expect(errors).toEqual([]);
+  await page.getByRole('link', { name: 'Read case study →' }).click();
+  await expect(page).toHaveURL(new RegExp(`${projectPath}$`));
+  await context.close();
+});
+
+for (const fault of ['unsupported format', 'incomplete framebuffer'] as const) {
+  test(`reflection uses ink fallback after ${fault} without losing the exhibition`, async ({ browser }) => {
+    const context = await browser.newContext({ reducedMotion: 'no-preference', viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 });
+    await context.addInitScript((fault) => {
+      let rejected = 0;
+      Object.defineProperty(window, '__reflectionFaults', { get: () => rejected });
+      if (fault === 'unsupported format') {
+        const original = WebGL2RenderingContext.prototype.getExtension;
+        WebGL2RenderingContext.prototype.getExtension = function (this: WebGL2RenderingContext, name: string) {
+          if (name === 'EXT_color_buffer_float' || name === 'EXT_color_buffer_half_float') { rejected++; return null; }
+          return Reflect.apply(original, this, [name]);
+        } as typeof original;
+      } else {
+        const original = WebGL2RenderingContext.prototype.checkFramebufferStatus;
+        WebGL2RenderingContext.prototype.checkFramebufferStatus = function (target: number) {
+          // Reject only a bound floating-point colour attachment, leaving the
+          // default canvas framebuffer and depth-only shadows fully usable.
+          if (this.getParameter(this.FRAMEBUFFER_BINDING)
+            && this.getFramebufferAttachmentParameter(target, this.COLOR_ATTACHMENT0, this.FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE) !== this.NONE
+            && this.getFramebufferAttachmentParameter(target, this.COLOR_ATTACHMENT0, this.FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE) === this.FLOAT) {
+            rejected++;
+            return this.FRAMEBUFFER_UNSUPPORTED;
+          }
+          return original.call(this, target);
+        };
+      }
+    }, fault);
+    const page = await context.newPage();
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto('/');
+    await expect.poll(() => page.evaluate(() => Number(window.__exhibition?.renderCount ?? 0))).toBeGreaterThan(0);
+    await expect(page.locator('html')).toHaveAttribute('data-scene', 'active');
+    expect(await page.evaluate(() => (window as unknown as { __reflectionFaults: number }).__reflectionFaults)).toBeGreaterThan(0);
+    const debug = await page.evaluate(() => window.__exhibition!);
+    expect(debug.reflectionEnabled).toBe(false);
+    expect(debug.reflectionTargetWidth).toBe(0);
+    expect(debug.reflectionTargetHeight).toBe(0);
+    expect(debug.renderTargetRendersPerFrame).toBe(0);
+    expect(Number(debug.reflectionFallbackSegments)).toBeGreaterThan(0);
+    expect(await page.locator('.exhibition-canvas canvas').evaluate((canvas) => {
+      const gl = (canvas as HTMLCanvasElement).getContext('webgl2')!;
+      return !gl.isContextLost() && gl.getParameter(gl.FRAMEBUFFER_BINDING) === null;
+    })).toBe(true);
+    expect(errors).toEqual([]);
+    await page.getByRole('link', { name: 'Read case study →' }).click();
+    await expect(page).toHaveURL(new RegExp(`${projectPath}$`));
+    await context.close();
+  });
+}
+
 test('a blocked screenshot restores its authored description and caption without a broken icon', async ({ browser }) => {
   const context = await browser.newContext({ reducedMotion: 'no-preference' });
   const page = await context.newPage();

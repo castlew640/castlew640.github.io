@@ -29,8 +29,6 @@ I wanted this portfolio to feel like an exhibition without making a hiring manag
 
 Native document scrolling and one-handed arrows move through the exhibits. Each project has an ordinary HTML link to a direct, readable case-study page, so the content remains available without JavaScript. Phones open the illustrated still catalogue first; the visible view choice enters the 3D exhibition when a visitor wants it. Reduced-motion preferences and an explicit still choice are respected. If graphics rendering fails, the catalogue and its links remain available.
 
-The view switch preserves the current exhibit.
-
 ## Decisions and tradeoffs
 
 Astro produces static pages from one validated local content collection. Adding a completed project creates its page and exhibit from the same entry. I used vanilla Three.js for the optional scene after measuring a React-based version against the scene budget. A fixed route frame maps scroll position to camera and architecture, so adding another project does not move earlier exhibits. The scene renders on demand and has a cheaper completed-world reflection fallback.

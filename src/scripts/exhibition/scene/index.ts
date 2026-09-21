@@ -227,7 +227,13 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
       scene.updateMatrixWorld(true);
       camera.updateMatrixWorld();
       const current = exhibits.panels.find((panel) => panel.userData.stopId === currentStopId);
-      if (!current) { debug.panelStopId = ''; return; }
+      if (!current) {
+        debug.panelStopId = '';
+        debug.panelTextureReady = exhibits.panels.length > 0 && exhibits.panels.every((panel) => Boolean(panel.material.map));
+        debug.panelReusesImage = exhibits.panels.every((panel) => panel.material.map?.image
+          === (panel.userData.stop as HTMLElement).querySelector('figure img'));
+        return;
+      }
       current.updateMatrixWorld(true);
       const localCorners = [new Vector3(-2, 1, 0), new Vector3(2, 1, 0), new Vector3(2, -1, 0), new Vector3(-2, -1, 0)];
       const worldCorners = localCorners.map((corner) => current.localToWorld(corner.clone()));

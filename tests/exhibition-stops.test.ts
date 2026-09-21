@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { buildStopTable } from '../src/lib/exhibition/stops.ts';
 import { progressFor } from '../src/scripts/exhibition/scroll.ts';
+import { routeBounds, sampleRoute } from '../src/scripts/exhibition/scene/path.ts';
 
 const slugs = () => ['featured-client', 'second-project', 'third-project'];
 
@@ -33,6 +34,11 @@ test('GROW-04 invariance keeps earlier stops and portals fixed when projects are
   const expanded = buildStopTable(slugs());
   assert.equal(expanded.stops[1].z, original.stops[1].z);
   assert.equal(expanded.portalZ(1), original.portalZ(1));
+  assert.equal(expanded.stops[1].id, original.stops[1].id);
+  const originalFrame = sampleRoute(-original.stops[1].z, routeBounds(-original.stops.at(-1)!.z));
+  const expandedFrame = sampleRoute(-expanded.stops[1].z, routeBounds(-expanded.stops.at(-1)!.z));
+  assert.deepEqual(expandedFrame.position.toArray(), originalFrame.position.toArray());
+  assert.deepEqual(expandedFrame.forward.toArray(), originalFrame.forward.toArray());
 });
 
 test('exhibit ids preserve the supplied published slug order', () => {
@@ -42,12 +48,13 @@ test('exhibit ids preserve the supplied published slug order', () => {
   ]);
 });
 
-test('measured scroll segments interpolate camera depth and clamp travel endpoints', () => {
+test('measured scroll segments interpolate the signed scalar used as route station', () => {
   const stops = [{ offsetTop: 120, z: 0 }, { offsetTop: 1500, z: -18 }, { offsetTop: 2400, z: -36 }];
   assert.deepEqual(progressFor(810, stops), { stopIndex: 0, localProgress: 0.5, z: -9 });
   assert.deepEqual(progressFor(1950, stops), { stopIndex: 1, localProgress: 0.5, z: -27 });
   assert.deepEqual(progressFor(0, stops), { stopIndex: 0, localProgress: 0, z: 0 });
   assert.deepEqual(progressFor(3000, stops), { stopIndex: 2, localProgress: 0, z: -36 });
+  assert.equal(-progressFor(1950, stops).z, 27);
 });
 
 test('empty and collapsed scroll segments return finite progress without motion', () => {

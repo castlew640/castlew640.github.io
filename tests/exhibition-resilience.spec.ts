@@ -251,7 +251,7 @@ test('context loss keeps navigation usable and context restoration never resumes
   await context.close();
 });
 
-test('the moving scene retains native canvas gestures and the fixed camera and light contract', async ({ browser }) => {
+test('the moving scene retains native canvas gestures and the level route-frame light contract', async ({ browser }) => {
   const context = await browser.newContext({ reducedMotion: 'no-preference' });
   const page = await context.newPage();
   await page.goto('/');
@@ -267,11 +267,22 @@ test('the moving scene retains native canvas gestures and the fixed camera and l
     const expected = Math.max(36, Math.min(68, 2 * Math.atan(Math.tan(32 * Math.PI / 180) / (viewport.width / viewport.height)) * 180 / Math.PI));
     await expect.poll(() => page.evaluate(() => window.__exhibition?.fovY)).toBeCloseTo(expected, 2);
   }
-  for (const [id, z] of [['entrance', 0], [exhibitId, -18], ['landing', -46]] as const) {
+  const routeSamples: { x: number; y: number }[] = [];
+  for (const [id, station] of [['entrance', 0], [exhibitId, 18], ['landing', 46]] as const) {
     await page.locator(`#${id}`).evaluate((el) => window.scrollTo({ top: el.getBoundingClientRect().top + scrollY, behavior: 'auto' }));
-    await expect.poll(() => page.evaluate(() => window.__exhibition?.cameraZ)).toBeCloseTo(z, 1);
-    expect(await page.evaluate(() => ({ x: window.__exhibition?.cameraX, y: window.__exhibition?.cameraY, zeroPitch: window.__exhibition?.cameraRotationX === 0 }))).toEqual({ x: 0, y: 1.62, zeroPitch: true });
+    await expect.poll(() => page.evaluate(() => Number(window.__exhibition?.station))).toBeCloseTo(station, 1);
+    const pose = await page.evaluate(() => ({
+      stopId: window.__exhibition?.currentStopId,
+      x: Number(window.__exhibition?.cameraX), y: Number(window.__exhibition?.cameraY),
+      zeroPitch: window.__exhibition?.cameraRotationX === 0,
+      zeroRoll: window.__exhibition?.cameraRoll === 0,
+      up: [window.__exhibition?.cameraUpX, window.__exhibition?.cameraUpY, window.__exhibition?.cameraUpZ],
+    }));
+    expect(pose).toMatchObject({ stopId: id, zeroPitch: true, zeroRoll: true, up: [0, 1, 0] });
+    routeSamples.push({ x: pose.x, y: pose.y });
   }
+  expect(routeSamples.some(({ x }) => Math.abs(x) > 0.01)).toBe(true);
+  expect(routeSamples.some(({ y }) => Math.abs(y - 1.62) > 0.01)).toBe(true);
   expect(await page.evaluate(() => ({ lights: window.__exhibition?.lights, shadowLights: window.__exhibition?.shadowLights }))).toEqual({ lights: 3, shadowLights: 1 });
   await context.close();
 });
@@ -280,15 +291,18 @@ test('scene resources and css-pixel ink stay bounded across three deliberate rem
   const context = await browser.newContext({ reducedMotion: 'no-preference', deviceScaleFactor: 2, viewport: { width: 390, height: 844 } });
   const page = await context.newPage();
   await page.goto('/');
+  const projectCount = await page.locator('#exhibition [data-stop][data-slug]').count();
   const counts = () => page.evaluate(() => ({ materials: window.__exhibition?.materials, geometries: window.__exhibition?.geometries, textures: window.__exhibition?.textures }));
   await expect.poll(() => page.evaluate(() => window.__exhibition?.renderCount ?? 0)).toBeGreaterThan(0);
   const first = await counts();
-  expect(first.materials).toBeLessThanOrEqual(18);
-  expect(first.materials).toBeGreaterThanOrEqual(8 + Number(await page.evaluate(() => window.__exhibition?.pickablePanels)));
-  expect(await page.evaluate(() => window.__exhibition?.lineSegments)).toBeLessThanOrEqual(1200);
+  expect(first.materials).toBeLessThanOrEqual(17 + projectCount);
+  expect(first.materials).toBeGreaterThanOrEqual(8 + projectCount);
+  expect(await page.evaluate(() => window.__exhibition?.pickablePanels)).toBe(projectCount);
+  expect(await page.evaluate(() => Number(window.__exhibition?.lineSegments))).toBeLessThanOrEqual(1200 + 400 * Math.max(0, projectCount - 1));
   expect(await page.evaluate(() => window.__exhibition?.walkwayObstructions)).toBe(0);
   expect(await page.evaluate(() => window.__exhibition?.pixelRatio)).toBe(1.75);
-  expect(await page.evaluate(() => Object.values(window.__exhibition!).every((value) => typeof value === 'number' || typeof value === 'boolean'))).toBe(true);
+  expect(await page.evaluate(() => Object.values(window.__exhibition!).every((value) =>
+    typeof value === 'number' || typeof value === 'boolean' || typeof value === 'string'))).toBe(true);
   expect(await page.evaluate(() => Array.from({ length: 6 }, (_, i) => window.__exhibition![`ink${i}Width`]))).toEqual([1.4, 1.3, 1, 1, 1, 1.4]);
   expect(await page.evaluate(() => Array.from({ length: 6 }, (_, i) => window.__exhibition![`ink${i}Color`]))).toEqual([0x4e5144, 0x8b877b, 0xb9b3a4, 0xb9b3a4, 0x656256, 0x8e4935]);
   for (let i = 0; i < 3; i++) {

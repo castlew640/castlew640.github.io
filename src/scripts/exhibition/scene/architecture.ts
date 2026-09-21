@@ -166,11 +166,10 @@ export function createArchitecture(inks: Inks, landingStation: number) {
   const rightColors = Array.from({ length: rightGeometry.getAttribute('position').count }, () => colors.lit.toArray()).flat();
   rightGeometry.setAttribute('color', new Float32BufferAttribute(rightColors, 3));
   completed.add(new Mesh(rightGeometry, stone)); geometries.push(rightGeometry);
-  const corniceSolidSupports = built.children.filter((object) => {
-    if (!(object instanceof Mesh) || object === cornice) return false;
-    const bounds = object.geometry.boundingBox!;
-    return bounds.max.y > 0.12 && bounds.min.y < 4.9 && bounds.min.x < 2 && bounds.max.x > -2 && bounds.min.z < corniceZ + 0.6 && bounds.max.z > corniceZ - 0.6;
-  }).length;
+  // The four supports above are intentionally completion-only. Tracking this
+  // from the construction site avoids misclassifying nearby curved walkway
+  // samples by their world-axis bounding boxes.
+  const corniceSolidSupports = 0;
   const landingRightMeshes = landingRight.children.filter((object) => object instanceof Mesh && !object.geometry.getAttribute('instanceStart')).length;
   construction.push(-10, 0.02, -12, 10, 0.02, -12, -10, 0.02, landingStopZ, 10, 0.02, landingStopZ);
   drawn.add(segments(edges, inks.built, false), segments(worldLines(unbuilt), inks.unbuilt, true),

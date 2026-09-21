@@ -145,10 +145,14 @@ async function panelPoint(page: Page): Promise<{ x: number; y: number }> {
   await page.goto('/');
   await expect.poll(() => page.evaluate(() => window.__exhibition?.panelTextureReady)).toBe(true);
   await page.locator(`#${exhibitId}`).evaluate((el) => el.scrollIntoView());
-  await expect.poll(() => page.evaluate(() => Number(window.__exhibition?.cameraZ))).toBeCloseTo(-18, 2);
+  await expect.poll(() => page.evaluate(() => window.__exhibition?.currentStopId)).toBe(exhibitId);
+  await expect.poll(() => page.evaluate(() => Number(window.__exhibition?.station))).toBeCloseTo(18, 2);
   return page.evaluate(() => {
     const d = window.__exhibition!;
-    return { x: (Number(d.panelLeft) + Number(d.panelRight)) / 2 * innerWidth, y: (Number(d.panelTop) + Number(d.panelBottom)) / 2 * innerHeight };
+    return {
+      x: (Number(d.panelCorner0X) + Number(d.panelCorner2X)) / 2 * innerWidth,
+      y: (Number(d.panelCorner0Y) + Number(d.panelCorner2Y)) / 2 * innerHeight,
+    };
   });
 }
 
@@ -206,7 +210,9 @@ for (const gesture of ['long press', 'wandering press', 'scroll during press', '
     const initial = page.url();
     if (gesture === 'pier') point.x = await page.evaluate(() => {
       const d = window.__exhibition!;
-      return (0.5 + (Number(d.panelRight) - Number(d.panelLeft)) * 3.9 / 4) * innerWidth;
+      const xs = Array.from({ length: 4 }, (_, index) => Number(d[`panelCorner${index}X`]));
+      const centre = (Math.min(...xs) + Math.max(...xs)) / 2;
+      return (centre + (Math.max(...xs) - Math.min(...xs)) * 3.9 / 4) * innerWidth;
     });
     if (gesture === 'missing slug') await page.locator(`#${exhibitId}`).evaluate((el) => el.removeAttribute('data-slug'));
     await page.mouse.move(point.x, point.y);
@@ -232,8 +238,15 @@ test('lintel sill walkway and empty sky never act as project links', async ({ br
   const initial = page.url();
   const points = await page.evaluate(() => {
     const d = window.__exhibition!;
-    const projectY = (y: number, distance: number) => (0.5 - (y - 1.62) / distance / (2 * Math.tan(Number(d.fovY) * Math.PI / 360))) * innerHeight;
-    return [{ x: innerWidth / 2, y: projectY(5.6, 11.5) }, { x: innerWidth / 2, y: projectY(3.02, 11.94) }, { x: 200, y: 800 }, { x: 40, y: 90 }];
+    const xs = Array.from({ length: 4 }, (_, index) => Number(d[`panelCorner${index}X`]) * innerWidth);
+    const ys = Array.from({ length: 4 }, (_, index) => Number(d[`panelCorner${index}Y`]) * innerHeight);
+    const centreX = (Math.min(...xs) + Math.max(...xs)) / 2;
+    return [
+      { x: centreX, y: Math.max(4, Math.min(...ys) - 24) },
+      { x: centreX, y: Math.min(innerHeight - 4, Math.max(...ys) + 12) },
+      { x: centreX, y: Math.min(innerHeight - 4, Math.max(...ys) + 180) },
+      { x: 40, y: 90 },
+    ];
   });
   for (const point of points) {
     await page.mouse.click(point.x, point.y);

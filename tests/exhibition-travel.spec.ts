@@ -187,36 +187,49 @@ test('fractional stop arrivals disable only actual endpoints and forward reaches
 });
 
 for (const viewport of [{ width: 1440, height: 810 }, { width: 390, height: 664 }, { width: 844, height: 390 }]) {
-  test(`the real panel fits the computed field at ${viewport.width} by ${viewport.height}`, async ({ browser }) => {
+  test(`published panels fit the computed route frame at ${viewport.width} by ${viewport.height}`, async ({ browser }) => {
     const context = await browser.newContext({ viewport, hasTouch: viewport.width < 900, deviceScaleFactor: 3, reducedMotion: 'no-preference' });
     const page = await context.newPage();
     await page.goto('/');
     await expect.poll(() => page.evaluate(() => window.__exhibition?.panelTextureReady)).toBe(true);
-    await page.locator('#exhibit-featured-client').evaluate((el) => el.scrollIntoView());
-    await expect.poll(() => page.evaluate(() => Number(window.__exhibition?.cameraZ))).toBeCloseTo(-18, 2);
-    const data = await page.evaluate(() => window.__exhibition!);
-    const fovY = Number(data.fovY) * Math.PI / 180;
-    const fovX = 2 * Math.atan(Math.tan(fovY / 2) * Number(data.cssWidth) / Number(data.cssHeight));
-    const expectedWidthFraction = Math.atan(2.00 / 12) / Math.tan(fovX / 2);
-    expect(Math.abs(Number(data.panelRight) - Number(data.panelLeft) - expectedWidthFraction)).toBeLessThanOrEqual(0.02);
-    expect(Number(data.panelTop)).toBeGreaterThanOrEqual(0.05);
-    expect(data).toMatchObject({ panelMinX: -2, panelMaxX: 2, panelMinY: 3.1, panelMaxY: 5.1, panelZ: -29.94, panelVariant: 0, panelTextureSRGB: true, panelReusesImage: true, pickablePanels: 1, nonPanelRaycasts: 0, walkwayObstructions: 0 });
-    expect(Number(data.materials)).toBeLessThanOrEqual(18);
-    expect(Number(data.drawCalls)).toBeLessThanOrEqual(90);
-    expect(Number(data.triangles)).toBeLessThanOrEqual(120000);
-    const overlay = await page.locator('.exhibit-overlay').boundingBox();
-    expect(overlay!.y).toBeGreaterThan(Number(data.panelBottom) * viewport.height);
-    if (viewport.width === 1440) {
-      expect(Math.abs(overlay!.y / viewport.height - 0.46)).toBeLessThan(0.01);
-      expect(overlay!.width).toBe(Math.min(34 * 16, viewport.width * 0.4));
-    }
-    if (viewport.width === 390) {
-      const link = (await page.getByRole('link', { name: 'Read case study →' }).boundingBox())!;
-      const controls = (await page.locator('.exhibition-controls').boundingBox())!;
-      expect(1 - (link.y + link.height / 2) / viewport.height).toBeGreaterThanOrEqual(0.30);
-      expect(1 - (link.y + link.height / 2) / viewport.height).toBeLessThanOrEqual(0.48);
-      expect(controls.y - link.y - link.height).toBeGreaterThanOrEqual(16);
-      await expect(page.locator('.exhibit-overlay')).toHaveCSS('padding-bottom', '104px');
+    const exhibits = page.locator('#exhibition [data-stop][data-slug]');
+    const projectCount = await exhibits.count();
+    expect(projectCount).toBeGreaterThan(0);
+    for (const exhibit of await exhibits.all()) {
+      const id = (await exhibit.getAttribute('id'))!;
+      await exhibit.evaluate((el) => el.scrollIntoView());
+      await expect.poll(() => page.evaluate(() => window.__exhibition?.currentStopId)).toBe(id);
+      const data = await page.evaluate(() => window.__exhibition!);
+      const fovY = Number(data.fovY) * Math.PI / 180;
+      const fovX = 2 * Math.atan(Math.tan(fovY / 2) * Number(data.cssWidth) / Number(data.cssHeight));
+      const expectedWidthFraction = Math.atan(2.00 / 12) / Math.tan(fovX / 2);
+      const corners = Array.from({ length: 4 }, (_, index) => ({
+        x: Number(data[`panelCorner${index}X`]), y: Number(data[`panelCorner${index}Y`]),
+      }));
+      const left = Math.min(...corners.map(({ x }) => x));
+      const right = Math.max(...corners.map(({ x }) => x));
+      expect(Math.abs(right - left - expectedWidthFraction)).toBeLessThanOrEqual(0.02);
+      expect(Math.min(...corners.map(({ y }) => y))).toBeGreaterThanOrEqual(0.05);
+      expect(data).toMatchObject({ panelStopId: id, panelFacingCamera: true, panelMinX: -2, panelMaxX: 2,
+        panelMinY: 3.1, panelMaxY: 5.1, panelTextureSRGB: true, panelReusesImage: true,
+        pickablePanels: projectCount, nonPanelRaycasts: 0, walkwayObstructions: 0 });
+      expect(Number(data.materials)).toBeLessThanOrEqual(17 + projectCount);
+      expect(Number(data.drawCalls)).toBeLessThanOrEqual(90);
+      expect(Number(data.triangles)).toBeLessThanOrEqual(120000);
+      const overlay = await exhibit.locator('.exhibit-overlay').boundingBox();
+      expect(overlay!.y).toBeGreaterThan(Math.max(...corners.map(({ y }) => y)) * viewport.height);
+      if (viewport.width === 1440) {
+        expect(Math.abs(overlay!.y / viewport.height - 0.46)).toBeLessThan(0.01);
+        expect(overlay!.width).toBe(Math.min(34 * 16, viewport.width * 0.4));
+      }
+      if (viewport.width === 390) {
+        const link = (await exhibit.getByRole('link', { name: 'Read case study →' }).boundingBox())!;
+        const controls = (await page.locator('.exhibition-controls').boundingBox())!;
+        expect(1 - (link.y + link.height / 2) / viewport.height).toBeGreaterThanOrEqual(0.30);
+        expect(1 - (link.y + link.height / 2) / viewport.height).toBeLessThanOrEqual(0.48);
+        expect(controls.y - link.y - link.height).toBeGreaterThanOrEqual(16);
+        await expect(exhibit.locator('.exhibit-overlay')).toHaveCSS('padding-bottom', '104px');
+      }
     }
     await context.close();
   });
@@ -229,7 +242,8 @@ test('mobile exhibit text continues in document flow at enlarged sizes without c
     await page.goto('/');
     await expect(page.locator('html')).toHaveAttribute('data-scene', 'active');
     await page.addStyleTag({ content: ':root { font-size: 200%; }' });
-    await page.locator('#exhibit-featured-client').evaluate((el) => el.scrollIntoView());
+    const exhibit = page.locator('#exhibition [data-stop][data-slug]').first();
+    await exhibit.evaluate((el) => el.scrollIntoView());
     await page.waitForTimeout(200);
     const link = (await page.getByRole('link', { name: 'Read case study →' }).boundingBox())!;
     const controls = (await page.locator('.exhibition-controls').boundingBox())!;

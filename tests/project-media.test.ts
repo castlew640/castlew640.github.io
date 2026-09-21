@@ -39,6 +39,7 @@ test('still-only project and correctly owned page video are valid', async () => 
 test('audio requires usable captions and silent demos require description', () => {
   assert.equal(videoSchema.safeParse({ ...video(), hasAudio: true }).success, false);
   assert.equal(videoSchema.safeParse({ ...video(), description: '   ' }).success, false);
+  assert.equal(videoSchema.safeParse({ src: video().src, description: 'A demo.', hasAudio: false }).success, false);
   assert.equal(videoSchema.safeParse({ ...video(), hasAudio: true, captions: { src: '/media/published/demo.vtt', language: 'en', label: 'English' } }).success, true);
 });
 

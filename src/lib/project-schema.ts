@@ -32,7 +32,7 @@ export const evidenceSchema = screenshotSchema.extend({
 export const videoFields = {
   src: nonBlank,
   // The collection replaces this with image() so Astro resolves a local still.
-  poster: z.unknown(),
+  poster: z.unknown().refine((value) => value !== undefined && value !== null, 'Video poster is required'),
   description: nonBlank,
   hasAudio: z.boolean(),
   captions: z.object({

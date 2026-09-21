@@ -35,7 +35,9 @@ Last activity: 2026-09-21 — Final check passed (33 unit and 69 browser tests);
 
 **Progress:** [██████████] 100% of currently planned implementation slices; Phase 02 is not closed.
 
-Next action: `$gsd-verify-work 2` using `.planning/phases/02-one-handed-surreal-exhibition/02-UAT.md`. Validate composition/reflections, Windows Chrome input/real zoom, actual iPhone Safari, and landing clearance/design adjustments. No Phase 2 deployment or phase advancement was performed.
+Next action: `$gsd-verify-work 2` using `.planning/phases/02-one-handed-surreal-exhibition/02-UAT.md`. Validate composition/reflections, Windows Chrome input/real zoom, actual iPhone Safari, and landing clearance/design adjustments. Phase 02 remains open.
+
+Deployment for UAT: on 2026-09-21 the owner authorized pushing Phase 02. Commit `0f0507e0101ab68072002049c3cc9089072847f1` deployed successfully through [Pages run 35552310047](https://github.com/castlew640/castlew640.github.io/actions/runs/35552310047). The CI build passed all 33 unit and 69 browser tests, including real WebGL scene contracts. `https://castlew640.github.io/` returned HTTP 200 and its HTML exactly matched the tested local build. Test the exhibition at that URL; human results remain pending.
 
 Outstanding from Phase 01: verification status is `human_needed` and 01-UAT.md is still `testing` — the subjective live visual/keyboard passes have not been signed off. Phase 1 is not closed.
 

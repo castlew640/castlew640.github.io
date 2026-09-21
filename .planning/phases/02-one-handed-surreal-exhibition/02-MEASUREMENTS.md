@@ -78,7 +78,7 @@ Visual inspection supports the implemented motifs. It does not replace the devel
 | A1 | iPhone Safari `position: fixed` and `100svh` behavior while its URL bar retracts and returns | Physical-device pass pending |
 | A2 | Actual iPhone 12 Pro small-viewport height and overlay/control clearance | Physical-device pass pending; 390 × 664 is emulation |
 | A3 | Screenshot WebP decoding as a WebGL texture in iPhone Safari | Safari pass pending |
-| A7 | WebGL2 availability in the first CI Chromium run of this phase | First CI run pending; local SwiftShader supports it |
+| A7 | WebGL2 availability in the first CI Chromium run of this phase | Verified in [Pages run 35552310047](https://github.com/castlew640/castlew640.github.io/actions/runs/35552310047): all 69 browser tests passed, including mounted scene, reflection and budget contracts |
 
 ## D-18 manual device pass
 
@@ -97,4 +97,4 @@ The end-of-phase gate retains these checks. Record the mobile browser actually u
 | iPhone 12 Pro, Safari: URL bar retract/reappear causes no corridor resize or jitter | |
 | Mobile browser and version actually used | |
 
-Phase 02 remains in progress pending independent verification and human composition/device sign-off.
+Phase 02 verification is `human_needed`; composition/device sign-off remains pending. On 2026-09-21, the owner authorized deployment of `0f0507e`. The Pages run linked above passed 33 unit and 69 browser tests and deployed successfully. The public HTML at `https://castlew640.github.io/` returned HTTP 200 and exactly matched the tested local build. CI rendering establishes correctness in that environment, not physical-device performance.

@@ -3,8 +3,10 @@ status: testing
 phase: 02-one-handed-surreal-exhibition
 source: [02-VERIFICATION.md]
 started: 2026-09-21T01:44:25Z
-updated: 2026-09-21T01:44:25Z
+updated: 2026-09-21T01:56:08Z
 ---
+
+Test URL: [https://castlew640.github.io/](https://castlew640.github.io/). Phase 02 commit `0f0507e` is live after [successful checks and deployment](https://github.com/castlew640/castlew640.github.io/actions/runs/35552310047). Public HTML matches the tested local build. Use this URL on the actual Windows laptop and iPhone; deployment does not count as passing the manual tests below.
 
 ## Current Test
 

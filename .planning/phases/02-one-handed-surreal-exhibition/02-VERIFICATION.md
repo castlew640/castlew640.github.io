@@ -152,6 +152,6 @@ Useful final evidence: `/tmp/02-08-visual/desktop-exhibit-featured-client.png`, 
 
 There is no identified implementation gap requiring a closure plan. Keep Phase 2 awaiting human verification and collect the four checks above through end-of-phase UAT. Final 02-08 Task 3 is committed as `95fcde8`; all task references are recorded in the completed summary.
 
-Phase 3 owns physical-device performance evidence for PERF-01, broader content-growth rehearsal and production delivery/recovery checks. Those later goals do not substitute for Phase 2's composition and D-18 manual journey acceptance. First CI WebGL availability and A1/A2/A3 Safari assumptions also remain explicitly unproven in `02-MEASUREMENTS.md`.
+Phase 3 owns physical-device performance evidence for PERF-01, broader content-growth rehearsal and production delivery/recovery checks. Those later goals do not substitute for Phase 2's composition and D-18 manual journey acceptance. A1/A2/A3 Safari assumptions remain unproven in `02-MEASUREMENTS.md`. Post-verification deployment evidence: [Pages run 35552310047](https://github.com/castlew640/castlew640.github.io/actions/runs/35552310047) passed all 33 unit and 69 browser tests, establishing A7 CI WebGL availability, and deployed `0f0507e` successfully. Public HTML matched the tested local build; human verification status is unchanged.
 
 _Verifier: reused-agent fallback applying the installed GSD verifier procedure; report only, no commit._

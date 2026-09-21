@@ -128,7 +128,7 @@ export function createExhibits(stops: HTMLElement[], inks: Inks, stone: MeshStan
         material.map = texture;
         material.color.set('#ffffff');
         material.needsUpdate = true;
-        figure.setAttribute('aria-hidden', 'true');
+        figure.removeAttribute('aria-hidden');
         requestRender();
       } catch { fail(); }
     })();

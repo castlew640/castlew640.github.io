@@ -439,8 +439,9 @@ test('the live panel reuses one image request and restores the figure in still v
   const figure = page.locator('figure[data-panel-source]');
   expect(requests).toHaveLength(1);
   expect(requests[0]).toBe(await figure.locator('img').evaluate((el) => (el as HTMLImageElement).src));
-  await expect(figure).toHaveAttribute('aria-hidden', 'true');
-  await expect(figure).toHaveCSS('visibility', 'hidden');
+  await expect(figure).not.toHaveAttribute('aria-hidden', 'true');
+  await expect(figure).toHaveCSS('opacity', '0');
+  await expect(figure).toHaveCSS('pointer-events', 'none');
   const link = page.getByRole('link', { name: 'Read case study →' });
   await page.locator(`#${exhibitId}`).focus();
   await page.keyboard.press('Tab');

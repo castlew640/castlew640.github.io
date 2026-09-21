@@ -171,6 +171,33 @@ test('one touch on the screenshot opens the same anchor as the visible case-stud
   await context.close();
 });
 
+test('the active decorative canvas preserves the screenshot alternative and caption for assistive technology', async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 664 }, hasTouch: true, reducedMotion: 'no-preference' });
+  const page = await context.newPage();
+  const point = await panelPoint(page);
+  const figure = page.locator('figure[data-panel-source]');
+  const alt = await figure.locator('img').getAttribute('alt');
+  const caption = await figure.locator('figcaption').innerText();
+  expect(alt).toBeTruthy();
+  expect(caption).toBeTruthy();
+  // Role queries exclude aria-hidden and visibility:hidden descendants. The
+  // snapshot additionally proves the authored caption remains readable.
+  await expect(page.getByRole('img', { name: alt!, exact: true })).toHaveCount(1);
+  const accessible = await figure.ariaSnapshot();
+  expect(accessible).toContain(alt!);
+  expect(accessible).toContain(caption);
+  await expect(figure).not.toHaveAttribute('aria-hidden', 'true');
+  await expect(figure).toHaveCSS('opacity', '0');
+  await expect(figure).toHaveCSS('pointer-events', 'none');
+  await expect(page.locator('.exhibition-canvas canvas')).toHaveAttribute('aria-hidden', 'true');
+  expect(await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.matches('canvas'), point)).toBe(true);
+  await page.getByRole('button', { name: 'Still view', exact: true }).click();
+  await expect(figure).toHaveCSS('opacity', '1');
+  await expect(page.getByRole('img', { name: alt!, exact: true })).toHaveCount(1);
+  expect(await figure.ariaSnapshot()).toContain(caption);
+  await context.close();
+});
+
 for (const gesture of ['long press', 'wandering press', 'scroll during press', 'two pointers', 'pier', 'missing slug'] as const) {
   test(`a real panel rejects ${gesture}`, async ({ browser }) => {
     const context = await browser.newContext({ viewport: { width: 390, height: 664 }, hasTouch: true, deviceScaleFactor: 3, reducedMotion: 'no-preference' });

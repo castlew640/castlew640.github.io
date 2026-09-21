@@ -4,7 +4,8 @@ declare const process: { env: Record<string, string | undefined> };
 
 export default defineConfig({
   testDir: './tests',
-  testMatch: process.env.GROWTH_FIXTURE_SUITE === 'media' ? 'project-media.spec.ts' : 'project-growth.spec.ts',
+  testMatch: process.env.GROWTH_FIXTURE_SUITE === 'media' ? 'project-media.spec.ts'
+    : process.env.GROWTH_FIXTURE_SUITE === 'performance' ? 'performance-release.spec.ts' : 'project-growth.spec.ts',
   fullyParallel: false,
   forbidOnly: true,
   retries: 0,

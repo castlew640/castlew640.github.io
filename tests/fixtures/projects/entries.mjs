@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { chromium } from '@playwright/test';
+import sharp from 'sharp';
 
 export const FIXTURE_SENTINEL = 'GROWTH_FIXTURE_DO_NOT_PUBLISH';
 export const DRAFT_SENTINEL = 'GROWTH_DRAFT_DO_NOT_PUBLISH';
@@ -46,7 +47,7 @@ ${media ? `  - src: ./terminal.png
     caption: Still preview, not a gallery video.
     kind: screenshot
     fit: cover
-` : `  - src: ./evidence.jpg
+` : `  - src: ./evidence-${id}.jpg
     alt: Fixture evidence for personal project ${id}
     caption: ${FIXTURE_SENTINEL} approved-image copy used only inside an isolated build.
     kind: screenshot
@@ -130,7 +131,10 @@ async function addPersonal(projectsRoot, sourceImage, number, exhibitionOrder = 
   const id = String(number).padStart(2, '0');
   const entryRoot = join(projectsRoot, `fixture-personal-${id}`);
   await mkdir(entryRoot, { recursive: true });
-  await cp(sourceImage, join(entryRoot, 'evidence.jpg'));
+  const [width, height] = number % 3 === 0 ? [720, 1080] : number % 3 === 1 ? [1200, 675] : [1000, 800];
+  const overlay = Buffer.from(`<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg"><rect width="${width}" height="58" fill="#292e29"/><text x="24" y="38" fill="#f4f0e6" font-family="monospace" font-size="27">FIXTURE ${id} · EVIDENCE STUDY</text><rect x="${width - 52}" y="${height - 52}" width="36" height="36" fill="#8e4935"/></svg>`);
+  await sharp(sourceImage).resize(width, height, { fit: 'contain', background: '#f4f0e6' })
+    .composite([{ input: overlay }]).jpeg({ quality: 79 }).toFile(join(entryRoot, `evidence-${id}.jpg`));
   if (media) await renderMediaStills(entryRoot);
   await writeFile(join(entryRoot, 'index.md'), personalEntry(number, exhibitionOrder, media));
 }

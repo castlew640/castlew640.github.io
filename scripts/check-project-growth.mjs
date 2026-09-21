@@ -14,7 +14,7 @@ const suite = args.get('--suite') ?? 'growth';
 
 if (![0, 1, 10].includes(count)) throw new Error('--count must be one of 0, 1, or 10');
 if (!['growth', 'media', 'performance'].includes(suite)) throw new Error('--suite must be growth, media, or performance');
-if (suite === 'performance') throw new Error(`Suite "${suite}" is reserved for a later Phase 3 plan`);
+if (suite === 'media' && count < 2) throw new Error('Media fixture requires a personal project; use --count 10');
 
 async function hashPath(path) {
   const hash = createHash('sha256');
@@ -130,6 +130,8 @@ try {
       console.log(`Chromium decoded checked-in MP4: ${decoded.width}x${decoded.height}, ${decoded.duration.toFixed(2)}s`);
     } finally { await browser.close(); }
     await exerciseScenario({ scenario: `media-count-${count}`, scenarioCount: count, personalOnly: false });
+  } else if (suite === 'performance') {
+    await exerciseScenario({ scenario: `performance-count-${count}`, scenarioCount: count, personalOnly: false });
   } else {
     await exerciseScenario({ scenario: `count-${count}`, scenarioCount: count, personalOnly: false });
     await exerciseScenario({ scenario: 'personal-only', scenarioCount: 1, personalOnly: true });

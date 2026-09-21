@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 // @ts-expect-error Node test types are intentionally not a production dependency.
 import test from 'node:test';
 // @ts-expect-error Node types are intentionally not a production dependency.
-import { mkdtemp, mkdir, writeFile, symlink } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, writeFile, symlink } from 'node:fs/promises';
 // @ts-expect-error Node types are intentionally not a production dependency.
 import { tmpdir } from 'node:os';
 // @ts-expect-error Node types are intentionally not a production dependency.
@@ -21,10 +21,11 @@ const video = (slug = 'published') => ({
 const entry = (overrides: Record<string, unknown> = {}) => ({
   id: 'published', data: { slug: 'published', published: true, video: video(), ...overrides },
 });
-const put = async (base: string, slug: string, name: string, content = 'fixture') => {
+const put = async (base: string, slug: string, name: string, content?: string) => {
   const folder = join(base, 'media', slug);
   await mkdir(folder, { recursive: true });
-  await writeFile(join(folder, name), content);
+  const bytes = content ?? (name.endsWith('.mp4') ? await readFile(new URL('./fixtures/projects/silent-demo.mp4', import.meta.url)) : 'fixture');
+  await writeFile(join(folder, name), bytes);
 };
 
 test('still-only project and correctly owned page video are valid', async () => {

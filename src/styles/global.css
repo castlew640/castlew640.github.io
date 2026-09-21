@@ -95,7 +95,10 @@
   .project-content { max-width: 48rem; padding-block: 3rem; }
   .project-content h2 { margin-top: 2.5rem; font-size: clamp(2rem, 4vw, 3rem); }
   .project-content p { max-width: 44rem; color: var(--muted); }
-  .contract-list, .evidence { padding-block: 3rem; border-top: 1px solid var(--line); }
+  .contract-list, .evidence, .project-video { padding-block: 3rem; border-top: 1px solid var(--line); }
+  .project-video video { display: block; width: min(100%, 52rem); height: auto; margin-top: 2rem; background: var(--stone-lit); }
+  .project-video p { max-width: 52rem; margin-top: 1rem; }
+  .project-video .text-link { margin-top: 1rem; }
   .contract-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 2rem; }
   .contract-card { padding: 1.5rem; border: 1px solid var(--line); }
   .contract-card h3 { margin-top: 0.7rem; font-family: var(--serif); font-size: 1.8rem; font-weight: 400; line-height: 1.1; }

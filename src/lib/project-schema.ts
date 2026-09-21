@@ -28,3 +28,22 @@ export const evidenceSchema = screenshotSchema.extend({
   kind: z.enum(['screenshot', 'terminal', 'diagram', 'illustration']),
   fit: z.enum(['contain', 'cover']),
 });
+
+export const videoFields = {
+  src: nonBlank,
+  // The collection replaces this with image() so Astro resolves a local still.
+  poster: z.unknown(),
+  description: nonBlank,
+  hasAudio: z.boolean(),
+  captions: z.object({
+    src: nonBlank,
+    language: nonBlank,
+    label: nonBlank,
+  }).optional(),
+};
+
+export const requireVideoCaptions = (value: { hasAudio: boolean; captions?: unknown }, context: z.RefinementCtx) => {
+  if (value.hasAudio && !value.captions) context.addIssue({ code: 'custom', path: ['captions'], message: 'Video with audio requires captions' });
+};
+
+export const videoSchema = z.object(videoFields).superRefine(requireVideoCaptions);

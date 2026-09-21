@@ -7,6 +7,8 @@ import {
   httpsUrlSchema,
   nonBlank,
   screenshotSchema,
+  videoFields,
+  requireVideoCaptions,
 } from './lib/project-schema';
 
 const commonProject = {
@@ -28,6 +30,7 @@ const projects = defineCollection({
       repositoryUrl: httpsUrlSchema.optional(),
       contracts: z.array(contractSchema).length(3),
       screenshots: z.array(screenshotSchema.extend({ src: image() })),
+      video: z.object({ ...videoFields, poster: image() }).superRefine(requireVideoCaptions).optional(),
     }),
     z.object({
       ...commonProject,
@@ -36,6 +39,7 @@ const projects = defineCollection({
       liveUrl: httpsUrlSchema.optional(),
       repositoryUrl: httpsUrlSchema.optional(),
       evidence: z.array(evidenceSchema.extend({ src: image() })),
+      video: z.object({ ...videoFields, poster: image() }).superRefine(requireVideoCaptions).optional(),
     }),
   ]),
 });

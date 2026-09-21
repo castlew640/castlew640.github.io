@@ -21,7 +21,8 @@ test('page-only native video waits for activation while home uses the still', as
   await expect(page.getByText('A rust circle crosses a plain paper background.')).toBeVisible();
   await expect(page.getByRole('link', { name: /Download video/i })).toHaveAttribute('href', '/media/fixture-personal-01/silent-demo.mp4');
   expect(await video.evaluate((element: HTMLVideoElement) => element.paused)).toBe(true);
-  await video.click({ position: { x: 25, y: 120 } });
+  await video.focus();
+  await page.keyboard.press('Space');
   await expect.poll(() => video.evaluate((element: HTMLVideoElement) => !element.paused && element.currentTime > 0)).toBe(true);
 });
 

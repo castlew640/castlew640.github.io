@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
+declare const process: { env: Record<string, string | undefined> };
+
 export default defineConfig({
   testDir: './tests',
   testMatch: process.env.GROWTH_FIXTURE_SUITE === 'media' ? 'project-media.spec.ts' : 'project-growth.spec.ts',

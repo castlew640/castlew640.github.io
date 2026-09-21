@@ -40,7 +40,7 @@ test('approach construction is reversible by station and idle at partial progres
       const t = Math.max(0, Math.min(1, (16 - distance) / 8));
       const progress = t * t * (3 - 2 * t);
       expect(Number(data[`transformation${index}Progress`])).toBeCloseTo(progress, 2);
-      expect(data[`transformation${index}Shadow`]).toBe(progress >= 0.5);
+      expect(data[`transformation${index}Shadow`]).toBe(Number(data[`transformation${index}Progress`]) >= 0.5);
     }
     expect(Number(data.shadowTargetOffset)).toBeCloseTo(10, 2);
   }

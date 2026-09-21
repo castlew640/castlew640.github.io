@@ -145,7 +145,7 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
       inks, architecture.stone, renderer.capabilities.getMaxAnisotropy(), () => requestRender(), options.landingStation);
     cleanups.push(() => exhibits.dispose());
     scene.add(exhibits.group);
-    const transformations = createTransformations(inks, architecture.stone, -options.landingStation + 10);
+    const transformations = createTransformations(inks, architecture.stone, options.landingStation - 10, options.landingStation);
     cleanups.push(() => transformations.dispose());
     scene.add(transformations.group);
     const completed = createCompletedGroup([architecture.group, architecture.completed, exhibits.group, exhibits.completed, transformations.completed], architecture.stone, inks);
@@ -167,6 +167,8 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
     debug.lightsOnBothLayers = [sun, hemisphere, ambient].every((light) => light.layers.isEnabled(0) && light.layers.isEnabled(2));
     renderer.info.autoReset = false;
     debug.walkwayObstructions = architecture.walkwayObstructions + exhibits.walkwayObstructions;
+    debug.maximumStructuralBend = architecture.maximumStructuralBend;
+    debug.localWalkwayClearance = architecture.localWalkwayClearance;
     debug.pickablePanels = exhibits.panels.length;
     debug.nonPanelRaycasts = 0;
     exhibits.group.traverse((object) => {
@@ -203,6 +205,7 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
         .addScaledVector(route.up, 11).addScaledVector(route.forward, -14.9);
       sun.target.position.copy(route.position).addScaledVector(route.up, 1.5).addScaledVector(route.forward, 10);
       sun.shadow.camera.updateProjectionMatrix();
+      debug.shadowTargetOffset = sun.target.position.clone().sub(route.position).dot(route.forward);
       debug.station = station;
       debug.currentStopId = currentStopId;
       debug.cameraZ = camera.position.z;
@@ -214,9 +217,11 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
       debug.cameraUpX = camera.up.x;
       debug.cameraUpY = camera.up.y;
       debug.cameraUpZ = camera.up.z;
-      transformations.update(-station);
+      transformations.update(station);
+      transformations.group.updateMatrixWorld(true);
       transformations.elements.forEach((element, index) => {
-        debug[`transformation${index}Z`] = element.z;
+        debug[`transformation${index}Station`] = element.station;
+        debug[`transformation${index}WorldX`] = element.mesh.getWorldPosition(new Vector3()).x;
         debug[`transformation${index}Progress`] = element.progress;
         debug[`transformation${index}Shadow`] = element.mesh.castShadow;
         debug[`transformation${index}MeshVisible`] = element.mesh.visible;

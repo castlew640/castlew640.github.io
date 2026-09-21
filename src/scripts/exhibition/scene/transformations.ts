@@ -4,14 +4,15 @@ import {
 } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { segments, type Inks } from './ink';
+import { routeBounds, routeMatrix } from './path';
 
-export function approachProgress(cameraZ: number, elementZ: number): number {
+export function approachProgress(cameraStation: number, elementStation: number): number {
   // Reversed-edge smoothstep: fully drawn at 16 m, fully built at 8 m.
-  const t = Math.max(0, Math.min(1, (16 - Math.abs(cameraZ - elementZ)) / 8));
+  const t = Math.max(0, Math.min(1, (16 - Math.abs(cameraStation - elementStation)) / 8));
   return t * t * (3 - 2 * t);
 }
 
-export function createTransformations(inks: Inks, stone: MeshStandardMaterial, aboutZ: number) {
+export function createTransformations(inks: Inks, stone: MeshStandardMaterial, aboutStation: number, landingStation: number) {
   const group = new Group();
   const completed = new Group();
   const hatchMaterial = new MeshBasicMaterial({ color: '#8e4935', transparent: true, depthWrite: false });
@@ -24,7 +25,7 @@ export function createTransformations(inks: Inks, stone: MeshStandardMaterial, a
   };
   const startColor = new Color('#8b877b');
   const endColor = new Color('#4e5144');
-  const elements: { z: number; progress: number; mesh: Mesh; ink: ReturnType<typeof segments>; hatch: Mesh; local: Group }[] = [];
+  const elements: { station: number; progress: number; mesh: Mesh; ink: ReturnType<typeof segments>; hatch: Mesh; local: Group }[] = [];
   const geometries: BufferGeometry[] = [];
   const arc = new Shape();
   arc.moveTo(-2.4, 0); arc.lineTo(-2.4, 2);
@@ -36,7 +37,7 @@ export function createTransformations(inks: Inks, stone: MeshStandardMaterial, a
   const bay = [-0.7, 0.7].flatMap((x) => [-0.7, 0.7].map((z) => new BoxGeometry(0.3, 4.6, 0.3).translate(x, 2.3, z)));
   const stairs = Array.from({ length: 4 }, (_, i) => new BoxGeometry(1.2, 0.35 * (i + 1), 0.65).translate(0, 0.175 * (i + 1), -i * 0.65));
 
-  function add(parts: BufferGeometry[], x: number, z: number, rotation = 0): void {
+  function add(parts: BufferGeometry[], x: number, station: number, rotation = 0): void {
     const normalized = parts.map((part) => { const result = part.index ? part.toNonIndexed() : part; if (result !== part) part.dispose(); return result; });
     const geometry = mergeGeometries(normalized)!;
     normalized.forEach((part) => part.dispose());
@@ -55,25 +56,29 @@ export function createTransformations(inks: Inks, stone: MeshStandardMaterial, a
     edgeGeometry.dispose();
     // Shared procedural 35-degree / 7px-at-design-standoff hatch, with no texture.
     const hatch = new Mesh(geometry, hatchMaterial); hatch.raycast = () => {};
-    const local = new Group(); local.position.set(x, 0, z); local.rotation.y = rotation;
-    local.add(mesh, ink, hatch); group.add(local);
+    const local = new Group(); local.position.set(x, 0, 0); local.rotation.y = rotation;
+    local.add(mesh, ink, hatch);
+    const routeGroup = new Group(); routeGroup.applyMatrix4(routeMatrix(station, routeBounds(landingStation + 36)));
+    routeGroup.add(local); group.add(routeGroup);
     const finished = new Mesh(geometry, stone);
-    finished.position.copy(local.position); finished.rotation.copy(local.rotation); completed.add(finished);
-    const element = { z, progress: 0, mesh, ink, hatch, local };
+    finished.position.copy(local.position); finished.rotation.copy(local.rotation);
+    const finishedFrame = new Group(); finishedFrame.applyMatrix4(routeMatrix(station, routeBounds(landingStation + 36)));
+    finishedFrame.add(finished); completed.add(finishedFrame);
+    const element = { station, progress: 0, mesh, ink, hatch, local };
     hatch.onBeforeRender = () => { hatchMaterial.opacity = 0.35 * (1 - element.progress); };
     elements.push(element);
     geometries.push(geometry, ink.geometry);
   }
   // Side elevation keeps the whole 4 m arch at x=5, outside the six-metre path.
-  add([arch], 5, -9, Math.PI / 2);
-  add(bay, -5.8, -30);
-  add(stairs, -6.2, aboutZ);
+  add([arch], 5, 9, Math.PI / 2);
+  add(bay, -5.8, 30);
+  add(stairs, -6.2, aboutStation);
 
   return {
     group, completed, elements,
-    update(cameraZ: number): void {
+    update(cameraStation: number): void {
       for (const element of elements) {
-        const progress = approachProgress(cameraZ, element.z);
+        const progress = approachProgress(cameraStation, element.station);
         element.progress = progress;
         element.mesh.visible = progress > 0;
         element.mesh.castShadow = progress >= 0.5;

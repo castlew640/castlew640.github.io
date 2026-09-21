@@ -1,6 +1,6 @@
 import {
   BoxGeometry, BufferGeometry, Color, EdgesGeometry, ExtrudeGeometry, Float32BufferAttribute,
-  Group, Mesh, MeshStandardMaterial, Shape,
+  Group, Mesh, MeshStandardMaterial, Shape, Vector3,
 } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { polyline, segments, type Inks } from './ink';
@@ -35,9 +35,44 @@ export function createArchitecture(inks: Inks, landingStation: number) {
   const construction: number[] = [];
   const geometries: BufferGeometry[] = [];
   let walkwayObstructions = 0;
+  let maximumStructuralBend = 0;
+  let nearestLowStructure = Number.POSITIVE_INFINITY;
+
+  function warpArchitecturePoint(point: Vector3, station: number, side: number): Vector3 {
+    if (point.y <= 3) return point;
+    const t = Math.min(1, (point.y - 3) / 4);
+    const eased = t * t * (3 - 2 * t);
+    const segment = Math.floor(station / 18);
+    // The ribs lean inward on both sides; adjacent fixed route segments have
+    // opposite leading edges, avoiding a repetitive perfectly vertical arcade.
+    const alternating = segment % 2 === 0 ? 1 : -1;
+    point.x += -side * 0.65 * eased + alternating * 0.15 * eased;
+    return point;
+  }
+
+  function deform(geometry: BufferGeometry, station: number, visibleClearance = true): void {
+    const positions = geometry.getAttribute('position');
+    const point = new Vector3();
+    for (let index = 0; index < positions.count; index++) {
+      point.fromBufferAttribute(positions, index);
+      const before = point.x;
+      const side = point.x === 0 ? 0 : Math.sign(point.x);
+      warpArchitecturePoint(point, station, side);
+      maximumStructuralBend = Math.max(maximumStructuralBend, Math.abs(point.x - before));
+      positions.setXYZ(index, point.x, point.y, point.z);
+      if (visibleClearance && point.y > 0.12 && point.y < 1.62) nearestLowStructure = Math.min(nearestLowStructure, Math.abs(point.x));
+    }
+    positions.needsUpdate = true;
+    geometry.computeVertexNormals();
+    geometry.computeBoundingBox();
+    geometry.computeBoundingSphere();
+  }
 
   function solid(geometry: BufferGeometry, floor = false, station?: number, outline = true): Mesh {
-    if (station !== undefined) geometry.applyMatrix4(routeMatrix(station, bounds));
+    if (station !== undefined) {
+      if (!floor) deform(geometry, station);
+      geometry.applyMatrix4(routeMatrix(station, bounds));
+    }
     const normals = geometry.getAttribute('normal');
     const colorsArray: number[] = [];
     for (let i = 0; i < normals.count; i++) {
@@ -61,7 +96,7 @@ export function createArchitecture(inks: Inks, landingStation: number) {
 
   function box(width: number, height: number, depth: number, x: number, y: number, z: number, floor = false): void {
     if (!floor && y - height / 2 < 3 && y + height / 2 > 0.12 && x - width / 2 < 3 && x + width / 2 > -3) walkwayObstructions++;
-    solid(new BoxGeometry(width, height, depth).translate(x, y, 0), floor, -z);
+    solid(new BoxGeometry(width, height, depth, 1, floor ? 1 : 4, 1).translate(x, y, 0), floor, -z);
   }
   const end = landingStopZ - 20;
   // Fixed route samples form one continuous local six-metre walkway. The
@@ -102,7 +137,9 @@ export function createArchitecture(inks: Inks, landingStation: number) {
   const worldLines = (points: number[]): number[] => {
     const transformed: number[] = [];
     for (let index = 0; index < points.length; index += 3) {
-      transformed.push(...routePoint(-points[index + 2], points[index], points[index + 1], bounds).toArray());
+      const station = -points[index + 2];
+      const local = warpArchitecturePoint(new Vector3(points[index], points[index + 1], 0), station, Math.sign(points[index]));
+      transformed.push(...routePoint(station, local.x, local.y, bounds).toArray());
     }
     return transformed;
   };
@@ -128,7 +165,9 @@ export function createArchitecture(inks: Inks, landingStation: number) {
   const corniceLines: number[] = [];
   for (const x of [-2, 2]) for (const z of [corniceZ - 0.6, corniceZ + 0.6]) {
     corniceLines.push(x, 0, z, x, 4.9, z);
-    const geometry = new BoxGeometry(0.15, 4.9, 0.15).translate(x, 2.45, 0).applyMatrix4(routeMatrix(-z, bounds));
+    const geometry = new BoxGeometry(0.15, 4.9, 0.15, 1, 4, 1).translate(x, 2.45, 0);
+    deform(geometry, -z, false);
+    geometry.applyMatrix4(routeMatrix(-z, bounds));
     const values = Array.from({ length: geometry.getAttribute('position').count }, () => colors.lit.toArray()).flat();
     geometry.setAttribute('color', new Float32BufferAttribute(values, 3));
     completed.add(new Mesh(geometry, stone)); geometries.push(geometry);
@@ -156,7 +195,9 @@ export function createArchitecture(inks: Inks, landingStation: number) {
   const landingLeft = solid(new BoxGeometry(1, 3.2, 1).translate(-3.9, 1.6, landingArchZ));
   landingLeft.name = 'landing-left-pier';
   // There is deliberately no right-pier mesh in the visible architecture.
-  const rightGeometry = new BoxGeometry(1, 3.2, 1).translate(3.9, 1.6, 0).applyMatrix4(routeMatrix(-landingArchZ, bounds));
+  const rightGeometry = new BoxGeometry(1, 3.2, 1, 1, 4, 1).translate(3.9, 1.6, 0);
+  deform(rightGeometry, -landingArchZ, false);
+  rightGeometry.applyMatrix4(routeMatrix(-landingArchZ, bounds));
   const rightEdges = new EdgesGeometry(rightGeometry);
   const landingRight = new Group();
   const rightDrawing = segments(Array.from(rightEdges.getAttribute('position').array), inks.unbuilt, true);
@@ -176,6 +217,8 @@ export function createArchitecture(inks: Inks, landingStation: number) {
     segments(worldLines(construction), inks.construction, true), segments(worldLines(registration), inks.registration, false));
   return {
     group, built, drawn, completed, stone, walkwayObstructions,
+    get maximumStructuralBend() { return maximumStructuralBend; },
+    get localWalkwayClearance() { return Math.min(6, nearestLowStructure * 2); },
     cornice, landingLeft, landingRing, corniceSupports: corniceLines.length / 6, corniceSolidSupports, landingRightMeshes,
     batch() {
       // Once the independent completed copy exists, batch static stone for both

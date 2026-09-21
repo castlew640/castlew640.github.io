@@ -91,7 +91,7 @@ try {
   await page.goto(baseURL, { waitUntil: 'load' });
   await page.locator('html[data-scene="active"]').waitFor();
   await page.waitForFunction(() => Number(window.__exhibition?.renderCount) > 0);
-  await page.waitForFunction(() => window.__exhibition?.panelTextureReady === true);
+  await page.waitForFunction(() => Number(window.__exhibition?.panelGpuTextures) > 0);
   const startup = await snapshot(page);
   const coldSamples = await traverse(page);
   const full = await snapshot(page);

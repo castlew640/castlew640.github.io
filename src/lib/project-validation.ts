@@ -6,7 +6,7 @@ type ProjectRecord = {
   title?: string;
   summary?: string;
   published: boolean;
-  exhibitionOrder?: number;
+  exhibitionOrder: number;
   kind?: 'client' | 'personal';
   liveUrl?: string;
   repositoryUrl?: string;
@@ -33,14 +33,17 @@ export function validateProjectRecords(records: ProjectRecord[]): void {
     if (project.repositoryUrl) requireHttpsUrl(project.repositoryUrl, `Project ${project.slug} repository URL`);
 
     if (project.published) {
+      if (!Number.isInteger(project.exhibitionOrder) || project.exhibitionOrder < 0) {
+        throw new Error(`Published project ${project.slug} requires a nonnegative integer exhibition order`);
+      }
       if (publishedSlugs.has(project.slug)) {
         throw new Error(`Duplicate published project slug: ${project.slug}`);
       }
       publishedSlugs.add(project.slug);
-      if (project.exhibitionOrder !== undefined && publishedOrders.has(project.exhibitionOrder)) {
+      if (publishedOrders.has(project.exhibitionOrder)) {
         throw new Error(`Duplicate published exhibition order: ${project.exhibitionOrder}`);
       }
-      if (project.exhibitionOrder !== undefined) publishedOrders.add(project.exhibitionOrder);
+      publishedOrders.add(project.exhibitionOrder);
       if (!project.title?.trim() || !project.summary?.trim()) {
         throw new Error(`Published project ${project.slug} requires a title and summary`);
       }

@@ -1,7 +1,8 @@
 import {
   BoxGeometry, BufferGeometry, Color, EdgesGeometry, ExtrudeGeometry, Float32BufferAttribute,
-  Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, Shape,
+  Group, Mesh, MeshStandardMaterial, Shape,
 } from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { polyline, segments, type Inks } from './ink';
 
 export function createArchitecture(inks: Inks, landingStopZ: number) {
@@ -12,6 +13,7 @@ export function createArchitecture(inks: Inks, landingStopZ: number) {
   const drawn = new Group();
   drawn.name = 'drawn';
   group.add(built, drawn);
+  const completed = new Group();
   const stone = new MeshStandardMaterial({
     roughness: 0.92, metalness: 0, vertexColors: true,
     // The approved .55 hemisphere uses physical irradiance in r186 and alone
@@ -72,11 +74,12 @@ export function createArchitecture(inks: Inks, landingStopZ: number) {
   // The ring is bounded by two circular segments; its outer rise is 1.8 m
   // above the 3.2 m springing, with a .5 m stone crown thickness.
   const arch = new Shape();
-  function arcPoints(halfWidth: number, rise: number): [number, number][] {
+  function arcPoints(halfWidth: number, rise: number, spring = 3.2): [number, number][] {
     const radius = (halfWidth * halfWidth + rise * rise) / (2 * rise);
-    const centre = 3.2 + rise - radius;
-    return Array.from({ length: 49 }, (_, index) => {
-      const x = -halfWidth + index / 48 * 2 * halfWidth;
+    const centre = spring + rise - radius;
+    return Array.from({ length: 25 }, (_, index) => {
+      const angle = Math.asin(halfWidth / radius) * (index / 12 - 1);
+      const x = radius * Math.sin(angle);
       return [x, centre + Math.sqrt(radius * radius - x * x)];
     });
   }
@@ -95,28 +98,84 @@ export function createArchitecture(inks: Inks, landingStopZ: number) {
   }
 
   for (const x of [-5.8, 5.8]) {
-    for (let z = -16; z >= landingStopZ; z -= 8) {
+    for (let z = -16; z >= landingStopZ + 16; z -= 8) {
       unbuilt.push(x - 0.25, 0, z, x - 0.25, 4.6, z, x + 0.25, 0, z, x + 0.25, 4.6, z,
         x - 0.25, 4.6, z, x + 0.25, 4.6, z);
     }
-    unbuilt.push(x, 4.6, -16, x, 4.6, landingStopZ - 6);
+    unbuilt.push(x, 4.6, -16, x, 4.6, landingStopZ + 16);
     construction.push(x, 0.02, -8, x, 0.02, end);
   }
+  const aboutZ = landingStopZ + 10;
+  // Place the subject ahead of the stop, rather than directly over the camera.
+  const corniceZ = aboutZ - 12;
+  const cornice = solid(new BoxGeometry(4, 0.6, 1.2).translate(0, 5.2, corniceZ));
+  cornice.name = 'floating-cornice';
+  const corniceLines: number[] = [];
+  for (const x of [-2, 2]) for (const z of [corniceZ - 0.6, corniceZ + 0.6]) {
+    corniceLines.push(x, 0, z, x, 4.9, z);
+    const geometry = new BoxGeometry(0.15, 4.9, 0.15).translate(x, 2.45, z);
+    const values = Array.from({ length: geometry.getAttribute('position').count }, () => colors.lit.toArray()).flat();
+    geometry.setAttribute('color', new Float32BufferAttribute(values, 3));
+    completed.add(new Mesh(geometry, stone)); geometries.push(geometry);
+  }
+  const corniceDrawing = segments(corniceLines, inks.construction, true);
+  drawn.add(corniceDrawing);
+  for (const x of [-7.5, 7.5]) {
+    // Wide, open side arcades, drawn only; no new portal across the path.
+    for (const radius of [2, 2.3]) {
+      const points = [-radius, 0, -radius, 2.3];
+      for (let i = 0; i <= 12; i++) { const angle = Math.PI - i * Math.PI / 12; points.push(radius * Math.cos(angle), 2.3 + radius * Math.sin(angle)); }
+      points.push(radius, 0);
+      for (let i = 0; i < points.length - 2; i += 2) unbuilt.push(x, points[i + 1], aboutZ - 6 + points[i], x, points[i + 3], aboutZ - 6 + points[i + 2]);
+    }
+  }
+  const landingArchZ = landingStopZ - 18;
+  const landingShape = new Shape();
+  const landingOuter = arcPoints(4.4, 3.8);
+  const landingInner = arcPoints(3.4, 2.8).reverse();
+  landingShape.moveTo(...landingOuter[0]);
+  for (const point of [...landingOuter.slice(1), ...landingInner]) landingShape.lineTo(...point);
+  landingShape.closePath();
+  const landingRing = solid(new ExtrudeGeometry(landingShape, { depth: 1, bevelEnabled: false }).translate(0, 0, landingArchZ - 0.5));
+  landingRing.name = 'landing-ring';
+  const landingLeft = solid(new BoxGeometry(1, 3.2, 1).translate(-3.9, 1.6, landingArchZ));
+  landingLeft.name = 'landing-left-pier';
+  // There is deliberately no right-pier mesh in the visible architecture.
+  const rightGeometry = new BoxGeometry(1, 3.2, 1).translate(3.9, 1.6, landingArchZ);
+  const rightEdges = new EdgesGeometry(rightGeometry);
+  const landingRight = new Group();
+  const rightDrawing = segments(Array.from(rightEdges.getAttribute('position').array), inks.unbuilt, true);
+  rightDrawing.userData.excludeCompletion = true;
+  landingRight.add(rightDrawing); drawn.add(landingRight);
+  rightEdges.dispose();
+  const rightColors = Array.from({ length: rightGeometry.getAttribute('position').count }, () => colors.lit.toArray()).flat();
+  rightGeometry.setAttribute('color', new Float32BufferAttribute(rightColors, 3));
+  completed.add(new Mesh(rightGeometry, stone)); geometries.push(rightGeometry);
+  const corniceSolidSupports = built.children.filter((object) => {
+    if (!(object instanceof Mesh) || object === cornice) return false;
+    const bounds = object.geometry.boundingBox!;
+    return bounds.max.y > 0.12 && bounds.min.y < 4.9 && bounds.min.x < 2 && bounds.max.x > -2 && bounds.min.z < corniceZ + 0.6 && bounds.max.z > corniceZ - 0.6;
+  }).length;
+  const landingRightMeshes = landingRight.children.filter((object) => object instanceof Mesh && !object.geometry.getAttribute('instanceStart')).length;
   construction.push(-10, 0.02, -12, 10, 0.02, -12, -10, 0.02, landingStopZ, 10, 0.02, landingStopZ);
   drawn.add(segments(edges, inks.built, false), segments(unbuilt, inks.unbuilt, true),
     segments(construction, inks.construction, true), segments(registration, inks.registration, false));
-  const waterMaterial = new MeshBasicMaterial({ color: '#e3e5d8', toneMapped: false });
-  const water = new Mesh(new PlaneGeometry(60, 200).rotateX(-Math.PI / 2).translate(0, 0, -90), waterMaterial);
-  water.name = 'water';
-  group.add(water);
-
   return {
-    group, built, drawn, stone, water, walkwayObstructions,
+    group, built, drawn, completed, stone, walkwayObstructions,
+    cornice, landingLeft, landingRing, corniceSupports: corniceLines.length / 6, corniceSolidSupports, landingRightMeshes,
+    batch() {
+      // Once the independent completed copy exists, batch static stone for both
+      // the main and shadow passes. Keep the floor receiving but not casting.
+      const parts = built.children.filter((object): object is Mesh => object instanceof Mesh).map((mesh) => mesh.geometry.index ? mesh.geometry.toNonIndexed() : mesh.geometry.clone());
+      const merged = mergeGeometries(parts)!;
+      parts.forEach((part) => part.dispose());
+      built.clear();
+      const mesh = new Mesh(merged, stone); mesh.castShadow = mesh.receiveShadow = true; mesh.raycast = () => {};
+      built.add(mesh); geometries.push(merged);
+    },
     dispose() {
       for (const geometry of geometries) geometry.dispose();
       drawn.traverse((object) => { if (object instanceof Mesh) object.geometry.dispose(); });
-      water.geometry.dispose();
-      waterMaterial.dispose();
       stone.dispose();
     },
   };

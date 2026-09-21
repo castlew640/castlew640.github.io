@@ -7,6 +7,7 @@ import { createInkMaterials } from './ink';
 import { createArchitecture } from './architecture';
 import { createExhibits } from './exhibit';
 import { createCompletedGroup, createReflection } from './reflection';
+import { createTransformations } from './transformations';
 
 export interface SceneHandle {
   setCameraZ(z: number): void;
@@ -103,9 +104,18 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
   const exhibits = createExhibits(Array.from(exhibition.querySelectorAll<HTMLElement>('[data-stop][data-slug]')),
     inks, architecture.stone, renderer.capabilities.getMaxAnisotropy(), () => requestRender());
   scene.add(exhibits.group);
-  architecture.group.remove(architecture.water);
-  const completed = createCompletedGroup([architecture.group, exhibits.group], architecture.stone, inks);
+  const transformations = createTransformations(inks, architecture.stone, options.landingStopZ + 10);
+  scene.add(transformations.group);
+  const completed = createCompletedGroup([architecture.group, architecture.completed, exhibits.group, transformations.completed], architecture.stone, inks);
+  architecture.batch();
   const reflection = createReflection(scene, camera, renderer, completed, inks);
+  debug.transformations = transformations.elements.length;
+  debug.impossibleConstructions = Number(architecture.cornice.material === architecture.stone && architecture.corniceSolidSupports === 0)
+    + Number(architecture.landingRing.material === architecture.stone && architecture.landingRightMeshes === 0);
+  debug.corniceSupports = architecture.corniceSupports;
+  debug.corniceSolidSupports = architecture.corniceSolidSupports;
+  debug.landingLeftSolid = architecture.landingLeft.material === architecture.stone;
+  debug.landingRightMeshes = architecture.landingRightMeshes;
   debug.completedLayerZeroObjects = 0;
   completed.group.traverse((object) => { if (object.layers.isEnabled(0)) debug.completedLayerZeroObjects = Number(debug.completedLayerZeroObjects) + 1; });
   debug.lightsOnBothLayers = [sun, hemisphere, ambient].every((light) => light.layers.isEnabled(0) && light.layers.isEnabled(2));
@@ -125,13 +135,14 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
     }
   });
   debug.materials = materials.size;
-  for (const group of [architecture.drawn, exhibits.group]) group.traverse((object) => {
+  for (const group of [architecture.drawn, exhibits.group, transformations.group]) group.traverse((object) => {
     if ('geometry' in object) {
       const geometry = object.geometry as import('three').BufferGeometry;
       debug.lineSegments = Number(debug.lineSegments ?? 0) + (geometry.getAttribute('instanceStart')?.count ?? 0);
     }
   });
   window.__exhibition = debug;
+  const architectureLineSegments = Number(debug.lineSegments);
   Object.values(inks).forEach((ink, index) => {
     debug[`ink${index}Width`] = ink.linewidth;
     debug[`ink${index}Color`] = ink.color.getHex();
@@ -146,6 +157,13 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
     debug.cameraX = camera.position.x;
     debug.cameraY = camera.position.y;
     debug.cameraRotationX = camera.rotation.x;
+    transformations.update(camera.position.z);
+    transformations.elements.forEach((element, index) => {
+      debug[`transformation${index}Z`] = element.z;
+      debug[`transformation${index}Progress`] = element.progress;
+      debug[`transformation${index}Shadow`] = element.mesh.castShadow;
+      debug[`transformation${index}MeshVisible`] = element.mesh.visible;
+    });
   };
 
   const updatePanels = (): void => {
@@ -174,6 +192,7 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
     renderer.setSize(size.x, size.y, false);
     const cssSize = renderer.getSize(new Vector2());
     for (const ink of Object.values(inks)) ink.resolution.copy(cssSize);
+    transformations.resize(cssSize);
     if (sun.shadow.mapSize.x !== policy.shadowMapSize) {
       sun.shadow.map?.dispose();
       sun.shadow.map = null;
@@ -190,6 +209,7 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
     debug.reflectionTargetWidth = reflection.targetWidth;
     debug.reflectionTargetHeight = reflection.targetHeight;
     debug.reflectionFallbackSegments = reflection.fallbackSegments;
+    debug.lineSegments = architectureLineSegments + reflection.fallbackSegments;
     qualityDirty = false;
   };
 
@@ -219,6 +239,9 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
       debug.triangles = renderer.info.render.triangles;
       debug.geometries = renderer.info.memory.geometries;
       debug.textures = renderer.info.memory.textures;
+      debug.panelGpuTextures = exhibits.panels.filter((panel) => panel.material.map && (renderer.properties.get(panel.material.map) as { __webglTexture?: unknown }).__webglTexture).length;
+      debug.shadowGpuTextures = [sun.shadow.map?.texture, sun.shadow.map?.depthTexture].filter((texture) => texture && (renderer.properties.get(texture) as { __webglTexture?: unknown }).__webglTexture).length;
+      debug.waterGpuTextures = reflection.allocatedTextures;
       materials.clear();
       for (const ink of Object.values(inks)) materials.add(ink);
       scene.traverse((object) => {
@@ -286,6 +309,7 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
     canvas.removeEventListener('webglcontextlost', contextLost);
     canvas.removeEventListener('webglcontextcreationerror', creationError);
     reflection.dispose();
+    transformations.dispose();
     exhibits.dispose();
     architecture.dispose();
     for (const ink of Object.values(inks)) ink.dispose();

@@ -62,7 +62,14 @@ export function createCompletedGroup(sources: Group[], stone: MeshStandardMateri
     const { min, max } = unindexed.boundingBox!;
     // A single front elevation per completed member keeps the fallback a drawing,
     // rather than a dense wireframe of every internal triangulation edge.
-    if (max.y > 0.2) silhouettes.push(min.x, -min.y, max.z, max.x, -min.y, max.z,
+    if (max.y > 0.2 && Math.min(max.x - min.x, max.y - min.y) < 0.26) {
+      // A slender completed rib/column reads as a single datum stroke at this
+      // distance; four almost-coincident box edges only waste the ink budget.
+      const x = (min.x + max.x) / 2;
+      const y = -(min.y + max.y) / 2;
+      if (max.y - min.y > max.x - min.x) silhouettes.push(x, -min.y, max.z, x, -max.y, max.z);
+      else silhouettes.push(min.x, y, max.z, max.x, y, max.z);
+    } else if (max.y > 0.2) silhouettes.push(min.x, -min.y, max.z, max.x, -min.y, max.z,
       max.x, -min.y, max.z, max.x, -max.y, max.z, max.x, -max.y, max.z, min.x, -max.y, max.z,
       min.x, -max.y, max.z, min.x, -min.y, max.z);
   };
@@ -168,6 +175,10 @@ export function createReflection(scene: Scene, camera: PerspectiveCamera, render
     get targetWidth() { return reflector?.getRenderTarget().width ?? 0; },
     get targetHeight() { return reflector?.getRenderTarget().height ?? 0; },
     get fallbackSegments() { return fallback.visible ? completed.silhouettes.length / 6 : 0; },
+    get allocatedTextures() {
+      return Number(Boolean((renderer.properties.get(texture) as { __webglTexture?: unknown }).__webglTexture))
+        + Number(Boolean(reflector && (renderer.properties.get(reflector.getRenderTarget().texture) as { __webglTexture?: unknown }).__webglTexture));
+    },
     get material() { return reflector?.material ?? fallbackMaterial; },
     dispose() {
       releaseTarget();

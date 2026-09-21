@@ -1,0 +1,22 @@
+# Phase 03 live release and recovery evidence
+
+The public destination is [castlew640.github.io](https://castlew640.github.io/) from `master`. On 2026-09-21, the existing Pages workflow checked each pushed SHA, uploaded the checked `dist`, and deployed that artifact. Each row below had a successful build and deploy job. Times are UTC. The full 40-character SHAs identify the actual checked source; the artifact IDs identify the uploaded `github-pages` artifacts.
+
+| State | Source SHA | Successful run | Artifact ID | Deployment ID / completed | Portfolio HTML SHA-256 |
+|---|---|---|---:|---|---|
+| K, known good | `6d01465d3752a193922c6a6015234b7beade3f9b` | [35640616223](https://github.com/castlew640/castlew640.github.io/actions/runs/35640616223) | `10658775271` | `6575750944` / 18:51:43 | `cfef93d5c15f9207550e80be4da298e38ea20454309c685542c944afd99d35ac` |
+| C, reviewed sentence | `d0e13a7c9fd2eeb32c0142d8efd5118cd1bee948` | [35642092959](https://github.com/castlew640/castlew640.github.io/actions/runs/35642092959) | `10658598442` | `6575995760` / 19:05:37 | `967c3ee2fa0722db9211e021e9fcd07289d15384d5d2beb34034d4adf5f0da04` |
+| R, normal `git revert C` | `dfd2cd94b58d89dc1973b0c5efa1ea93c25ddea7` | [35643405410](https://github.com/castlew640/castlew640.github.io/actions/runs/35643405410) | `10659515461` | `6576221508` / 19:17:54 | `cfef93d5c15f9207550e80be4da298e38ea20454309c685542c944afd99d35ac` |
+| Intended, normal `git revert R` | `2407476be6d34b352a94fc0946cde80844b716df` | [35645308662](https://github.com/castlew640/castlew640.github.io/actions/runs/35645308662) | `10660242421` | `6576525685` / 19:35:06 | `967c3ee2fa0722db9211e021e9fcd07289d15384d5d2beb34034d4adf5f0da04` |
+
+K's artifact was downloaded to `/tmp/phase03-release/known-good/checked-dist` and its 19-file hash manifest retained as `/tmp/phase03-release/known-good/manifest.json` throughout the exercise. Its artifact tar SHA-256 is `0886c2fd0cec5a79feb7d5cd82969a0c4888accf3e6117f56cb4184c188eb556`. The C, R and intended artifacts were independently downloaded from their successful runs and extracted under `/tmp/phase03-release/change/checked-dist`, `/tmp/phase03-release/recovery/checked-dist` and `/tmp/phase03-release/intended/checked-dist`. They were compared to the **live HTTPS responses**, not to an assumed identical local rebuild.
+
+The same full `npm run check` gate passed locally before each of K, C, R and intended was pushed. Each CI run also passed the workflow's checked build job before deploy. `npm run smoke:production` then passed for each live deployment: **19 exact byte matches**, both direct project routes and returns, navigation, contact and resume destinations, no-JavaScript routes, and phone still/explicit opt-in browser journeys. Reports: `/tmp/phase03-release/known-good/live-smoke.json`, `/tmp/phase03-release/change/live-smoke.json`, `/tmp/phase03-release/recovery/live-smoke.json`, and `/tmp/phase03-production-smoke.json`. The last run used:
+
+```sh
+node scripts/production-smoke.mjs --base-url https://castlew640.github.io/ --dist /tmp/phase03-release/intended/checked-dist --output /tmp/phase03-production-smoke.json
+```
+
+C added exactly one reviewed case-study sentence: “The view switch preserves the current exhibit.” The C live portfolio HTML contained it. R's downloaded portfolio HTML was byte-identical to K's; **all 19 R live file hashes matched K's retained manifest**, and the sentence was absent. The known-good public content was restored 12 minutes 17 seconds after C's deployment completed. The intended deployment's **all 19 live file hashes matched C's**, and the sentence was present again. This was a normal history-preserving revert and re-revert, with no reset or force push. It demonstrates SHIP-03 and SHIP-04 for the selected Pages host.
+
+The smoke checks establish actual-host content and navigation, including HTTP content types, PDF signature and exact decoded bytes. They do not establish physical displayed-frame time or human visual quality. [03-MEASUREMENTS.md](03-MEASUREMENTS.md) records the N=2/N=10 lab observations and the unresolved physical PERF-01 protocol. The owner has a Windows laptop and iPhone but no Mac for Safari Web Inspector, so the Windows Chrome trace, physical iPhone Safari rendering timeline, device visitor checklist, and inherited [Phase 01 UAT](../01-publishable-portfolio-and-delivery/01-UAT.md) / [Phase 02 UAT](../02-one-handed-surreal-exhibition/02-UAT.md) remain pending. No physical timing or earlier UAT is claimed as passed.

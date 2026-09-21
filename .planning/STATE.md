@@ -5,16 +5,16 @@ milestone_name: milestone
 current_phase: 03
 current_phase_name: growth-and-release-polish
 status: executing
-stopped_at: Completed 03-02-PLAN.md
-last_updated: "2026-09-21T06:58:47.929Z"
+stopped_at: Completed 03-08-PLAN.md; physical acceptance pending
+last_updated: "2026-09-21T19:53:54.694Z"
 last_activity: 2026-09-21
-last_activity_desc: Plan 03-02 completed with safe page-only video and contained still evidence
+last_activity_desc: Plan 03-08 verified live Pages release and ordinary-revert recovery; physical PERF-01 and device UAT remain pending
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 19
-  completed_plans: 14
-  percent: 74
+  completed_plans: 19
+  percent: 100
 ---
 
 # Project State
@@ -28,18 +28,18 @@ See: .planning/PROJECT.md (updated 2026-09-19)
 
 ## Current Position
 
-Phase: 03 (growth-and-release-polish) — EXECUTING
-Plan: 4 of 8
-Status: Ready for Plan 03-04
-Last activity: 2026-09-21 — Plan 03-02 completed with safe page-only video and contained still evidence; physical PERF-01 evidence remains pending
+Phase: 03 (growth-and-release-polish) — AWAITING HUMAN VERIFICATION
+Plan: 8 of 8
+Status: All plans executed; final acceptance pending
+Last activity: 2026-09-21 — Plan 03-08 verified live Pages release and ordinary-revert recovery; physical PERF-01 and device UAT remain pending
 
-**Progress:** [███████░░░] 74%
+**Progress:** [██████████] 100%
 
-Next action: `$gsd-execute-phase 3`. Eight plans contain 24 tasks in six waves; all six assigned requirements and all 28 context decisions are covered. The independent review's omitted multi-exhibit regression task was added to 03-06 and its recheck passed with no blockers or warnings.
+Next action: collect the three pending checks in `.planning/phases/03-growth-and-release-polish/03-UAT.md`; use `$gsd-verify-work 3` when results are available. All eight Phase 03 plans have summaries. Five of six Phase 03 requirements have evidence; PERF-01 is still open.
 
 Outstanding from Phase 02: all eight implementation plans and automated checks (33 unit and 69 browser tests) passed, but the four checks in `.planning/phases/02-one-handed-surreal-exhibition/02-UAT.md` remain pending: composition/reflections, Windows Chrome input/real zoom, actual iPhone Safari, and landing clearance. Phase 03 explicitly revises the route, phone defaults and copy; its plans preserve the remaining acceptance obligations without inventing previous results. Phase 02 remains open.
 
-Phase 03 execution must obtain actual Windows/iPhone performance evidence, live production smoke results and observed rollback/restoration before claiming those requirements passed. Unavailable physical evidence remains `human_needed`; planning verification is not implementation or release acceptance.
+Phase 03 live production smoke and observed ordinary-revert recovery passed on 2026-09-21. [Release evidence](phases/03-growth-and-release-polish/03-RELEASE-EVIDENCE.md) records four successful Pages runs and exact live hashes; the intended content is restored at `2407476`. Actual Windows/iPhone performance evidence and independent device checks remain `human_needed`. The owner has no Mac for the iPhone Safari rendering timeline.
 
 Deployment for UAT: on 2026-09-21 the owner authorized pushing Phase 02. Commit `0f0507e0101ab68072002049c3cc9089072847f1` deployed successfully through [Pages run 35552310047](https://github.com/castlew640/castlew640.github.io/actions/runs/35552310047). The CI build passed all 33 unit and 69 browser tests, including real WebGL scene contracts. `https://castlew640.github.io/` returned HTTP 200 and its HTML exactly matched the tested local build. Test the exhibition at that URL; human results remain pending.
 
@@ -47,7 +47,7 @@ Outstanding from Phase 01: verification status is `human_needed` and 01-UAT.md i
 
 ## Performance Metrics
 
-- Total plans completed: 14
+- Total plans completed: 19
 - Average duration: 47 min
 - Total recorded execution time: 654 min (including waits and review)
 
@@ -67,6 +67,11 @@ Outstanding from Phase 01: verification status is `human_needed` and 01-UAT.md i
 | Phase 03 P01 | 12min | 3 tasks | 12 files |
 | Phase 03 P03 | 30min | 3 tasks | 13 files |
 | Phase 03 P02 | 94 min | 3 tasks | 20 files |
+| Phase 03 P04 | approximately 2 sessions | 3 tasks | 6 files |
+| Phase 03 P05 | approximately 1 session | 3 tasks | 13 files |
+| Phase 03 P06 | approximately 1 session | 3 tasks | 12 files |
+| Phase 03 P07 | 50min | 3 tasks | 17 files |
+| Phase 03 P08 | multiple sessions | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -142,6 +147,6 @@ Remaining publication inputs and environment notes:
 
 ## Session Continuity
 
-Last session: 2026-09-21T06:58:23.490Z
-Stopped at: Completed 03-02-PLAN.md
+Last session: 2026-09-21T19:53:54.676Z
+Stopped at: Completed 03-08-PLAN.md; physical acceptance pending
 Resume file: None

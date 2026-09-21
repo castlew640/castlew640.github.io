@@ -52,14 +52,14 @@ The first milestone includes both an early readable release and the finished ini
 ### Performance
 
 - [ ] **PERF-01**: Visitors on the representative desktop and physical mobile targets defined during planning receive responsive navigation and readable content within recorded transfer/frame-time budgets, with measured evidence before the immersive release.
-- [ ] **PERF-02**: A visitor's browser stops unnecessary scene work when the exhibition is hidden or inactive, and repeated project visits do not accumulate scene listeners or owned rendering resources.
+- [x] **PERF-02**: A visitor's browser stops unnecessary scene work when the exhibition is hidden or inactive, and repeated project visits do not accumulate scene listeners or owned rendering resources.
 
 ### Delivery and Release
 
 - [x] **SHIP-01**: The owner receives automated content/type/build checks and focused visitor-journey checks for proposed changes, with checks expanding as scene capabilities are added.
 - [x] **SHIP-02**: A successful default-branch update automatically deploys the exact checked artifact to the chosen public host; failed checks preserve the last successful release.
-- [ ] **SHIP-03**: The owner can verify the deployed HTTPS site, direct project routes, screenshot/resume assets, navigation, and contact links through documented production smoke checks.
-- [ ] **SHIP-04**: The owner can restore a previous working release using a documented and exercised rollback procedure for the selected host.
+- [x] **SHIP-03**: The owner can verify the deployed HTTPS site, direct project routes, screenshot/resume assets, navigation, and contact links through documented production smoke checks.
+- [x] **SHIP-04**: The owner can restore a previous working release using a documented and exercised rollback procedure for the selected host.
 
 ## v2 Requirements
 
@@ -126,11 +126,11 @@ Every v1 requirement is owned by exactly one phase. Later phases preserve and re
 | GROW-03 | Phase 1 | Complete |
 | GROW-04 | Phase 3 | Complete |
 | PERF-01 | Phase 3 | Pending |
-| PERF-02 | Phase 3 | Pending |
+| PERF-02 | Phase 3 | Complete |
 | SHIP-01 | Phase 1 | Complete |
 | SHIP-02 | Phase 1 | Complete |
-| SHIP-03 | Phase 3 | Pending |
-| SHIP-04 | Phase 3 | Pending |
+| SHIP-03 | Phase 3 | Complete |
+| SHIP-04 | Phase 3 | Complete |
 
 **Coverage:**
 

@@ -10,7 +10,7 @@ Planning baseline: Astro static HTML/content collections, TypeScript, and a Reac
 
 - [x] **Phase 1: Publishable Portfolio and Delivery** - Present real professional evidence through a readable site and working automated delivery. (completed 2026-09-19)
 - [ ] **Phase 2: One-Handed Surreal Exhibition** - Let visitors explore a distinctive corridor and its projects with scroll, swipe, or simple taps. (implementation complete; human verification pending)
-- [ ] **Phase 3: Growth and Release Polish** - Make additions repeatable and verify performance, visual refinement, and production reliability.
+- [ ] **Phase 3: Growth and Release Polish** - Make additions repeatable and verify performance, visual refinement, and production reliability. (implementation complete; human verification pending)
 
 ## Phase Details
 
@@ -107,7 +107,7 @@ Planning notes: create the visual/interaction contract before extensive asset wo
 4. Production smoke checks verify HTTPS, direct project refresh, images, resume, contact destinations, and navigation on the actual chosen host.
 5. The owner can recover a prior known-good release using the documented rollback procedure, and any public description of this site's rendering or CI/CD reflects demonstrated behavior.
 
-**Plans:** 3/8 plans executed
+**Plans:** 8/8 plans complete
 
 Plans:
 **Wave 1**
@@ -118,23 +118,23 @@ Plans:
 **Wave 2** *(blocked on Wave 1 completion)*
 
 - [x] 03-02-PLAN.md — Readable still evidence and safe optional native project video.
-- [ ] 03-04-PLAN.md — Curved architecture, reversible construction, and route-aware completed reflections.
+- [x] 03-04-PLAN.md — Curved architecture, reversible construction, and route-aware completed reflections.
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 03-05-PLAN.md — Still-first phones, opaque labels, professional copy, and accessible contact glass.
+- [x] 03-05-PLAN.md — Still-first phones, opaque labels, professional copy, and accessible contact glass.
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 03-06-PLAN.md — Real portfolio case study with annotated evidence after final presentation.
+- [x] 03-06-PLAN.md — Real portfolio case study with annotated evidence after final presentation.
 
 **Wave 5** *(blocked on Wave 4 completion)*
 
-- [ ] 03-07-PLAN.md — Expanded growth, lifecycle stabilization, fixed budgets, and measured performance evidence.
+- [x] 03-07-PLAN.md — Expanded growth, lifecycle stabilization, fixed budgets, and measured performance evidence.
 
 **Wave 6** *(blocked on Wave 5 completion)*
 
-- [ ] 03-08-PLAN.md — Concise runbooks, actual-host smoke, and exercised normal-revert recovery.
+- [x] 03-08-PLAN.md — Concise runbooks, actual-host smoke, and exercised normal-revert recovery.
 
 Planning notes: require real device evidence for claims about physical-device performance; record any checks still awaiting hardware access. Refine the existing art direction and budgets rather than expand into new scenes, a CMS, or unrequested product features. This completes the initial immersive milestone; subsequent completed projects are normal content updates.
 
@@ -146,7 +146,7 @@ Execution order: Phase 1 → Phase 2 → Phase 3.
 |-------|----------------|--------|-----------|
 | 1. Publishable Portfolio and Delivery | 3/3 | Complete   | 2026-09-19 |
 | 2. One-Handed Surreal Exhibition | 8/8 | Awaiting human verification | - |
-| 3. Growth and Release Polish | 3/8 | In Progress|  |
+| 3. Growth and Release Polish | 8/8 | Awaiting human verification | - |
 
 ## Coverage
 

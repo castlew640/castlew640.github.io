@@ -15,6 +15,8 @@ The smoke runner accepts plain HTTP only for a loopback test server. It follows 
 
 Keep a successful run’s downloaded artifact and SHA-256 manifest. If a reviewed change `C` needs reversal, use `git revert C`, run `npm run check`, push the new commit normally, wait for both workflow jobs, download that run’s artifact and run the live smoke against it. Compare the live content and hashes to the retained known-good artifact. When restoring the intended content after a drill, revert the recovery commit normally, check/push/watch/smoke again and verify the intended sentence/content is live. Never reset or force-push release history. An old failed-build test proved that a failed build preserves the prior site; it did not prove this live restoration procedure.
 
+The exercised example is in [Phase 03 release evidence](../.planning/phases/03-growth-and-release-polish/03-RELEASE-EVIDENCE.md): known-good `6d01465`, sentence commit `d0e13a7`, its ordinary revert `dfd2cd9`, and re-revert `2407476`. The recovery run's 19 live file hashes matched known-good; the final run's 19 matched the intended sentence release. Use the SHA of the actual change being reversed for a future recovery.
+
 ## Independent visitor checklist
 
 Keep results for the **actual device/browser/version** and note any failures. Earlier unresolved checks remain in [Phase 01 UAT](../.planning/phases/01-publishable-portfolio-and-delivery/01-UAT.md) and [Phase 02 UAT](../.planning/phases/02-one-handed-surreal-exhibition/02-UAT.md); [Phase 03 measurements](../.planning/phases/03-growth-and-release-polish/03-MEASUREMENTS.md) keeps the performance fields.

@@ -9,7 +9,7 @@ Planning baseline: Astro static HTML/content collections, TypeScript, and a Reac
 ## Phases
 
 - [x] **Phase 1: Publishable Portfolio and Delivery** - Present real professional evidence through a readable site and working automated delivery. (completed 2026-09-19)
-- [ ] **Phase 2: One-Handed Surreal Exhibition** - Let visitors explore a distinctive corridor and its projects with scroll, swipe, or simple taps.
+- [ ] **Phase 2: One-Handed Surreal Exhibition** - Let visitors explore a distinctive corridor and its projects with scroll, swipe, or simple taps. (implementation complete; human verification pending)
 - [ ] **Phase 3: Growth and Release Polish** - Make additions repeatable and verify performance, visual refinement, and production reliability.
 
 ## Phase Details
@@ -61,7 +61,7 @@ Planning notes: establish project structure, typed content, basic UI contract, a
 4. Reduced motion is honored before spatial animation begins, a visible still-view control is available, and scene/asset/context failures preserve complete readable navigation and content.
 5. The initial representative scene is exercised with mouse, touch, and keyboard, including mobile swipe-versus-tap behavior and browser zoom; preliminary device and asset measurements constrain further visual work.
 
-**Plans:** 7/8 plans executed
+**Plans:** 8/8 plans executed; phase acceptance awaits the four checks in `02-UAT.md`.
 
 Plans:
 **Wave 1**
@@ -88,7 +88,7 @@ Plans:
 
 **Wave 6** *(blocked on Wave 5 completion)*
 
-- [ ] 02-08-PLAN.md — Add the layer-2 reflection, the three approach-driven transformations, the landing, and the phase's preliminary measurements.
+- [x] 02-08-PLAN.md — Add the layer-2 reflection, the three approach-driven transformations, the landing, and the phase's preliminary measurements.
 
 Planning notes: create the visual/interaction contract before extensive asset work. Use native document scroll as the authoritative travel position, one scene boundary, canonical project routes, and motion/failure policy from the start. Ground arrows may be visual meshes, but simple HTML controls must retain stable target sizes. A modal is optional future scope. Phase 3 owns final performance acceptance; it is not the first time performance is measured.
 
@@ -118,12 +118,12 @@ Execution order: Phase 1 → Phase 2 → Phase 3.
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Publishable Portfolio and Delivery | 3/3 | Complete   | 2026-09-19 |
-| 2. One-Handed Surreal Exhibition | 7/8 | In Progress|  |
+| 2. One-Handed Surreal Exhibition | 8/8 | Awaiting human verification | - |
 | 3. Growth and Release Polish | 0/TBD | Not started | - |
 
 ## Coverage
 
-30 v1 requirements map to exactly one phase: 15 in Phase 1, 9 in Phase 2, and 6 in Phase 3. Complete traceability is in [REQUIREMENTS.md](REQUIREMENTS.md). No implementation plans or application features are complete yet.
+30 v1 requirements map to exactly one phase: 15 in Phase 1, 9 in Phase 2, and 6 in Phase 3. Complete traceability is in [REQUIREMENTS.md](REQUIREMENTS.md). All 11 planned implementation slices for Phases 1 and 2 have summaries; outstanding human acceptance is recorded in their verification/UAT files and STATE.md.
 
 ---
 *Created: 2026-09-19 under the approved autonomous, coarse-granularity workflow*

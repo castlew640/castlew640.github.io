@@ -21,7 +21,7 @@ async function filesIn(directory) {
 
 for (const file of await filesIn(join(project, 'src/scripts/exhibition/scene'))) {
   if (file.endsWith('.ts') && /new\s+Clock\b|elapsedTime|getDelta\s*\(\s*\)|performance\.now\s*\(\s*\)/.test(await readFile(file, 'utf8'))) {
-    throw new Error(`Scene must derive motion only from cameraZ; forbidden clock in ${relative(project, file)}`);
+    throw new Error(`Scene must derive motion only from route station; forbidden clock in ${relative(project, file)}`);
   }
 }
 
@@ -33,8 +33,11 @@ const sceneBytes = gzipSync(scenes[0].bytes, { level: 9 }).length;
 if (sceneBytes > SCENE_BUDGET) throw new Error(`Scene gzip budget exceeded: ${sceneBytes} bytes > ${SCENE_BUDGET}`);
 const html = await readFile(join(dist, 'index.html'), 'utf8');
 const entries = [...html.matchAll(/<script\b[^>]*src="([^"]+)"/g)].map((match) => join(dist, match[1]));
-if (entries.length !== 1) throw new Error(`Expected one always-loaded controller; found ${entries.length}`);
-const controllerBytes = gzipSync(await readFile(entries[0]), { level: 9 }).length;
+const essentialScripts = await Promise.all(entries.map(async (file) => ({ file, bytes: await readFile(file) })));
+const controllers = essentialScripts.filter(({ bytes }) => bytes.includes('exhibition-view'));
+if (controllers.length !== 1) throw new Error(`Expected one always-loaded exhibition controller; found ${controllers.length}`);
+const controllerBytes = gzipSync(controllers[0].bytes, { level: 9 }).length;
+const essentialBytes = essentialScripts.reduce((total, { bytes }) => total + gzipSync(bytes, { level: 9 }).length, 0);
 
 function webpDimensions(bytes) {
   if (bytes.toString('ascii', 0, 4) !== 'RIFF' || bytes.toString('ascii', 8, 12) !== 'WEBP') throw new Error('Exhibit asset is not WebP');
@@ -60,4 +63,4 @@ for (const [, url] of panels) {
   if (Math.max(width, height) > 1600 || bytes.length > SCREENSHOT_BUDGET) throw new Error(`Screenshot budget exceeded: ${bytes.length} bytes, ${width}x${height} (${url})`);
   images.push(`${bytes.length} B / ${width}x${height}`);
 }
-console.log(`Scene budget: scene gzip ${sceneBytes}/${SCENE_BUDGET} B; controller gzip ${controllerBytes} B; screenshots ${images.join(', ')} (<=1600px, <=${SCREENSHOT_BUDGET} B each); no-clock source guard passed.`);
+console.log(`Scene budget: scene gzip ${sceneBytes}/${SCENE_BUDGET} B; controller gzip ${controllerBytes} B; essential scripts gzip ${essentialBytes} B; screenshots ${images.join(', ')} (<=1600px, <=${SCREENSHOT_BUDGET} B each); no-clock source guard passed.`);

@@ -113,6 +113,8 @@
   .publication-status { font-family: var(--mono); font-size: 0.75rem; }
   .publication-status span { margin-right: 0.5em; color: var(--rust); }
   .contact-section { border-top-color: var(--ink); }
+  .contact-title-row { display: flex; align-items: center; gap: 0.5rem 1rem; }
+  .contact-title-row h2 { flex: 1; min-width: 0; }
   .email-link { display: flex; align-items: baseline; justify-content: space-between; gap: 0.8rem; min-height: 44px; width: fit-content; max-width: 100%; padding-block: 0.5rem; border-bottom: 1px solid var(--rust); font-size: clamp(1rem, 2vw, 1.5rem); text-decoration: none; }
   .email-link span { flex: none; color: var(--rust); }
   .profile-links { display: flex; flex-wrap: wrap; padding: 0; gap: 1rem 2rem; list-style: none; }

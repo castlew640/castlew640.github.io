@@ -8,7 +8,7 @@ interface Props {
 }
 
 const {
-  title = `${profile.displayName} — Software, from idea to deployment`,
+  title = `${profile.displayName} — Software & solutions`,
   description = profile.introduction,
 } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
@@ -35,7 +35,7 @@ const destinations = ['Projects', 'About', 'Resume', 'Contact'];
       <header class="site-header">
         <a class="wordmark" href="/" aria-label={`${profile.displayName}, home`}>
           <span class="monogram" aria-hidden="true">W<span>/</span>C</span>
-          <span class="wordmark-caption">Software &amp;<br />possibilities</span>
+          <span class="wordmark-caption">Software &amp; solutions.</span>
         </a>
         <nav class="primary-nav" aria-label="Primary">
           {destinations.map((name) => <a href={`/#${name.toLowerCase()}`}>{name}</a>)}

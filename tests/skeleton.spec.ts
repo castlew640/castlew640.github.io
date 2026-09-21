@@ -25,7 +25,7 @@ test('profile and direct navigation work without JavaScript', async ({ browser }
   for (const name of destinations) {
     await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name, exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`#${name.toLowerCase()}$`));
-    await expect(page.getByRole('heading', { name, exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: name === 'Contact' ? 'Talk shop with me.' : name, exact: true })).toBeVisible();
   }
   await context.close();
 });

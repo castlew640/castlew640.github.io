@@ -6,6 +6,7 @@ import ExhibitSection from '../components/exhibition/ExhibitSection.astro';
 import EntranceDrawing from '../components/exhibition/drawings/EntranceDrawing.astro';
 import AboutDrawing from '../components/exhibition/drawings/AboutDrawing.astro';
 import LandingDrawing from '../components/exhibition/drawings/LandingDrawing.astro';
+import ContactGlass from '../components/ContactGlass.astro';
 import { profile } from '../data/profile';
 import { getPublishedProjects } from '../lib/projects';
 
@@ -64,7 +65,7 @@ const projects = await getPublishedProjects();
 
     <EntranceDrawing />
 
-    <div class="hero-footnote"><span>Ideas, considered. Software, delivered.</span><span aria-hidden="true">↓</span></div>
+    <div class="hero-footnote"><span aria-hidden="true">↓</span></div>
   </StopSection>
 
   <section id="projects" class="catalogue-section" aria-labelledby="projects-title">
@@ -85,7 +86,7 @@ const projects = await getPublishedProjects();
     <div class="section-heading"><p class="eyebrow">02 / The person</p><h2 id="about-title">About</h2></div>
     <div class="section-body">
       <p class="large-copy">{profile.background}</p>
-      <p>I was the sole developer across those engagements. My work starts with understanding the client’s goal, then making practical decisions about what to build and how to deliver it.</p>
+      {profile.aboutParagraphs.map((paragraph) => <p>{paragraph}</p>)}
     </div>
     <AboutDrawing />
   </StopSection>
@@ -101,9 +102,9 @@ const projects = await getPublishedProjects();
   </section>
 
   <section id="contact" class="catalogue-section contact-section" aria-labelledby="contact-title">
-    <div class="section-heading"><p class="eyebrow">04 / A conversation</p><h2 id="contact-title">Contact</h2></div>
+    <div class="section-heading"><p class="eyebrow">04 / A conversation</p><div class="contact-title-row"><h2 id="contact-title">Talk shop with me.</h2><ContactGlass /></div></div>
     <div class="section-body">
-      <p class="landing-invitation">What could we<br /><em>build together?</em></p>
+      <p class="landing-invitation">Have a problem worth untangling? I’d like to hear about it.</p>
       <a class="email-link" href={`mailto:${profile.email}`}>{profile.email}<span aria-hidden="true">↗</span></a>
       <ul class="profile-links" aria-label="Find me elsewhere">
         {profile.profileLinks.map(({ label, url }) => <li><a class="text-link" href={url}>{label} <span aria-hidden="true">↗</span></a></li>)}

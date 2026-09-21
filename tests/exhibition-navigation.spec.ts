@@ -134,7 +134,7 @@ test('all shipped primary anchors resolve in their original reading order', asyn
     const link = nav.getByRole('link', { name, exact: true });
     await expect(link).toHaveAttribute('href', `/#${name.toLowerCase()}`);
     await link.click();
-    await expect(page.getByRole('heading', { name, exact: true })).toBeInViewport();
+    await expect(page.getByRole('heading', { name: name === 'Contact' ? 'Talk shop with me.' : name, exact: true })).toBeInViewport();
   }
   expect(await page.locator('main section[id]').evaluateAll((sections) => sections
     .map((section) => section.id).filter((id) => ['projects', 'about', 'resume', 'contact'].includes(id)),

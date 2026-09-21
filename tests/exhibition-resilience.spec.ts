@@ -107,7 +107,7 @@ test('without javascript the catalogue has no dead controls and all direct navig
   for (const name of ['Projects', 'About', 'Resume', 'Contact']) {
     await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name, exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`#${name.toLowerCase()}$`));
-    await expect(page.getByRole('heading', { name, exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: name === 'Contact' ? 'Talk shop with me.' : name, exact: true })).toBeVisible();
   }
   await page.getByRole('link', { name: 'Read case study →' }).click();
   await expect(page).toHaveURL(new RegExp(`${projectPath}$`));

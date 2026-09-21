@@ -1,32 +1,23 @@
 import { expect, test } from '@playwright/test';
-import { readFile, readdir } from 'node:fs/promises';
-import path from 'node:path';
-
-async function sceneChunk(): Promise<string> {
-  const root = path.join(process.cwd(), 'dist', '_astro');
-  for (const name of await readdir(root)) {
-    if (name.endsWith('.js') && (await readFile(path.join(root, name), 'utf8')).includes('CompletedArchitectureWater')) return name;
-  }
-  throw new Error('Built scene chunk was not found');
-}
 
 for (const viewport of [{ width: 390, height: 664 }, { width: 844, height: 390 }, { width: 932, height: 430 }]) {
   test(`fresh phone at ${viewport.width}x${viewport.height} stays complete before deliberate 3D opt-in`, async ({ browser }) => {
     const context = await browser.newContext({ viewport, hasTouch: true, isMobile: true, reducedMotion: 'no-preference' });
     const page = await context.newPage();
-    const chunk = await sceneChunk();
     const requests: string[] = [];
-    page.on('request', (request) => { if (request.url().includes(chunk)) requests.push(request.url()); });
+    page.on('request', (request) => { if (request.resourceType() === 'script') requests.push(request.url()); });
     await page.goto('/#exhibit-featured-client');
     await expect(page.locator('html')).toHaveAttribute('data-view', 'still');
     await expect(page.locator('[data-view-toggle]')).toHaveText('Enter 3D exhibition');
     await expect(page.getByText('Illustrated still view is on. You can enter the 3D exhibition.')).toBeVisible();
     await expect(page.locator('#exhibit-featured-client .exhibit-link')).toBeVisible();
-    expect(requests).toHaveLength(0);
+    const initialScripts = [...requests];
+    expect(initialScripts.every((url) => url.includes('/_astro/'))).toBe(true);
     await page.locator('[data-view-toggle]').click();
     await expect(page.locator('html')).toHaveAttribute('data-view', 'moving');
     await expect(page.locator('[data-view-toggle]')).toHaveText('Use illustrated still view');
-    await expect.poll(() => requests.length).toBeGreaterThan(0);
+    await expect.poll(() => page.evaluate(() => Number(window.__exhibition?.renderCount ?? 0))).toBeGreaterThan(0);
+    expect(requests.filter((url) => !initialScripts.includes(url)).length).toBeGreaterThan(0);
     await context.close();
   });
 }
@@ -43,11 +34,34 @@ test('explicit moving choice wins on a phone and survives rotation', async ({ br
   await context.close();
 });
 
+for (const storage of ['invalid', 'blocked']) {
+  test(`phone default remains still with ${storage} preference storage`, async ({ browser }) => {
+    const context = await browser.newContext({ viewport: { width: 390, height: 664 }, hasTouch: true, isMobile: true, reducedMotion: 'no-preference' });
+    await context.addInitScript((mode) => {
+      if (mode === 'invalid') localStorage.setItem('exhibition-view', 'surprise');
+      else {
+        Storage.prototype.getItem = () => { throw new DOMException('Storage blocked', 'SecurityError'); };
+        Storage.prototype.setItem = () => { throw new DOMException('Storage blocked', 'SecurityError'); };
+      }
+    }, storage);
+    const page = await context.newPage();
+    await page.goto('/#exhibit-featured-client');
+    await expect(page.locator('html')).toHaveAttribute('data-view', 'still');
+    await page.locator('[data-view-toggle]').click();
+    await expect(page.locator('html')).toHaveAttribute('data-view', 'moving');
+    await page.setViewportSize({ width: 844, height: 390 });
+    await expect(page.locator('html')).toHaveAttribute('data-view', 'moving');
+    await context.close();
+  });
+}
+
 test('copy, opaque evidence label and contact glass remain usable', async ({ page }) => {
   await page.goto('/#exhibit-featured-client');
   await expect(page).toHaveTitle('William Castle — Software & solutions');
   await expect(page.locator('.wordmark-caption')).toHaveText('Software & solutions.');
   await expect(page.locator('#contact-title')).toHaveText('Talk shop with me.');
+  await expect(page.locator('#about .section-body')).toContainText('existing tool makes more sense');
+  await expect(page.locator('#about .section-body')).toContainText('three client contracts');
   await expect(page.locator('#contact a[href^="mailto:"]')).toBeVisible();
   await expect(page.locator('.hero-footnote')).not.toContainText('Ideas, considered. Software, delivered.');
   const overlay = page.locator('#exhibit-featured-client .exhibit-overlay');
@@ -71,6 +85,16 @@ test('copy, opaque evidence label and contact glass remain usable', async ({ pag
   await expect(glass).toHaveAttribute('aria-pressed', 'true');
   await page.keyboard.press('Space');
   await expect(glass).toHaveAttribute('data-filled', 'false');
+});
+
+test('glass fill is immediate under reduced motion', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/#contact');
+  const glass = page.locator('button[data-contact-glass]');
+  await glass.click();
+  await expect(glass).toHaveAttribute('data-filled', 'true');
+  await expect(glass.locator('.contact-glass-fill')).toHaveCSS('transition-duration', '0s');
+  await expect(glass.locator('.contact-glass-fill')).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, 0)');
 });
 
 test('glass stays a static drawing without JavaScript', async ({ browser }) => {

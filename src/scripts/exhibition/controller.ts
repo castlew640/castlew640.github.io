@@ -113,7 +113,7 @@ export function start(): void {
   const stops: MeasuredStop[] = elements.map((el, index) => ({
     id: ids[index], el, offsetTop: 0, z: table.stops[index].z,
   }));
-  const controls = createControls(stops, () => mode);
+  const controls = createControls(stops, () => mode, () => progressFor(window.scrollY, stops));
   document.querySelector('.page-frame')?.append(controls.nav);
   let progress = progressFor(window.scrollY, []);
   let measured = false;
@@ -123,7 +123,7 @@ export function start(): void {
 
   const derive = (): void => {
     progress = progressFor(window.scrollY, stops);
-    controls.update(progress.stopIndex);
+    controls.update(progress);
     sceneHandle?.setCameraZ(progress.z);
   };
 

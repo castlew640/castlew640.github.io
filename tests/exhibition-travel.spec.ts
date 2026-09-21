@@ -125,6 +125,67 @@ test('native page scrolling and gesture policies remain intact', async ({ page }
   await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(100);
 });
 
+test('back from halfway through each segment returns to its start without skipping or announcing an endpoint', async ({ page }) => {
+  await page.goto('/#entrance');
+  const stops = page.locator('#exhibition [data-stop]');
+  const back = page.getByRole('button', { name: 'Previous exhibit' });
+  const forward = page.getByRole('button', { name: 'Next exhibit' });
+  const nav = page.getByRole('navigation', { name: 'Exhibition travel' });
+  const historyBefore = await page.evaluate(() => ({ length: history.length, hash: location.hash }));
+  const count = await stops.count();
+  for (let index = 0; index < count - 1; index++) {
+    const start = await stops.nth(index).evaluate((el) => el.getBoundingClientRect().top + scrollY);
+    const end = await stops.nth(index + 1).evaluate((el) => el.getBoundingClientRect().top + scrollY);
+    await page.evaluate((top) => scrollTo({ top, behavior: 'auto' }), (start + end) / 2);
+    await expect(nav).toHaveAttribute('data-stop-index', String(index));
+    await expect(back).toHaveAttribute('aria-disabled', 'false');
+    await expect(forward).toHaveAttribute('aria-disabled', 'false');
+    await expect(page.getByRole('status')).toHaveText('');
+    await back.focus();
+    await page.keyboard.press('Enter');
+    await expect.poll(() => page.evaluate(() => scrollY)).toBe(Math.round(start));
+    await expect(back).toBeFocused();
+    await expect(back).toHaveAttribute('aria-disabled', String(index === 0));
+    if (index === 0) await expect(page.getByRole('status')).toHaveText(entranceStatus);
+    else {
+      const previous = await stops.nth(index - 1).evaluate((el) => el.getBoundingClientRect().top + scrollY);
+      await page.keyboard.press('Enter');
+      await expect.poll(() => page.evaluate(() => scrollY)).toBe(Math.round(previous));
+      await expect(back).toBeFocused();
+    }
+  }
+  expect(await page.evaluate(() => ({ length: history.length, hash: location.hash }))).toEqual(historyBefore);
+});
+
+test('fractional stop arrivals disable only actual endpoints and forward reaches the next stop', async ({ page }) => {
+  await page.goto('/');
+  await page.addStyleTag({ content: '.page-frame { padding-top: .375px; }' });
+  const stops = page.locator('#exhibition [data-stop]');
+  const back = page.getByRole('button', { name: 'Previous exhibit' });
+  const forward = page.getByRole('button', { name: 'Next exhibit' });
+  const nav = page.getByRole('navigation', { name: 'Exhibition travel' });
+  const count = await stops.count();
+  expect(await stops.evaluateAll((elements) => elements.some((el) => !Number.isInteger(el.getBoundingClientRect().top + scrollY)))).toBe(true);
+  for (let index = 0; index < count; index++) {
+    const top = await stops.nth(index).evaluate((el) => el.getBoundingClientRect().top + scrollY);
+    await page.evaluate((position) => scrollTo({ top: position, behavior: 'auto' }), top);
+    await expect(nav).toHaveAttribute('data-stop-index', String(index));
+    await expect(back).toHaveAttribute('aria-disabled', String(index === 0));
+    await expect(forward).toHaveAttribute('aria-disabled', String(index === count - 1));
+    await expect(page.getByRole('status')).toHaveText(index === 0 ? entranceStatus : index === count - 1 ? endStatus : '');
+    if (index < count - 1) {
+      const end = await stops.nth(index + 1).evaluate((el) => el.getBoundingClientRect().top + scrollY);
+      await page.evaluate((position) => scrollTo({ top: position, behavior: 'auto' }), (top + end) / 2);
+      await expect(back).toHaveAttribute('aria-disabled', 'false');
+      await expect(page.getByRole('status')).toHaveText('');
+      await forward.focus();
+      await page.keyboard.press('Enter');
+      await expect.poll(() => page.evaluate(() => scrollY)).toBe(Math.round(end));
+      await expect(forward).toBeFocused();
+    }
+  }
+});
+
 for (const viewport of [{ width: 1440, height: 810 }, { width: 390, height: 664 }, { width: 844, height: 390 }]) {
   test(`the real panel fits the computed field at ${viewport.width} by ${viewport.height}`, async ({ browser }) => {
     const context = await browser.newContext({ viewport, hasTouch: viewport.width < 900, deviceScaleFactor: 3, reducedMotion: 'no-preference' });

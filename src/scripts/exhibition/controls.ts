@@ -1,13 +1,26 @@
 import { reduceQuery, type ViewMode } from './policy';
+import type { ScrollProgress } from './scroll';
 
 export function createControls(
-  stops: { offsetTop: number }[],
+  stops: { offsetTop: number; el?: HTMLElement }[],
   getMode: () => ViewMode,
-): { nav: HTMLElement; update: (stopIndex: number) => void } {
+  getProgress: () => ScrollProgress,
+): { nav: HTMLElement; update: (progress: ScrollProgress) => void } {
   const nav = document.createElement('nav');
   nav.className = 'exhibition-controls';
   nav.setAttribute('aria-label', 'Exhibition travel');
-  let current = 0;
+  // A position-only layout shift need not resize the exhibition, so cached
+  // offsets can lag behind the document. Read live positions for arrow actions
+  // and allow native scrolling to round within half a CSS pixel at any DPR.
+  const arrivalTolerance = 0.5;
+  const positions = (): number[] => stops.map((stop) => stop.el
+    ? stop.el.getBoundingClientRect().top + window.scrollY : stop.offsetTop);
+  const indexAt = (initial: number, offsets: number[]): number => {
+    let index = Math.min(initial, Math.max(0, offsets.length - 1));
+    while (index > 0 && window.scrollY < offsets[index] - arrivalTolerance) index--;
+    while (index < offsets.length - 1 && window.scrollY >= offsets[index + 1] - arrivalTolerance) index++;
+    return index;
+  };
 
   const createButton = (direction: -1 | 1): HTMLButtonElement => {
     const button = document.createElement('button');
@@ -25,10 +38,17 @@ export function createControls(
     caption.textContent = direction === -1 ? 'Back' : 'Forward';
     button.append(svg, caption);
     button.addEventListener('click', () => {
-      const destination = stops[current + direction];
-      if (!destination) return;
+      // Read native progress at activation, including during a smooth trip or
+      // before the next scroll frame has updated the controls.
+      const offsets = positions();
+      const current = indexAt(getProgress().stopIndex, offsets);
+      const start = offsets[current];
+      if (start === undefined) return;
+      const pastStart = window.scrollY > start + arrivalTolerance;
+      const destination = offsets[direction === -1 && pastStart ? current : current + direction];
+      if (destination === undefined) return;
       window.scrollTo({
-        top: destination.offsetTop,
+        top: destination,
         behavior: reduceQuery.matches || getMode() === 'still' ? 'auto' : 'smooth',
       });
     }, { passive: true });
@@ -46,11 +66,11 @@ export function createControls(
   status.setAttribute('aria-live', 'polite');
   nav.append(back, marker, forward, status);
 
-  const update = (stopIndex: number): void => {
-    current = stopIndex;
-    nav.dataset.stopIndex = String(current);
-    const atStart = current === 0;
-    const atEnd = current === stops.length - 1;
+  const update = (progress: ScrollProgress): void => {
+    const offsets = positions();
+    nav.dataset.stopIndex = String(indexAt(progress.stopIndex, offsets));
+    const atStart = offsets.length === 0 || window.scrollY <= offsets[0] + arrivalTolerance;
+    const atEnd = offsets.length === 0 || window.scrollY >= offsets[offsets.length - 1] - arrivalTolerance;
     back.setAttribute('aria-disabled', String(atStart));
     forward.setAttribute('aria-disabled', String(atEnd));
     back.classList.toggle('is-endpoint', atStart);
@@ -58,6 +78,6 @@ export function createControls(
     const message = atStart ? 'Entrance — the exhibition starts here.' : atEnd ? 'End of the exhibition.' : '';
     if (status.textContent !== message) status.textContent = message;
   };
-  update(0);
+  update(getProgress());
   return { nav, update };
 }

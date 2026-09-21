@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests',
-  testMatch: 'project-growth.spec.ts',
+  testMatch: process.env.GROWTH_FIXTURE_SUITE === 'media' ? 'project-media.spec.ts' : 'project-growth.spec.ts',
   fullyParallel: false,
   forbidOnly: true,
   retries: 0,

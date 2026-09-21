@@ -1,10 +1,16 @@
-import { cp, mkdir, readdir, rm, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { chromium } from '@playwright/test';
 
 export const FIXTURE_SENTINEL = 'GROWTH_FIXTURE_DO_NOT_PUBLISH';
 export const DRAFT_SENTINEL = 'GROWTH_DRAFT_DO_NOT_PUBLISH';
+export const MEDIA_FIXTURE_SHA256 = 'e2fe113d480b69b53fbefebfe3709dd8069fd2a3778485f63f3f173593c51705';
+// Self-authored by create-media-fixture.mjs: Chromium canvas MediaRecorder,
+// 256x144 moving rust circle on paper, ~1 second, silent H.264/MP4 (avc1.42E01E).
+// The checked-in 2,430-byte file is decoded in Chromium before fixture builds.
 
-const personalEntry = (number, exhibitionOrder) => {
+const personalEntry = (number, exhibitionOrder, media = false) => {
   const id = String(number).padStart(2, '0');
   return `---
 kind: personal
@@ -15,12 +21,37 @@ summary: ${FIXTURE_SENTINEL} repository-only project ${id} proves content-driven
 published: true
 exhibitionOrder: ${exhibitionOrder}
 repositoryUrl: https://github.com/castlew640/fixture-personal-${id}
-evidence:
-  - src: ./evidence.jpg
+${media ? `video:
+  src: /media/fixture-personal-${id}/silent-demo.mp4
+  poster: ./poster.png
+  description: A rust circle crosses a plain paper background.
+  hasAudio: true
+  captions:
+    src: /media/fixture-personal-${id}/silent-demo.vtt
+    language: en
+    label: English
+` : ''}evidence:
+${media ? `  - src: ./terminal.png
+    alt: Wide terminal capture with visible first and fourth corners
+    caption: Complete terminal output.
+    kind: terminal
+    fit: cover
+  - src: ./diagram.png
+    alt: Portrait diagram with visible first and fourth corners
+    caption: Complete portrait diagram.
+    kind: diagram
+    fit: cover
+  - src: ./poster.png
+    alt: Ordinary screenshot preview
+    caption: Still preview, not a gallery video.
+    kind: screenshot
+    fit: cover
+` : `  - src: ./evidence.jpg
     alt: Fixture evidence for personal project ${id}
     caption: ${FIXTURE_SENTINEL} approved-image copy used only inside an isolated build.
     kind: screenshot
     fit: contain
+`}
 ---
 
 ## What it does
@@ -71,29 +102,63 @@ async function clearProjects(projectsRoot) {
   }
 }
 
-async function addPersonal(projectsRoot, sourceImage, number, exhibitionOrder = number) {
+async function renderMediaStills(entryRoot) {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    for (const [name, width, height] of [['terminal.png', 1200, 240], ['diagram.png', 240, 960], ['poster.png', 800, 400]]) {
+      const base64 = await page.evaluate(([file, w, h]) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = file === 'terminal.png' ? '#292e29' : '#f4f0e6';
+        ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = '#8e4935';
+        ctx.fillRect(0, 0, 28, 28);
+        ctx.fillRect(w - 28, h - 28, 28, 28);
+        ctx.fillStyle = file === 'terminal.png' ? '#f4f0e6' : '#292e29';
+        ctx.font = '22px monospace';
+        ctx.fillText(file, 40, Math.min(h - 40, 80));
+        return canvas.toDataURL('image/png').split(',')[1];
+      }, [name, width, height]);
+      await writeFile(join(entryRoot, name), Buffer.from(base64, 'base64'));
+    }
+  } finally { await browser.close(); }
+}
+
+async function addPersonal(projectsRoot, sourceImage, number, exhibitionOrder = number, media = false) {
   const id = String(number).padStart(2, '0');
   const entryRoot = join(projectsRoot, `fixture-personal-${id}`);
   await mkdir(entryRoot, { recursive: true });
   await cp(sourceImage, join(entryRoot, 'evidence.jpg'));
-  await writeFile(join(entryRoot, 'index.md'), personalEntry(number, exhibitionOrder));
+  if (media) await renderMediaStills(entryRoot);
+  await writeFile(join(entryRoot, 'index.md'), personalEntry(number, exhibitionOrder, media));
 }
 
-export async function applyGrowthFixtures(root, { count, personalOnly = false }) {
+export async function applyGrowthFixtures(root, { count, personalOnly = false, media = false }) {
   const projectsRoot = join(root, 'src/content/projects');
   const sourceImage = join(root, 'tests/fixtures/projects/approved-evidence.jpg');
   await clearProjects(projectsRoot);
 
   if (personalOnly) {
-    await addPersonal(projectsRoot, sourceImage, 1);
+    await addPersonal(projectsRoot, sourceImage, 1, 1, media);
   } else if (count > 0) {
     const sourceClient = join(root, 'tests/fixtures/projects/featured-client');
     await cp(sourceClient, join(projectsRoot, 'featured-client'), { recursive: true });
     for (let number = 1; number < count; number += 1) {
-      await addPersonal(projectsRoot, sourceImage, number, number + 1);
+      await addPersonal(projectsRoot, sourceImage, number, number + 1, media && number === 1);
     }
   }
 
   await writeFile(join(projectsRoot, 'zz-fixture-growth-draft.md'), draftEntry);
   await cp(sourceImage, join(projectsRoot, 'fixture-draft.jpg'));
+  if (media) {
+    const slugRoot = join(root, 'public/media/fixture-personal-01');
+    await mkdir(slugRoot, { recursive: true });
+    const fixture = join(root, 'tests/fixtures/projects/silent-demo.mp4');
+    const bytes = await readFile(fixture);
+    if (createHash('sha256').update(bytes).digest('hex') !== MEDIA_FIXTURE_SHA256) throw new Error('Media fixture hash changed');
+    await cp(fixture, join(slugRoot, 'silent-demo.mp4'));
+    await writeFile(join(slugRoot, 'silent-demo.vtt'), 'WEBVTT\n\n00:00:00.000 --> 00:00:01.200\nNo speech or music. A circle moves across a plain background.\n');
+  }
 }

@@ -14,7 +14,7 @@ const suite = args.get('--suite') ?? 'growth';
 
 if (![0, 1, 10].includes(count)) throw new Error('--count must be one of 0, 1, or 10');
 if (!['growth', 'media', 'performance'].includes(suite)) throw new Error('--suite must be growth, media, or performance');
-if (suite !== 'growth') throw new Error(`Suite "${suite}" is reserved for a later Phase 3 plan`);
+if (suite === 'performance') throw new Error(`Suite "${suite}" is reserved for a later Phase 3 plan`);
 
 async function hashPath(path) {
   const hash = createHash('sha256');
@@ -83,12 +83,13 @@ function run(command, commandArgs, options = {}) {
 async function exerciseScenario({ scenario, scenarioCount, personalOnly }) {
   const root = await mkdtemp(join(tmpdir(), `project-growth-${scenario}-`));
   await copyCheckout(root);
-  await applyGrowthFixtures(root, { count: scenarioCount, personalOnly });
+  await applyGrowthFixtures(root, { count: scenarioCount, personalOnly, media: suite === 'media' });
   console.log(`Growth fixture root (${scenario}): ${root}`);
   console.log(`Growth fixture output (${scenario}): ${join(root, 'dist')}`);
   const env = {
     GROWTH_FIXTURE_COUNT: String(scenarioCount),
     GROWTH_FIXTURE_SCENARIO: scenario,
+    GROWTH_FIXTURE_SUITE: suite,
   };
   await run('npm', ['run', 'build'], { cwd: root, env });
   await run('node', [
@@ -105,8 +106,34 @@ const before = {
 };
 
 try {
-  await exerciseScenario({ scenario: `count-${count}`, scenarioCount: count, personalOnly: false });
-  await exerciseScenario({ scenario: 'personal-only', scenarioCount: 1, personalOnly: true });
+  if (suite === 'media') {
+    const { chromium } = await import('@playwright/test');
+    const browser = await chromium.launch();
+    try {
+      const page = await browser.newPage();
+      const bytes = await readFile(join(checkout, 'tests/fixtures/projects/silent-demo.mp4'));
+      const decoded = await page.evaluate(async (base64) => {
+        const video = document.createElement('video');
+        video.src = `data:video/mp4;base64,${base64}`;
+        await new Promise((resolve, reject) => {
+          video.onloadedmetadata = resolve;
+          video.onerror = () => reject(new Error('Checked-in MP4 cannot decode'));
+        });
+        await video.play();
+        await new Promise((resolve, reject) => {
+          video.requestVideoFrameCallback?.(() => resolve());
+          setTimeout(() => reject(new Error('MP4 frame decode timed out')), 4000);
+        });
+        return { width: video.videoWidth, height: video.videoHeight, duration: video.duration };
+      }, bytes.toString('base64'));
+      if (decoded.width !== 256 || decoded.height !== 144 || decoded.duration <= 0) throw new Error('Unexpected MP4 fixture dimensions or duration');
+      console.log(`Chromium decoded checked-in MP4: ${decoded.width}x${decoded.height}, ${decoded.duration.toFixed(2)}s`);
+    } finally { await browser.close(); }
+    await exerciseScenario({ scenario: `media-count-${count}`, scenarioCount: count, personalOnly: false });
+  } else {
+    await exerciseScenario({ scenario: `count-${count}`, scenarioCount: count, personalOnly: false });
+    await exerciseScenario({ scenario: 'personal-only', scenarioCount: 1, personalOnly: true });
+  }
 } finally {
   const after = {
     content: await hashPath(join(checkout, 'src/content')),

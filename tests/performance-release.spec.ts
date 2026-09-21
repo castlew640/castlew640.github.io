@@ -61,7 +61,7 @@ test('ten remounts and five project visits release scene listeners and contexts'
       return deleteTexture.call(this, texture);
     };
     const getContext = HTMLCanvasElement.prototype.getContext;
-    HTMLCanvasElement.prototype.getContext = function (type: string, ...args: unknown[]) {
+    HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, type: string, ...args: unknown[]) {
       const context = Reflect.apply(getContext, this, [type, ...args]);
       if (type === 'webgl2' && context && !canvases.has(this)) {
         canvases.add(this);

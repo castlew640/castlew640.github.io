@@ -247,15 +247,15 @@ test('mobile exhibit text continues in document flow at enlarged sizes without c
     const exhibit = page.locator('#exhibition [data-stop][data-slug]').first();
     await exhibit.evaluate((el) => el.scrollIntoView());
     await page.waitForTimeout(200);
-    const link = (await page.getByRole('link', { name: 'Read case study →' }).boundingBox())!;
+    const link = (await exhibit.getByRole('link', { name: 'Read case study →' }).boundingBox())!;
     const controls = (await page.locator('.exhibition-controls').boundingBox())!;
     expect(controls.y - link.y - link.height).toBeGreaterThanOrEqual(16);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
-    await expect(page.locator('.exhibit-overlay')).toHaveCSS('overflow-y', 'visible');
+    await expect(exhibit.locator('.exhibit-overlay')).toHaveCSS('overflow-y', 'visible');
     for (const selector of ['.exhibit-summary', '.contract-labels']) {
-      await page.locator(selector).evaluate((el) => el.scrollIntoView({ block: 'start' }));
-      await expect(page.locator(selector)).toBeInViewport();
-      expect(await page.locator(selector).evaluate((el) => getComputedStyle(el.parentElement!).backgroundColor)).toBe('rgb(244, 240, 230)');
+      await exhibit.locator(selector).evaluate((el) => el.scrollIntoView({ block: 'start' }));
+      await expect(exhibit.locator(selector)).toBeInViewport();
+      expect(await exhibit.locator(selector).evaluate((el) => getComputedStyle(el.parentElement!).backgroundColor)).toBe('rgb(244, 240, 230)');
     }
     for (const button of await page.locator('.exhibition-controls button').all()) await expect(button).toBeInViewport({ ratio: 1 });
     await context.close();

@@ -13,7 +13,7 @@ async function settleLayout(page: Page): Promise<void> {
 
 test('the visible case-study link and return link preserve the exhibit and focus', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('link', { name: 'Read case study →' }).click();
+  await page.locator('#exhibit-featured-client').getByRole('link', { name: 'Read case study →' }).click();
   await expect(page).toHaveURL(new RegExp(`${projectPath}$`));
   await expect(page.getByRole('heading', { name: /Eiffel Technologies/ })).toBeVisible();
   await page.getByRole('link', { name: '← Back to the exhibition' }).click();
@@ -34,7 +34,7 @@ test('direct exhibit arrival focuses without a second scroll jump', async ({ pag
 
 test('browser back and forward retain the native history and scroll position', async ({ page }) => {
   await page.goto('/');
-  const link = page.getByRole('link', { name: 'Read case study →' });
+  const link = page.locator('#exhibit-featured-client').getByRole('link', { name: 'Read case study →' });
   await link.scrollIntoViewIfNeeded();
   await settleLayout(page);
   const scrollBefore = await page.evaluate(() => scrollY);
@@ -59,7 +59,7 @@ test('browser back and forward retain the native history and scroll position', a
 
 test('a persisted pageshow rederives the restored stop without scrolling or focusing', async ({ page }) => {
   await page.goto('/');
-  const link = page.getByRole('link', { name: 'Read case study →' });
+  const link = page.locator('#exhibit-featured-client').getByRole('link', { name: 'Read case study →' });
   await link.scrollIntoViewIfNeeded();
   await link.click();
   await page.goBack();
@@ -107,7 +107,7 @@ test('the complete visit keeps resume and contact reachable through single taps'
   await page.goto('/');
   await page.getByRole('button', { name: 'Next exhibit' }).tap();
   await expect(page.getByRole('navigation', { name: 'Exhibition travel' })).toHaveAttribute('data-stop-index', '1');
-  const link = page.getByRole('link', { name: 'Read case study →' });
+  const link = page.locator('#exhibit-featured-client').getByRole('link', { name: 'Read case study →' });
   await link.scrollIntoViewIfNeeded();
   await link.tap();
   await expect(page).toHaveURL(new RegExp(`${projectPath}$`));
@@ -116,7 +116,8 @@ test('the complete visit keeps resume and contact reachable through single taps'
   const forward = page.getByRole('button', { name: 'Next exhibit' });
   await forward.tap();
   await expect(page.getByRole('navigation', { name: 'Exhibition travel' })).toHaveAttribute('data-stop-index', '2');
-  await forward.tap();
+  const lastIndex = await page.locator('#exhibition [data-stop]').count() - 1;
+  for (let index = 3; index <= lastIndex; index++) await forward.tap();
   await expect(forward).toHaveAttribute('aria-disabled', 'true');
   const resume = page.getByRole('link', { name: 'Open my resume' });
   await expect(resume).toHaveAttribute('href', '/resume/william-castle-resume.pdf');
@@ -161,7 +162,7 @@ test('one touch on the screenshot opens the same anchor as the visible case-stud
   const context = await browser.newContext({ viewport: { width: 390, height: 664 }, hasTouch: true, deviceScaleFactor: 3, reducedMotion: 'no-preference' });
   const page = await context.newPage();
   const point = await panelPoint(page);
-  await page.locator('.exhibit-link').evaluate((anchor) => {
+  await page.locator('#exhibit-featured-client .exhibit-link').evaluate((anchor) => {
     const link = anchor as HTMLAnchorElement;
     const click = link.click.bind(link);
     link.click = () => { sessionStorage.setItem('panel-used-anchor', 'true'); click(); };
@@ -171,7 +172,7 @@ test('one touch on the screenshot opens the same anchor as the visible case-stud
   expect(await page.evaluate(() => location.pathname)).toBe(projectPath);
   expect(await page.evaluate(() => sessionStorage.getItem('panel-used-anchor'))).toBe('true');
   await panelPoint(page);
-  await page.getByRole('link', { name: 'Read case study →' }).tap();
+  await page.locator('#exhibit-featured-client').getByRole('link', { name: 'Read case study →' }).tap();
   await expect(page).toHaveURL(new RegExp(`${projectPath}$`));
   await context.close();
 });
@@ -180,7 +181,7 @@ test('the active decorative canvas preserves the screenshot alternative and capt
   const context = await browser.newContext({ viewport: { width: 390, height: 664 }, hasTouch: true, reducedMotion: 'no-preference' });
   const page = await context.newPage();
   const point = await panelPoint(page);
-  const figure = page.locator('figure[data-panel-source]');
+  const figure = page.locator('#exhibit-featured-client figure[data-panel-source]');
   const alt = await figure.locator('img').getAttribute('alt');
   const caption = await figure.locator('figcaption').innerText();
   expect(alt).toBeTruthy();

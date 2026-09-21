@@ -60,6 +60,7 @@ test('approach construction is reversible by station and idle at partial progres
 });
 
 test('completed edges and water follow the whole route in live and fallback modes', async ({ page }, testInfo) => {
+  await page.addInitScript(() => localStorage.setItem('exhibition-view', 'moving'));
   await ready(page);
   for (const station of [18, 36, 46]) {
     const data = await atStation(page, station);

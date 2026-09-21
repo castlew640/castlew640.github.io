@@ -109,7 +109,7 @@ test('without javascript the catalogue has no dead controls and all direct navig
     await expect(page).toHaveURL(new RegExp(`#${name.toLowerCase()}$`));
     await expect(page.getByRole('heading', { name: name === 'Contact' ? 'Talk shop with me.' : name, exact: true })).toBeVisible();
   }
-  await page.getByRole('link', { name: 'Read case study →' }).click();
+  await page.locator('#exhibit-featured-client').getByRole('link', { name: 'Read case study →' }).click();
   await expect(page).toHaveURL(new RegExp(`${projectPath}$`));
   await page.getByRole('link', { name: /Back to the exhibition/ }).click();
   await expect(page).toHaveURL(new RegExp(`#${exhibitId}$`));
@@ -153,7 +153,7 @@ test('hash arrivals focus the exhibit while reload and browser back preserve bro
   await page.reload();
   await settleLayout(page);
   expect(await page.evaluate(() => document.documentElement.dataset.focusCalls ?? '0')).toBe('0');
-  const link = page.getByRole('link', { name: 'Read case study →' });
+  const link = page.locator('#exhibit-featured-client').getByRole('link', { name: 'Read case study →' });
   await link.scrollIntoViewIfNeeded();
   await settleLayout(page);
   const scrollBefore = await page.evaluate(() => window.scrollY);
@@ -169,14 +169,18 @@ test('resizing and text reflow preserve position within the measured exhibit seg
   await page.goto('/');
   await settleLayout(page);
   await page.evaluate((id) => {
+    const stops = Array.from(document.querySelectorAll<HTMLElement>('#exhibition [data-stop]'));
+    const next = stops[stops.findIndex((stop) => stop.id === id) + 1];
     const start = document.getElementById(id)!.getBoundingClientRect().top + scrollY;
-    const end = document.getElementById('about')!.getBoundingClientRect().top + scrollY;
+    const end = next.getBoundingClientRect().top + scrollY;
     window.scrollTo({ top: start + (end - start) * 0.25, behavior: 'auto' });
   }, exhibitId);
   await settleLayout(page);
   const fraction = () => page.evaluate((id) => {
+    const stops = Array.from(document.querySelectorAll<HTMLElement>('#exhibition [data-stop]'));
+    const next = stops[stops.findIndex((stop) => stop.id === id) + 1];
     const start = document.getElementById(id)!.getBoundingClientRect().top;
-    const end = document.getElementById('about')!.getBoundingClientRect().top;
+    const end = next.getBoundingClientRect().top;
     return -start / (end - start);
   }, exhibitId);
   await page.setViewportSize({ width: 390, height: 700 });
@@ -204,7 +208,7 @@ test('unavailable webgl keeps the complete catalogue and offers one deliberate r
   await expect(page.locator('a[href="mailto:castlew640@gmail.com"]')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Try the exhibition again', exact: true })).toHaveCount(1);
   expect(await page.locator('body').innerText()).not.toMatch(/webgl|gpu|driver|chrome|safari|firefox|unsupported device/i);
-  const link = page.getByRole('link', { name: 'Read case study →' });
+  const link = page.locator('#exhibit-featured-client').getByRole('link', { name: 'Read case study →' });
   await link.focus();
   await expect(link).toBeFocused();
   await page.getByRole('button', { name: 'Try the exhibition again', exact: true }).click();
@@ -236,7 +240,7 @@ test('context loss keeps navigation usable and context restoration never resumes
   });
   await expect(page.getByText('The exhibition stopped rendering. Everything is still here to read.', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Try the exhibition again', exact: true })).toHaveCount(1);
-  const link = page.getByRole('link', { name: 'Read case study →' });
+  const link = page.locator('#exhibit-featured-client').getByRole('link', { name: 'Read case study →' });
   await expect(link).toBeVisible();
   await link.focus();
   await expect(link).toBeFocused();
@@ -269,7 +273,9 @@ test('the moving scene retains native canvas gestures and the level route-frame 
     await expect.poll(() => page.evaluate(() => window.__exhibition?.fovY)).toBeCloseTo(expected, 2);
   }
   const routeSamples: { x: number; y: number }[] = [];
-  for (const [id, station] of [['entrance', 0], [exhibitId, 18], ['landing', 46]] as const) {
+  const stopCount = await page.locator('#exhibition [data-stop]').count();
+  const landingStation = (stopCount - 3) * 18 + 28;
+  for (const [id, station] of [['entrance', 0], [exhibitId, 18], ['landing', landingStation]] as const) {
     await page.locator(`#${id}`).evaluate((el) => window.scrollTo({ top: el.getBoundingClientRect().top + scrollY, behavior: 'auto' }));
     await expect.poll(() => page.evaluate(() => Number(window.__exhibition?.station))).toBeCloseTo(station, 1);
     const pose = await page.evaluate(() => ({
@@ -414,7 +420,7 @@ test('a blocked renderer chunk retains the catalogue with one retry', async ({ b
   await expect(page.getByRole('heading', { name: 'The exhibition could not start.', exact: true })).toBeVisible();
   expect(aborted).toBe(1);
   await expect(page.getByRole('button', { name: 'Try the exhibition again', exact: true })).toHaveCount(1);
-  await expect(page.getByRole('link', { name: 'Read case study →' })).toHaveCount(1);
+  await expect(page.locator('#exhibit-featured-client').getByRole('link', { name: 'Read case study →' })).toHaveCount(1);
   await expect(page.getByRole('link', { name: 'Open my resume' })).toHaveAttribute('href', /\.pdf$/);
   await expect(page.getByRole('link', { name: 'castlew640@gmail.com' })).toHaveAttribute('href', 'mailto:castlew640@gmail.com');
   await expect(page.locator('canvas')).toHaveCount(0);
@@ -449,13 +455,13 @@ test('a post-construction setup failure releases every scene canvas and context 
       return { created: contexts.length, live: contexts.filter((gl) => !gl.isContextLost()).length };
     });
     expect(resources).toEqual({ created: attempt, live: 0 });
-    await expect(page.getByRole('link', { name: 'Read case study →' })).toHaveCount(1);
+    await expect(page.locator('#exhibit-featured-client').getByRole('link', { name: 'Read case study →' })).toHaveCount(1);
     await expect(page.getByRole('link', { name: 'Open my resume' })).toHaveAttribute('href', /\.pdf$/);
     if (attempt === 1) await retry.click();
   }
   await expect(retry).toHaveCount(0);
   expect(errors).toEqual([]);
-  await page.getByRole('link', { name: 'Read case study →' }).click();
+  await page.locator('#exhibit-featured-client').getByRole('link', { name: 'Read case study →' }).click();
   await expect(page).toHaveURL(new RegExp(`${projectPath}$`));
   await context.close();
 });
@@ -505,7 +511,7 @@ for (const fault of ['unsupported format', 'incomplete framebuffer'] as const) {
       return !gl.isContextLost() && gl.getParameter(gl.FRAMEBUFFER_BINDING) === null;
     })).toBe(true);
     expect(errors).toEqual([]);
-    await page.getByRole('link', { name: 'Read case study →' }).click();
+    await page.locator('#exhibit-featured-client').getByRole('link', { name: 'Read case study →' }).click();
     await expect(page).toHaveURL(new RegExp(`${projectPath}$`));
     await context.close();
   });
@@ -517,7 +523,7 @@ test('a blocked screenshot restores its authored description and caption without
   await page.route('**/*.webp', (route) => route.abort());
   await page.goto(exhibitPath);
   await expect(page.locator('html')).toHaveAttribute('data-scene', 'active');
-  const figure = page.locator('figure[data-panel-source]');
+  const figure = page.locator('#exhibit-featured-client figure[data-panel-source]');
   await expect(figure).toHaveClass(/panel-source-failed/);
   await expect(figure).toHaveCSS('visibility', 'visible');
   await expect(figure).not.toHaveAttribute('aria-hidden', 'true');
@@ -530,7 +536,7 @@ test('a blocked screenshot restores its authored description and caption without
   await expect(figure.locator('figcaption')).toHaveText(/\S/);
   expect(await page.evaluate(() => window.__exhibition?.panelTextureReady)).toBe(false);
   expect(await page.locator('body').innerText()).not.toMatch(/webgl|gpu|driver|chrome|safari|firefox|unsupported device/i);
-  await page.getByRole('link', { name: 'Read case study →' }).click();
+  await page.locator('#exhibit-featured-client').getByRole('link', { name: 'Read case study →' }).click();
   await expect(page).toHaveURL(new RegExp(`${projectPath}$`));
   await context.close();
 });
@@ -542,20 +548,20 @@ test('the live panel reuses one image request and restores the figure in still v
   page.on('request', (request) => { if (request.url().endsWith('.webp')) requests.push(request.url()); });
   await page.goto('/');
   await expect.poll(() => page.evaluate(() => window.__exhibition?.panelReusesImage)).toBe(true);
-  const figure = page.locator('figure[data-panel-source]');
-  expect(requests).toHaveLength(1);
-  expect(requests[0]).toBe(await figure.locator('img').evaluate((el) => (el as HTMLImageElement).src));
+  const figure = page.locator('#exhibit-featured-client figure[data-panel-source]');
+  const imageUrl = await figure.locator('img').evaluate((el) => (el as HTMLImageElement).src);
+  expect(requests.filter((url) => url === imageUrl)).toHaveLength(1);
   await expect(figure).not.toHaveAttribute('aria-hidden', 'true');
   await expect(figure).toHaveCSS('opacity', '0');
   await expect(figure).toHaveCSS('pointer-events', 'none');
-  const link = page.getByRole('link', { name: 'Read case study →' });
+  const link = page.locator('#exhibit-featured-client').getByRole('link', { name: 'Read case study →' });
   await page.locator(`#${exhibitId}`).focus();
   await page.keyboard.press('Tab');
   await expect(link).toBeFocused();
   await page.locator('[data-view-toggle]').click();
   await expect(figure).not.toHaveAttribute('aria-hidden', 'true');
   await expect(figure).toHaveCSS('visibility', 'visible');
-  expect(requests).toHaveLength(1);
+  expect(requests.filter((url) => url === imageUrl)).toHaveLength(1);
   await context.close();
 });
 
@@ -579,7 +585,7 @@ test('the overlay plate guarantees ink contrast with the scene active and after 
   await expect(page.locator('html')).toHaveAttribute('data-scene', 'active');
   for (const active of [true, false]) {
     if (!active) await page.locator('[data-view-toggle]').click();
-    const contrast = await page.locator('.exhibit-overlay').evaluate((el) => {
+    const contrast = await page.locator('#exhibit-featured-client .exhibit-overlay').evaluate((el) => {
       const style = getComputedStyle(el);
       const rgb = (value: string) => value.match(/[\d.]+/g)!.map(Number);
       const ink = rgb(style.color).map((value) => value / 255);

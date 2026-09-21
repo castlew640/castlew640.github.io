@@ -53,7 +53,8 @@ test('small-surface fallback keeps mirrored ink without a render target', async 
   const data = await page.evaluate(() => ({ ...window.__exhibition! }));
   expect(data).toMatchObject({ reflectionEnabled: false, renderTargetRendersPerFrame: 0, reflectionTargetWidth: 0, reflectionTargetHeight: 0 });
   expect(Number(data.reflectionFallbackSegments)).toBeGreaterThan(0);
-  expect(Number(data.lineSegments)).toBeLessThanOrEqual(1200);
+  const projectCount = await page.locator('#exhibition [data-stop][data-slug]').count();
+  expect(Number(data.lineSegments)).toBeLessThanOrEqual(1200 + 400 * Math.max(0, projectCount - 1));
   await page.setViewportSize({ width: 1440, height: 810 });
   await expect.poll(() => page.evaluate(() => window.__exhibition?.reflectionEnabled)).toBe(true);
   await expect.poll(() => page.evaluate(() => window.__exhibition?.renderTargetRendersPerFrame)).toBe(1);
@@ -63,12 +64,15 @@ test('small-surface fallback keeps mirrored ink without a render target', async 
 test('three transformations follow station distance, reverse exactly, and remain idle mid-progress', async ({ page }) => {
   await ready(page);
   const samples: Record<string, number | boolean | string>[] = [];
-  for (const station of [4, 12, 24, 36, 24]) {
+  const projectCount = await page.locator('#exhibition [data-stop][data-slug]').count();
+  const aboutStation = (projectCount + 1) * 18;
+  const partialStation = aboutStation - 12;
+  for (const station of [4, 12, partialStation, aboutStation, partialStation]) {
     await page.evaluate((station) => {
-      const ids = ['entrance', 'exhibit-featured-client', 'about', 'landing'];
-      const positions = [0, -18, -36, -46];
+      const ids = Array.from(document.querySelectorAll<HTMLElement>('#exhibition [data-stop]')).map((element) => element.id);
+      const positions = ids.map((_, index) => index === ids.length - 1 ? -((index - 2) * 18 + 28) : -index * 18);
       const z = -station;
-      const index = positions.findIndex((value, i) => i < 3 && z <= value && z >= positions[i + 1]);
+      const index = positions.findIndex((value, i) => i < positions.length - 1 && z <= value && z >= positions[i + 1]);
       const start = document.getElementById(ids[index])!.getBoundingClientRect().top + scrollY;
       const end = document.getElementById(ids[index + 1])!.getBoundingClientRect().top + scrollY;
       scrollTo({ top: start + (end - start) * (positions[index] - z) / (positions[index] - positions[index + 1]), behavior: 'instant' });
@@ -82,7 +86,7 @@ test('three transformations follow station distance, reverse exactly, and remain
       expect(data[`transformation${index}Shadow`]).toBe(Number(data[`transformation${index}Progress`]) >= 0.5);
       expect(data[`transformation${index}MeshVisible`]).toBe(progress > 0);
     }
-    if (station === 24) samples.push(data);
+    if (station === partialStation) samples.push(data);
   }
   for (let index = 0; index < 3; index++) expect(samples[1][`transformation${index}Progress`]).toBe(samples[0][`transformation${index}Progress`]);
   expect(Number(samples[1].transformation2Progress)).toBeGreaterThan(0);

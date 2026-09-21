@@ -8,9 +8,13 @@ test('home and direct project routes expose descriptive metadata and evidence', 
   expect(response?.status()).toBe(200);
   await expect(page).toHaveTitle(/William Castle/);
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://castlew640.github.io/');
-  await expect(page.getByRole('link', { name: 'Read case study →' })).toBeVisible();
+  await expect(page.locator('#exhibit-featured-client').getByRole('link', { name: 'Read case study →' })).toBeVisible();
   await expect(page.getByText('Read the case study')).toHaveCount(0);
-  await expect(page.locator('.exhibit-link')).toHaveText('Read case study →');
+  for (const exhibit of await page.locator('#exhibition [data-slug]').all()) {
+    const slug = await exhibit.getAttribute('data-slug');
+    await expect(exhibit.locator('.exhibit-link')).toHaveText('Read case study →');
+    await expect(exhibit.locator('.exhibit-link')).toHaveAttribute('href', `/projects/${slug}/`);
+  }
   const projectResponse = await page.goto(projectPath);
   expect(projectResponse?.status()).toBe(200);
   await expect(page).toHaveTitle(/Eiffel Technologies/);
@@ -102,7 +106,7 @@ test('reduced motion keeps journeys usable and disables nonessential motion', as
   await expect(page.getByRole('heading', { level: 1, name: 'William Castle' })).toBeVisible();
   await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Projects' }).click();
   await expect(page.locator('#projects')).toBeVisible();
-  await page.getByRole('link', { name: 'Read case study →' }).click();
+  await page.locator('#exhibit-featured-client').getByRole('link', { name: 'Read case study →' }).click();
   await expect(page.getByRole('heading', { name: /Eiffel Technologies/ })).toBeVisible();
   await page.getByRole('link', { name: /Back to the exhibition/ }).click();
   await expect(page.locator('#projects')).toBeVisible();

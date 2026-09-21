@@ -58,6 +58,8 @@ test('small-surface fallback keeps mirrored ink without a render target', async 
   await page.setViewportSize({ width: 1440, height: 810 });
   await expect.poll(() => page.evaluate(() => window.__exhibition?.reflectionEnabled)).toBe(true);
   await expect.poll(() => page.evaluate(() => window.__exhibition?.renderTargetRendersPerFrame)).toBe(1);
+  await expect.poll(() => page.evaluate(() => Number(window.__exhibition?.textures) <= 4 + Number(document.querySelectorAll('#exhibition [data-slug]').length))).toBe(true);
+  await expect.poll(() => page.evaluate(() => Number(window.__exhibition?.waterGpuTextures))).toBe(1);
   await context.close();
 });
 

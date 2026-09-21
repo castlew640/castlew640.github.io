@@ -223,6 +223,10 @@ export function createReflection(scene: Scene, camera: PerspectiveCamera, render
       } catch { failed = true; releaseTarget(); }
     }
     fallback.visible = drawing.visible = !reflector;
+    // The fallback can have been rendered during a temporary quality or
+    // viewport change. Its CanvasTexture is reusable, but the old GPU handle
+    // must not remain allocated alongside the live reflection target.
+    if (reflector) texture.dispose();
   }
   return {
     resize,

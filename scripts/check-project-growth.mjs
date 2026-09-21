@@ -54,7 +54,7 @@ async function copyCheckout(root) {
     });
   }
   for (const file of files) await cp(join(checkout, file), join(root, file));
-  await symlink(join(checkout, 'node_modules'), join(root, 'node_modules'), 'dir');
+  await symlink(join(checkout, 'node_modules'), join(root, 'node_modules'), process.platform === 'win32' ? 'junction' : 'dir');
 
   const clientFixture = join(root, 'tests/fixtures/projects/featured-client');
   await mkdir(clientFixture, { recursive: true });

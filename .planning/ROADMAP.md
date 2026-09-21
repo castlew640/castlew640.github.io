@@ -94,7 +94,7 @@ Planning notes: create the visual/interaction contract before extensive asset wo
 
 ### Phase 3: Growth and Release Polish
 
-**Goal:** The owner can extend the exhibition with completed projects while visitors retain a polished, responsive experience and a reliable live application link.
+**Goal:** As a portfolio owner, I want to extend the exhibition with completed projects while preserving a polished, responsive experience, so that visitors can explore my growing work through a reliable live application link.
 **Mode:** mvp
 **Depends on:** Phase 2
 **Requirements:** GROW-01, GROW-04, PERF-01, PERF-02, SHIP-03, SHIP-04
@@ -107,7 +107,34 @@ Planning notes: create the visual/interaction contract before extensive asset wo
 4. Production smoke checks verify HTTPS, direct project refresh, images, resume, contact destinations, and navigation on the actual chosen host.
 5. The owner can recover a prior known-good release using the documented rollback procedure, and any public description of this site's rendering or CI/CD reflects demonstrated behavior.
 
-**Plans:** TBD during phase planning
+**Plans:** 8 plans
+
+Plans:
+**Wave 1**
+
+- [ ] 03-01-PLAN.md — Flexible projects, copyable starter, and isolated content-growth verification.
+- [ ] 03-03-PLAN.md — Stable winding route frames, calm exhibits, and native-scroll navigation.
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 03-02-PLAN.md — Readable still evidence and safe optional native project video.
+- [ ] 03-04-PLAN.md — Curved architecture, reversible construction, and route-aware completed reflections.
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 03-05-PLAN.md — Still-first phones, opaque labels, professional copy, and accessible contact glass.
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
+- [ ] 03-06-PLAN.md — Real portfolio case study with annotated evidence after final presentation.
+
+**Wave 5** *(blocked on Wave 4 completion)*
+
+- [ ] 03-07-PLAN.md — Expanded growth, lifecycle stabilization, fixed budgets, and measured performance evidence.
+
+**Wave 6** *(blocked on Wave 5 completion)*
+
+- [ ] 03-08-PLAN.md — Concise runbooks, actual-host smoke, and exercised normal-revert recovery.
 
 Planning notes: require real device evidence for claims about physical-device performance; record any checks still awaiting hardware access. Refine the existing art direction and budgets rather than expand into new scenes, a CMS, or unrequested product features. This completes the initial immersive milestone; subsequent completed projects are normal content updates.
 
@@ -119,7 +146,7 @@ Execution order: Phase 1 → Phase 2 → Phase 3.
 |-------|----------------|--------|-----------|
 | 1. Publishable Portfolio and Delivery | 3/3 | Complete   | 2026-09-19 |
 | 2. One-Handed Surreal Exhibition | 8/8 | Awaiting human verification | - |
-| 3. Growth and Release Polish | 0/TBD | Not started | - |
+| 3. Growth and Release Polish | 0/8 | Planned | - |
 
 ## Coverage
 

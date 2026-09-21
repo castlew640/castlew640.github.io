@@ -160,7 +160,9 @@
   html[data-scene="active"] .page-frame { pointer-events: none; }
   html[data-scene="active"] :is(.site-header, .site-footer, .view-preferences, .exhibition-controls) { pointer-events: auto; }
   html[data-scene="active"] :is(.site-header, .site-footer, .hero-copy, .hero-footnote, .section-heading, .section-body),
-  html[data-scene="active"] [data-stop] > :is(p, h2, ul, a, figure) { background: color-mix(in srgb, var(--paper) 88%, transparent); pointer-events: auto; }
+  html[data-scene="active"] [data-stop] > :is(p, h2, ul, a, figure) { background: var(--paper); pointer-events: auto; }
+  html[data-scene="active"] :is(.hero-copy, .section-heading, .section-body) { background: var(--paper); }
+  html[data-scene="active"] #landing .section-body { padding: 24px; border: 1px solid var(--line); }
   /* Preserve the catalogue's measured boxes during lazy mount and browser Back. */
   html[data-scene="active"] :is(.architectural-study, .stop-drawing) { visibility: hidden; }
   html[data-scene="active"] #exhibition { pointer-events: none; }
@@ -194,7 +196,7 @@
   .exhibit-list [data-stop] > * + * { margin-top: 16px; }
   .exhibit-list .eyebrow { font: 600 12px/1.4 var(--mono); letter-spacing: 0.1em; }
   .exhibit-title { font: 400 20px/1.2 var(--sans); letter-spacing: 0; text-wrap: balance; }
-  .exhibit-overlay { background: color-mix(in srgb, var(--paper) 88%, transparent); }
+  .exhibit-overlay { background: var(--paper); opacity: 1; border: 1px solid var(--line); }
   .exhibit-overlay > * + * { margin-top: 16px; }
   .exhibit-overlay .exhibit-link { display: block; width: fit-content; padding-block: 8px; line-height: 1.2; }
   .exhibit-overlay .exhibit-link span { margin-left: 0.4em; font-size: 1.25em; }
@@ -203,7 +205,7 @@
      the accessibility tree while hiding the duplicate and passing taps through. */
   html[data-scene="active"] #exhibition figure[data-panel-source] { grid-area: 1 / 1; align-self: start; opacity: 0; pointer-events: none; }
   html[data-scene="active"] .exhibit-list .stop-drawing { grid-area: 2 / 1; }
-  html[data-scene="active"] .exhibit-overlay { grid-area: 1 / 1; align-self: start; justify-self: end; width: min(34rem, 40vw); margin-top: 46svh; padding: 24px; }
+  html[data-scene="active"] .exhibit-overlay { grid-area: 1 / 1; align-self: start; justify-self: end; width: min(34rem, 40vw); margin-top: 46svh; padding: 24px; background: var(--paper); }
   html[data-scene="active"] #exhibition figure.panel-source-failed { opacity: 1; pointer-events: auto; grid-area: 2 / 1; align-self: start; background: var(--paper); }
   /* Keep the real image and alt text in the accessibility tree. A failed decode
      renders its authored alt as text, avoiding the browser's broken-image icon. */
@@ -213,7 +215,7 @@
     html[data-scene="active"] .exhibit-overlay {
       justify-self: stretch; width: calc(100% + 2 * var(--gutter)); margin-inline: calc(-1 * var(--gutter));
       margin-top: 48svh; padding: 24px var(--gutter) 104px; min-height: 52svh;
-      border-top: 1px solid var(--line); backdrop-filter: blur(6px);
+      border-top: 1px solid var(--line); backdrop-filter: none;
       display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px;
       grid-template-areas: 'eyebrow' 'title' 'link' '.' 'summary' 'contracts';
       grid-template-rows: auto auto auto minmax(104px, calc(52svh - 144px)) auto auto;

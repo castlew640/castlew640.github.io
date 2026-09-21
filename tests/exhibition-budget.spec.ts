@@ -8,6 +8,7 @@ const viewports = [
 
 async function ready(page: Page, hash = 'exhibit-featured-client'): Promise<void> {
   await page.goto(`/#${hash}`);
+  if (await page.locator('html').getAttribute('data-view') === 'still') await page.locator('[data-view-toggle]').click();
   await expect.poll(() => page.evaluate(() => window.__exhibition?.renderCount ?? 0)).toBeGreaterThan(0);
   await expect.poll(() => page.evaluate(() => window.__exhibition?.panelTextureReady)).toBe(true);
 }

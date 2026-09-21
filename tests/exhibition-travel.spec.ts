@@ -191,6 +191,7 @@ for (const viewport of [{ width: 1440, height: 810 }, { width: 390, height: 664 
     const context = await browser.newContext({ viewport, hasTouch: viewport.width < 900, deviceScaleFactor: 3, reducedMotion: 'no-preference' });
     const page = await context.newPage();
     await page.goto('/');
+    if (await page.locator('html').getAttribute('data-view') === 'still') await page.locator('[data-view-toggle]').click();
     await expect.poll(() => page.evaluate(() => window.__exhibition?.panelTextureReady)).toBe(true);
     const exhibits = page.locator('#exhibition [data-stop][data-slug]');
     const projectCount = await exhibits.count();
@@ -240,6 +241,7 @@ test('mobile exhibit text continues in document flow at enlarged sizes without c
     const context = await browser.newContext({ viewport: { width, height: 664 }, hasTouch: true, reducedMotion: 'no-preference' });
     const page = await context.newPage();
     await page.goto('/');
+    await page.locator('[data-view-toggle]').click();
     await expect(page.locator('html')).toHaveAttribute('data-scene', 'active');
     await page.addStyleTag({ content: ':root { font-size: 200%; }' });
     const exhibit = page.locator('#exhibition [data-stop][data-slug]').first();
@@ -253,7 +255,7 @@ test('mobile exhibit text continues in document flow at enlarged sizes without c
     for (const selector of ['.exhibit-summary', '.contract-labels']) {
       await page.locator(selector).evaluate((el) => el.scrollIntoView({ block: 'start' }));
       await expect(page.locator(selector)).toBeInViewport();
-      expect(await page.locator(selector).evaluate((el) => getComputedStyle(el.parentElement!).backgroundColor)).toContain('0.88');
+      expect(await page.locator(selector).evaluate((el) => getComputedStyle(el.parentElement!).backgroundColor)).toBe('rgb(244, 240, 230)');
     }
     for (const button of await page.locator('.exhibition-controls button').all()) await expect(button).toBeInViewport({ ratio: 1 });
     await context.close();

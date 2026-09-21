@@ -1,5 +1,5 @@
 import { buildStopTable } from '../../lib/exhibition/stops';
-import { motionPermitted, readStoredChoice, reduceQuery, writeChoice, type ViewMode } from './policy';
+import { defaultViewReason, motionPermitted, phoneQuery, readStoredChoice, reduceQuery, writeChoice, type ViewMode } from './policy';
 import { measureStops, progressFor, type MeasuredStop } from './scroll';
 import { createControls } from './controls';
 import { registerTap } from './tap';
@@ -48,7 +48,7 @@ export function start(): void {
   const toggle = document.createElement('button');
   toggle.type = 'button';
   toggle.className = 'view-toggle';
-  toggle.textContent = 'Still view';
+  toggle.dataset.viewToggle = '';
   const notice = document.createElement('p');
   notice.className = 'view-notice';
   notice.textContent = 'Still view is on because your device requests reduced motion.';
@@ -90,8 +90,13 @@ export function start(): void {
   };
   const presentMode = (): void => {
     document.documentElement.dataset.view = mode;
+    toggle.textContent = mode === 'still' ? 'Enter 3D exhibition' : 'Use illustrated still view';
     toggle.setAttribute('aria-pressed', String(mode === 'still'));
-    notice.hidden = !(mode === 'still' && reduceQuery.matches && explicitChoice === null);
+    const reason = defaultViewReason();
+    notice.textContent = reason === 'phone'
+      ? 'Illustrated still view is on. You can enter the 3D exhibition.'
+      : 'Still view is on because your device requests reduced motion.';
+    notice.hidden = !(mode === 'still' && explicitChoice === null && reason !== 'none');
     if (mode === 'still') {
       sceneGeneration++;
       sceneHandle?.dispose();
@@ -160,10 +165,8 @@ export function start(): void {
   };
 
   const switchView = (nextMode: ViewMode): void => {
-    const currentStop = stops.reduce<MeasuredStop | undefined>((nearest, stop) =>
-      !nearest || Math.abs(stop.el.getBoundingClientRect().top) < Math.abs(nearest.el.getBoundingClientRect().top)
-        ? stop : nearest, undefined);
-    const stopId = currentStop?.id;
+    const before = progressFor(window.scrollY, stops);
+    const stopId = stops[before.stopIndex]?.id;
     restoringView = true;
     if (frame) cancelAnimationFrame(frame);
     frame = 0;
@@ -173,7 +176,10 @@ export function start(): void {
     requestAnimationFrame(() => {
       measureStops(stops);
       const destination = stops.find((stop) => stop.id === stopId);
-      if (destination) window.scrollTo({ top: destination.offsetTop, behavior: 'auto' });
+      if (destination) {
+        const next = stops[stops.indexOf(destination) + 1] ?? destination;
+        window.scrollTo({ top: destination.offsetTop + (next.offsetTop - destination.offsetTop) * before.localProgress, behavior: 'auto' });
+      }
       derive();
       restoringView = false;
     });
@@ -218,9 +224,12 @@ export function start(): void {
     if (!historyArrival) focusHash();
     historyArrival = false;
   }, { passive: true });
-  reduceQuery.addEventListener('change', () => {
+  const updateImplicitMode = (): void => {
+    if (explicitChoice !== null) return;
     const nextMode = motionPermitted() ? 'moving' : 'still';
     if (nextMode !== mode) switchView(nextMode);
     else presentMode();
-  }, { passive: true });
+  };
+  reduceQuery.addEventListener('change', updateImplicitMode, { passive: true });
+  phoneQuery.addEventListener('change', updateImplicitMode, { passive: true });
 }

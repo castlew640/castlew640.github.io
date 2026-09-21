@@ -21,7 +21,7 @@ test('reduced motion shows still view and never requests scene code during trave
   const sceneRequests: string[] = [];
   page.on('request', (request) => { if (/scene|three/i.test(request.url())) sceneRequests.push(request.url()); });
   await page.goto('/');
-  await expect(page.getByRole('button', { name: 'Still view' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('[data-view-toggle]')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByText(notice, { exact: true })).toBeVisible();
   await page.locator('#landing').scrollIntoViewIfNeeded();
   await page.waitForTimeout(1100);
@@ -36,7 +36,7 @@ test('the view choice preserves the current exhibit and survives reload', async 
   await settleLayout(page);
   const before = await nearestStop(page);
   expect(before).toBe(exhibitId);
-  const toggle = page.getByRole('button', { name: 'Still view' });
+  const toggle = page.locator('[data-view-toggle]');
   await toggle.click();
   await settleLayout(page);
   await expect(toggle).toHaveAttribute('aria-pressed', 'false');
@@ -62,7 +62,7 @@ for (const blockedAccess of ['writes', 'all']) {
     }, blockedAccess);
     const page = await context.newPage();
     await page.goto('/');
-    const toggle = page.getByRole('button', { name: 'Still view' });
+    const toggle = page.locator('[data-view-toggle]');
     await toggle.click();
     await expect(toggle).toHaveAttribute('aria-pressed', 'false');
     await expect(page.locator('html')).toHaveAttribute('data-view', 'moving');
@@ -82,7 +82,7 @@ test('invalid stored choices cannot override the device motion preference', asyn
   await context.addInitScript(() => localStorage.setItem('exhibition-view', '__proto__'));
   const page = await context.newPage();
   await page.goto('/');
-  await expect(page.getByRole('button', { name: 'Still view' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('[data-view-toggle]')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByText(notice, { exact: true })).toBeVisible();
   await context.close();
 });
@@ -91,7 +91,7 @@ test('changing the device preference switches to still view without an explicit 
   const context = await browser.newContext({ reducedMotion: 'no-preference' });
   const page = await context.newPage();
   await page.goto(exhibitPath);
-  const toggle = page.getByRole('button', { name: 'Still view' });
+  const toggle = page.locator('[data-view-toggle]');
   await expect(toggle).toHaveAttribute('aria-pressed', 'false');
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect(toggle).toHaveAttribute('aria-pressed', 'true');
@@ -121,7 +121,7 @@ test('native gestures and zoom remain available with a reachable toggle at phone
   for (const width of [390, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/');
-    const toggle = page.getByRole('button', { name: 'Still view' });
+    const toggle = page.locator('[data-view-toggle]');
     const box = await toggle.boundingBox();
     expect(box?.width).toBeGreaterThanOrEqual(44);
     expect(box?.height).toBeGreaterThanOrEqual(44);
@@ -253,6 +253,7 @@ test('context loss keeps navigation usable and context restoration never resumes
 
 test('the moving scene retains native canvas gestures and the level route-frame light contract', async ({ browser }) => {
   const context = await browser.newContext({ reducedMotion: 'no-preference' });
+  await context.addInitScript(() => localStorage.setItem('exhibition-view', 'moving'));
   const page = await context.newPage();
   await page.goto('/');
   await expect(page.locator('html')).toHaveAttribute('data-scene', 'active');
@@ -291,6 +292,7 @@ test('scene resources and css-pixel ink stay bounded across three deliberate rem
   const context = await browser.newContext({ reducedMotion: 'no-preference', deviceScaleFactor: 2, viewport: { width: 390, height: 844 } });
   const page = await context.newPage();
   await page.goto('/');
+  await page.locator('[data-view-toggle]').click();
   const projectCount = await page.locator('#exhibition [data-stop][data-slug]').count();
   const counts = () => page.evaluate(() => ({ materials: window.__exhibition?.materials, geometries: window.__exhibition?.geometries, textures: window.__exhibition?.textures }));
   await expect.poll(() => page.evaluate(() => window.__exhibition?.renderCount ?? 0)).toBeGreaterThan(0);
@@ -306,11 +308,11 @@ test('scene resources and css-pixel ink stay bounded across three deliberate rem
   expect(await page.evaluate(() => Array.from({ length: 6 }, (_, i) => window.__exhibition![`ink${i}Width`]))).toEqual([1.4, 1.3, 1, 1, 1, 1.4]);
   expect(await page.evaluate(() => Array.from({ length: 6 }, (_, i) => window.__exhibition![`ink${i}Color`]))).toEqual([0x4e5144, 0x8b877b, 0xb9b3a4, 0xb9b3a4, 0x656256, 0x8e4935]);
   for (let i = 0; i < 3; i++) {
-    await page.getByRole('button', { name: 'Still view', exact: true }).click();
+    await page.locator('[data-view-toggle]').click();
     await expect(page.locator('.exhibition-canvas')).toHaveCount(0);
     expect(await page.evaluate(() => window.__exhibition?.mounted)).toBe(false);
     expect(await page.evaluate(() => window.__exhibition?.geometries)).toBe(0);
-    await page.getByRole('button', { name: 'Still view', exact: true }).click();
+    await page.locator('[data-view-toggle]').click();
     await expect.poll(counts).toEqual(first);
     await expect(page.locator('.exhibition-canvas canvas')).toHaveCount(1);
   }
@@ -550,7 +552,7 @@ test('the live panel reuses one image request and restores the figure in still v
   await page.locator(`#${exhibitId}`).focus();
   await page.keyboard.press('Tab');
   await expect(link).toBeFocused();
-  await page.getByRole('button', { name: 'Still view', exact: true }).click();
+  await page.locator('[data-view-toggle]').click();
   await expect(figure).not.toHaveAttribute('aria-hidden', 'true');
   await expect(figure).toHaveCSS('visibility', 'visible');
   expect(requests).toHaveLength(1);
@@ -576,7 +578,7 @@ test('the overlay plate guarantees ink contrast with the scene active and after 
   await page.goto('/');
   await expect(page.locator('html')).toHaveAttribute('data-scene', 'active');
   for (const active of [true, false]) {
-    if (!active) await page.getByRole('button', { name: 'Still view', exact: true }).click();
+    if (!active) await page.locator('[data-view-toggle]').click();
     const contrast = await page.locator('.exhibit-overlay').evaluate((el) => {
       const style = getComputedStyle(el);
       const rgb = (value: string) => value.match(/[\d.]+/g)!.map(Number);
@@ -584,8 +586,8 @@ test('the overlay plate guarantees ink contrast with the scene active and after 
       const plate = rgb(style.backgroundColor);
       const luminance = (channels: number[]) => channels.map((v) => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)
         .reduce((sum, value, i) => sum + value * [0.2126, 0.7152, 0.0722][i], 0);
-      // color(srgb r g b / .88): worst-case scene is black under the plate.
-      return (luminance(plate.slice(0, 3).map((v) => v * plate[3])) + 0.05) / (luminance(ink) + 0.05);
+      // The plate is opaque, so scene pixels cannot lower the contrast.
+      return (luminance(plate.slice(0, 3).map((v) => (v / 255) * (plate[3] ?? 1))) + 0.05) / (luminance(ink) + 0.05);
     });
     expect(contrast).toBeGreaterThanOrEqual(4.5);
   }

@@ -9,6 +9,7 @@ async function openMoving(browser: Browser, viewport: { width: number; height: n
   });
   const page = await context.newPage();
   await page.goto('/');
+  if (await page.locator('html').getAttribute('data-view') === 'still') await page.locator('[data-view-toggle]').click();
   await expect.poll(() => page.evaluate(() => window.__exhibition?.renderCount ?? 0)).toBeGreaterThan(0);
   return { context, page };
 }

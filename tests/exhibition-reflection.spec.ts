@@ -3,6 +3,7 @@ import { expect, test, type Page } from '@playwright/test';
 async function ready(page: Page, width = 1440): Promise<void> {
   await page.setViewportSize({ width, height: 810 });
   await page.goto('/#exhibit-featured-client');
+  if (await page.locator('html').getAttribute('data-view') === 'still') await page.locator('[data-view-toggle]').click();
   await expect.poll(() => page.evaluate(() => window.__exhibition?.renderCount ?? 0)).toBeGreaterThan(0);
 }
 

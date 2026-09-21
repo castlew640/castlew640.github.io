@@ -143,6 +143,7 @@ test('all shipped primary anchors resolve in their original reading order', asyn
 
 async function panelPoint(page: Page): Promise<{ x: number; y: number }> {
   await page.goto('/');
+  if (await page.locator('html').getAttribute('data-view') === 'still') await page.locator('[data-view-toggle]').click();
   await expect.poll(() => page.evaluate(() => window.__exhibition?.panelTextureReady)).toBe(true);
   await page.locator(`#${exhibitId}`).evaluate((el) => el.scrollIntoView());
   await expect.poll(() => page.evaluate(() => window.__exhibition?.currentStopId)).toBe(exhibitId);
@@ -195,7 +196,7 @@ test('the active decorative canvas preserves the screenshot alternative and capt
   await expect(figure).toHaveCSS('pointer-events', 'none');
   await expect(page.locator('.exhibition-canvas canvas')).toHaveAttribute('aria-hidden', 'true');
   expect(await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.matches('canvas'), point)).toBe(true);
-  await page.getByRole('button', { name: 'Still view', exact: true }).click();
+  await page.locator('[data-view-toggle]').click();
   await expect(figure).toHaveCSS('opacity', '1');
   await expect(page.getByRole('img', { name: alt!, exact: true })).toHaveCount(1);
   expect(await figure.ariaSnapshot()).toContain(caption);

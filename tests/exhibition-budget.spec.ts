@@ -59,7 +59,7 @@ test('small-surface fallback keeps mirrored ink without a render target', async 
   await context.close();
 });
 
-test('three transformations follow camera distance, reverse exactly, and remain idle mid-progress', async ({ page }) => {
+test('three transformations follow station distance, reverse exactly, and remain idle mid-progress', async ({ page }) => {
   await ready(page);
   const samples: Record<string, number | boolean | string>[] = [];
   for (const station of [4, 12, 24, 36, 24]) {
@@ -75,10 +75,10 @@ test('three transformations follow camera distance, reverse exactly, and remain 
     await expect.poll(() => page.evaluate(() => Number(window.__exhibition?.station))).toBeCloseTo(station, 1);
     const data = await page.evaluate(() => ({ ...window.__exhibition! }));
     for (let index = 0; index < 3; index++) {
-      const t = Math.max(0, Math.min(1, (16 - Math.abs(-Number(data.station) - Number(data[`transformation${index}Z`]))) / 8));
+      const t = Math.max(0, Math.min(1, (16 - Math.abs(Number(data.station) - Number(data[`transformation${index}Station`]))) / 8));
       const progress = t * t * (3 - 2 * t);
       expect(Math.abs(Number(data[`transformation${index}Progress`]) - progress)).toBeLessThanOrEqual(0.001);
-      expect(data[`transformation${index}Shadow`]).toBe(progress >= 0.5);
+      expect(data[`transformation${index}Shadow`]).toBe(Number(data[`transformation${index}Progress`]) >= 0.5);
       expect(data[`transformation${index}MeshVisible`]).toBe(progress > 0);
     }
     if (station === 24) samples.push(data);

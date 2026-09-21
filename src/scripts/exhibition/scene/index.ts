@@ -152,7 +152,7 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
     let releaseCompleted = () => completed.dispose();
     cleanups.push(() => releaseCompleted());
     architecture.batch();
-    const reflection = createReflection(scene, camera, renderer, completed, inks);
+    const reflection = createReflection(scene, camera, renderer, completed, inks, options.landingStation);
     // Reflection takes ownership of the completed group only after it succeeds.
     releaseCompleted = () => reflection.dispose();
     debug.transformations = transformations.elements.length;
@@ -163,6 +163,17 @@ export async function createScene(options: SceneOptions): Promise<SceneHandle | 
     debug.landingLeftSolid = architecture.landingLeft.material === architecture.stone;
     debug.landingRightMeshes = architecture.landingRightMeshes;
     debug.completedLayerZeroObjects = 0;
+    debug.completedEdgeCount = reflection.completedEdgeCount;
+    debug.fallbackEdgeCount = reflection.fallbackEdgeCount;
+    debug.waterContainsRoute = reflection.waterContainsRoute;
+    debug.waterNearRouteDistance = reflection.waterNearRouteDistance;
+    debug.waterFarRouteDistance = reflection.waterFarRouteDistance;
+    debug.waterNearStrength = reflection.waterNearStrength;
+    debug.waterFarStrength = reflection.waterFarStrength;
+    debug.waterMinX = reflection.waterBounds.minX;
+    debug.waterMaxX = reflection.waterBounds.maxX;
+    debug.waterMinZ = reflection.waterBounds.minZ;
+    debug.waterMaxZ = reflection.waterBounds.maxZ;
     completed.group.traverse((object) => { if (object.layers.isEnabled(0)) debug.completedLayerZeroObjects = Number(debug.completedLayerZeroObjects) + 1; });
     debug.lightsOnBothLayers = [sun, hemisphere, ambient].every((light) => light.layers.isEnabled(0) && light.layers.isEnabled(2));
     renderer.info.autoReset = false;

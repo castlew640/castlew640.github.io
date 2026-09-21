@@ -9,7 +9,7 @@ async function ready(page: Page, width = 1440): Promise<void> {
 async function atStation(page: Page, station: number): Promise<Record<string, number | boolean | string>> {
   await page.evaluate((wanted) => {
     const stops = Array.from(document.querySelectorAll<HTMLElement>('#exhibition [data-stop]'));
-    const stations = stops.map((stop, index) => index === stops.length - 1 ? (index - 2) * 18 + 28 : index * 18);
+    const stations = stops.map((_, index) => index === stops.length - 1 ? (index - 2) * 18 + 28 : index * 18);
     const index = Math.max(0, stations.findIndex((value, i) => i < stations.length - 1 && wanted >= value && wanted <= stations[i + 1]));
     const start = stops[index].getBoundingClientRect().top + scrollY;
     const end = stops[index + 1].getBoundingClientRect().top + scrollY;
@@ -58,7 +58,7 @@ test('approach construction is reversible by station and idle at partial progres
   expect(await page.evaluate(() => window.__exhibition?.renderCount)).toBe(count);
 });
 
-test('completed edges and water follow the whole route in live and fallback modes', async ({ page }) => {
+test('completed edges and water follow the whole route in live and fallback modes', async ({ page }, testInfo) => {
   await ready(page);
   for (const station of [18, 36, 46]) {
     const data = await atStation(page, station);
@@ -71,7 +71,8 @@ test('completed edges and water follow the whole route in live and fallback mode
     expect(Number(data.waterNearStrength)).toBeCloseTo(0.42, 2);
     expect(Number(data.waterFarStrength)).toBe(0);
   }
-  const live = await page.screenshot();
+  await atStation(page, 18);
+  const live = await page.screenshot({ path: testInfo.outputPath('reflection-live.png') });
   expect(live.byteLength).toBeGreaterThan(1000);
   await page.setViewportSize({ width: 600, height: 810 });
   await expect.poll(() => page.evaluate(() => window.__exhibition?.reflectionEnabled)).toBe(false);
@@ -79,7 +80,25 @@ test('completed edges and water follow the whole route in live and fallback mode
   expect(fallback.reflectionTargetWidth).toBe(0);
   expect(Number(fallback.reflectionFallbackSegments)).toBeGreaterThan(0);
   expect(Number(fallback.fallbackEdgeCount)).toBe(Number(fallback.completedEdgeCount));
-  await page.screenshot();
+  const fallbackCapture = await page.screenshot({ path: testInfo.outputPath('reflection-fallback.png') });
+  const changedPixels = await page.evaluate(async ([liveBytes, fallbackBytes]) => {
+    const read = async (bytes: number[]) => createImageBitmap(new Blob([new Uint8Array(bytes)], { type: 'image/png' }));
+    const [liveImage, fallbackImage] = await Promise.all([read(liveBytes), read(fallbackBytes)]);
+    const sample = (bitmap: ImageBitmap) => {
+      const canvas = document.createElement('canvas'); canvas.width = 80; canvas.height = 40;
+      const context = canvas.getContext('2d')!;
+      context.drawImage(bitmap, 0, bitmap.height / 2, bitmap.width, bitmap.height / 2, 0, 0, 80, 40);
+      return context.getImageData(0, 0, 80, 40).data;
+    };
+    const a = sample(liveImage); const b = sample(fallbackImage);
+    let changed = 0;
+    for (let i = 0; i < a.length; i += 4) {
+      if (Math.abs(a[i] - b[i]) + Math.abs(a[i + 1] - b[i + 1]) + Math.abs(a[i + 2] - b[i + 2]) > 30) changed++;
+    }
+    liveImage.close(); fallbackImage.close();
+    return changed;
+  }, [[...live], [...fallbackCapture]]);
+  expect(changedPixels).toBeGreaterThan(100);
   await page.setViewportSize({ width: 1440, height: 810 });
   await expect.poll(() => page.evaluate(() => window.__exhibition?.reflectionEnabled)).toBe(true);
   expect(await page.evaluate(() => window.__exhibition?.reflectionLayerMask)).toBe(4);

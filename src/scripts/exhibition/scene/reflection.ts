@@ -1,11 +1,12 @@
 import {
-  BoxGeometry, BufferGeometry, CanvasTexture, Color, Float32BufferAttribute, Group, Matrix4,
+  BoxGeometry, BufferGeometry, CanvasTexture, Color, EdgesGeometry, Float32BufferAttribute, Group, Matrix4,
   Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry, Quaternion, ShaderMaterial,
   SRGBColorSpace, UniformsLib, UniformsUtils, Vector3, type PerspectiveCamera, type Scene, type Vector2, type WebGLRenderer,
 } from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { segments, type Inks } from './ink';
+import { routeBounds, sampleRoute } from './path';
 
 const waterShader = {
   name: 'CompletedArchitectureWater',
@@ -15,11 +16,12 @@ const waterShader = {
   vertexShader: `
     uniform mat4 textureMatrix;
     varying vec4 reflectionUv;
-    varying vec3 worldPosition;
+    attribute float routeDistance;
+    varying float waterRouteDistance;
     #include <fog_pars_vertex>
     void main() {
       reflectionUv = textureMatrix * vec4(position, 1.0);
-      worldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
+      waterRouteDistance = routeDistance;
       vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
       gl_Position = projectionMatrix * mvPosition;
       #include <fog_vertex>
@@ -28,11 +30,11 @@ const waterShader = {
     uniform vec3 color;
     uniform sampler2D tDiffuse;
     varying vec4 reflectionUv;
-    varying vec3 worldPosition;
+    varying float waterRouteDistance;
     #include <fog_pars_fragment>
     void main() {
       vec4 reflection = texture2DProj(tDiffuse, reflectionUv);
-      float strength = 0.42 * clamp((26.0 - abs(worldPosition.x)) / 23.0, 0.0, 1.0);
+      float strength = 0.42 * clamp((26.0 - waterRouteDistance) / 23.0, 0.0, 1.0);
       gl_FragColor = vec4(mix(color, reflection.rgb, strength * reflection.a), 1.0);
       #include <tonemapping_fragment>
       #include <colorspace_fragment>
@@ -47,6 +49,7 @@ export function createCompletedGroup(sources: Group[], stone: MeshStandardMateri
   group.name = 'completed-architecture';
   const geometries: BufferGeometry[] = [];
   const silhouettes: number[] = [];
+  const completedEdges: number[] = [];
   const color = new Color('#ece6d6');
   const add = (geometry: BufferGeometry): void => {
     geometry.deleteAttribute('uv');
@@ -59,19 +62,22 @@ export function createCompletedGroup(sources: Group[], stone: MeshStandardMateri
     if (unindexed !== geometry) geometry.dispose();
     geometries.push(unindexed);
     unindexed.computeBoundingBox();
-    const { min, max } = unindexed.boundingBox!;
-    // A single front elevation per completed member keeps the fallback a drawing,
-    // rather than a dense wireframe of every internal triangulation edge.
-    if (max.y > 0.2 && Math.min(max.x - min.x, max.y - min.y) < 0.26) {
-      // A slender completed rib/column reads as a single datum stroke at this
-      // distance; four almost-coincident box edges only waste the ink budget.
-      const x = (min.x + max.x) / 2;
-      const y = -(min.y + max.y) / 2;
-      if (max.y - min.y > max.x - min.x) silhouettes.push(x, -min.y, max.z, x, -max.y, max.z);
-      else silhouettes.push(min.x, y, max.z, max.x, y, max.z);
-    } else if (max.y > 0.2) silhouettes.push(min.x, -min.y, max.z, max.x, -min.y, max.z,
-      max.x, -min.y, max.z, max.x, -max.y, max.z, max.x, -max.y, max.z, min.x, -max.y, max.z,
-      min.x, -max.y, max.z, min.x, -min.y, max.z);
+    const { max } = unindexed.boundingBox!;
+    // Select actual transformed structural edges. Floor tessellation is not a
+    // silhouette; cap each member's strokes to keep growing catalogues bounded.
+    if (max.y > 0.2) {
+      const edges = new EdgesGeometry(unindexed, 24);
+      const positions = edges.getAttribute('position');
+      const step = Math.max(1, Math.ceil(positions.count / 24));
+      for (let index = 0; index + 1 < positions.count; index += 2 * step) {
+        const a = new Vector3().fromBufferAttribute(positions, index);
+        const b = new Vector3().fromBufferAttribute(positions, index + 1);
+        if (a.distanceToSquared(b) < 0.0625) continue;
+        completedEdges.push(...a.toArray(), ...b.toArray());
+        silhouettes.push(a.x, -a.y, a.z, b.x, -b.y, b.z);
+      }
+      edges.dispose();
+    }
   };
   for (const source of sources) {
     source.updateMatrixWorld(true);
@@ -99,15 +105,26 @@ export function createCompletedGroup(sources: Group[], stone: MeshStandardMateri
       }
     });
   }
+  // Keep the fallback a sparse drawing even when additional project portals
+  // expand the completed world. Sampling after traversal represents the full
+  // route instead of exhausting the ink budget at the entrance.
+  const edgeCount = silhouettes.length / 6;
+  if (edgeCount > 120) {
+    const selected = Array.from({ length: 120 }, (_, index) => Math.floor(index * edgeCount / 120));
+    const sparseSilhouettes = selected.flatMap((index) => silhouettes.slice(index * 6, index * 6 + 6));
+    const sparseEdges = selected.flatMap((index) => completedEdges.slice(index * 6, index * 6 + 6));
+    silhouettes.splice(0, silhouettes.length, ...sparseSilhouettes);
+    completedEdges.splice(0, completedEdges.length, ...sparseEdges);
+  }
   const merged = mergeGeometries(geometries)!;
   geometries.forEach((geometry) => geometry.dispose());
   group.add(new Mesh(merged, stone));
   group.traverse((object) => { object.layers.set(2); object.raycast = () => {}; });
-  return { group, silhouettes, dispose() { merged.dispose(); } };
+  return { group, silhouettes, completedEdges, dispose() { merged.dispose(); } };
 }
 
 export function createReflection(scene: Scene, camera: PerspectiveCamera, renderer: WebGLRenderer,
-  completed: ReturnType<typeof createCompletedGroup>, inks: Inks) {
+  completed: ReturnType<typeof createCompletedGroup>, inks: Inks, landingStation: number) {
   const canvas = document.createElement('canvas');
   canvas.width = 64; canvas.height = 256;
   const context = canvas.getContext('2d');
@@ -118,11 +135,33 @@ export function createReflection(scene: Scene, camera: PerspectiveCamera, render
   const texture = new CanvasTexture(canvas);
   texture.colorSpace = SRGBColorSpace;
   scene.add(completed.group);
-  const geometry = new PlaneGeometry(60, 200);
+  const bounds = routeBounds(landingStation + 36);
+  const centerline: Vector3[] = [];
+  for (let station = 0; station <= bounds.maxStation; station++) centerline.push(sampleRoute(station, bounds).position);
+  if (bounds.maxStation % 1 !== 0) centerline.push(sampleRoute(bounds.maxStation, bounds).position);
+  const minX = Math.min(...centerline.map((point) => point.x)) - 30;
+  const maxX = Math.max(...centerline.map((point) => point.x)) + 30;
+  const minZ = Math.min(...centerline.map((point) => point.z)) - 20;
+  const maxZ = Math.max(...centerline.map((point) => point.z)) + 20;
+  const width = maxX - minX;
+  const depth = maxZ - minZ;
+  const centerX = (minX + maxX) / 2;
+  const centerZ = (minZ + maxZ) / 2;
+  const geometry = new PlaneGeometry(width, depth, Math.ceil(width / 2), Math.ceil(depth / 2));
+  const positions = geometry.getAttribute('position');
+  const distances: number[] = [];
+  for (let index = 0; index < positions.count; index++) {
+    const worldX = centerX + positions.getX(index);
+    const worldZ = centerZ - positions.getY(index);
+    let square = Number.POSITIVE_INFINITY;
+    for (const point of centerline) square = Math.min(square, (worldX - point.x) ** 2 + (worldZ - point.z) ** 2);
+    distances.push(Math.sqrt(square));
+  }
+  geometry.setAttribute('routeDistance', new Float32BufferAttribute(distances, 1));
   const fallbackMaterial = new MeshBasicMaterial({ color: '#e3e5d8', transparent: true, opacity: 0.65, depthWrite: false, toneMapped: false });
   fallbackMaterial.map = texture;
   const fallback = new Mesh(geometry, fallbackMaterial);
-  fallback.rotation.x = -Math.PI / 2; fallback.position.z = -90;
+  fallback.rotation.x = -Math.PI / 2; fallback.position.set(centerX, 0, centerZ);
   fallback.raycast = () => {};
   // Reuse the datum ink; per-draw opacity adds no persistent material.
   const drawing = segments(completed.silhouettes, inks.construction, true);
@@ -156,7 +195,7 @@ export function createReflection(scene: Scene, camera: PerspectiveCamera, render
           reflector = new Reflector(geometry, { textureWidth: width, textureHeight: height,
             multisample: deviceDpr > 1.5 ? 0 : 4, shader: waterShader, color: '#e3e5d8' });
           reflector.getReflectionCamera(camera).layers.set(2);
-          reflector.rotation.x = -Math.PI / 2; reflector.position.z = -90;
+          reflector.rotation.x = -Math.PI / 2; reflector.position.set(centerX, 0, centerZ);
           (reflector.material as ShaderMaterial).fog = true;
           reflector.raycast = () => {};
           const renderReflection = reflector.onBeforeRender;
@@ -194,6 +233,14 @@ export function createReflection(scene: Scene, camera: PerspectiveCamera, render
     get targetWidth() { return reflector?.getRenderTarget().width ?? 0; },
     get targetHeight() { return reflector?.getRenderTarget().height ?? 0; },
     get fallbackSegments() { return fallback.visible ? completed.silhouettes.length / 6 : 0; },
+    get completedEdgeCount() { return completed.completedEdges.length / 6; },
+    get fallbackEdgeCount() { return completed.silhouettes.length / 6; },
+    get waterBounds() { return { minX, maxX, minZ, maxZ }; },
+    get waterContainsRoute() { return centerline.every((point) => point.x >= minX && point.x <= maxX && point.z >= minZ && point.z <= maxZ); },
+    get waterNearRouteDistance() { return Math.min(...distances); },
+    get waterFarRouteDistance() { return Math.max(...distances); },
+    get waterNearStrength() { return 0.42 * Math.max(0, Math.min(1, (26 - Math.min(...distances)) / 23)); },
+    get waterFarStrength() { return 0.42 * Math.max(0, Math.min(1, (26 - Math.max(...distances)) / 23)); },
     get allocatedTextures() {
       return Number(Boolean((renderer.properties.get(texture) as { __webglTexture?: unknown }).__webglTexture))
         + Number(Boolean(reflector && (renderer.properties.get(reflector.getRenderTarget().texture) as { __webglTexture?: unknown }).__webglTexture));

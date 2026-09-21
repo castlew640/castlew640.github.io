@@ -4,7 +4,7 @@ import { join } from 'node:path';
 export const FIXTURE_SENTINEL = 'GROWTH_FIXTURE_DO_NOT_PUBLISH';
 export const DRAFT_SENTINEL = 'GROWTH_DRAFT_DO_NOT_PUBLISH';
 
-const personalEntry = (number) => {
+const personalEntry = (number, exhibitionOrder) => {
   const id = String(number).padStart(2, '0');
   return `---
 kind: personal
@@ -13,7 +13,7 @@ slug: fixture-personal-${id}
 title: Fixture Personal Project ${id}
 summary: ${FIXTURE_SENTINEL} repository-only project ${id} proves content-driven publication.
 published: true
-exhibitionOrder: ${number}
+exhibitionOrder: ${exhibitionOrder}
 repositoryUrl: https://github.com/castlew640/fixture-personal-${id}
 evidence:
   - src: ./evidence.jpg
@@ -71,12 +71,12 @@ async function clearProjects(projectsRoot) {
   }
 }
 
-async function addPersonal(projectsRoot, sourceImage, number) {
+async function addPersonal(projectsRoot, sourceImage, number, exhibitionOrder = number) {
   const id = String(number).padStart(2, '0');
   const entryRoot = join(projectsRoot, `fixture-personal-${id}`);
   await mkdir(entryRoot, { recursive: true });
   await cp(sourceImage, join(entryRoot, 'evidence.jpg'));
-  await writeFile(join(entryRoot, 'index.md'), personalEntry(number));
+  await writeFile(join(entryRoot, 'index.md'), personalEntry(number, exhibitionOrder));
 }
 
 export async function applyGrowthFixtures(root, { count, personalOnly = false }) {
@@ -90,7 +90,7 @@ export async function applyGrowthFixtures(root, { count, personalOnly = false })
     const sourceClient = join(root, 'tests/fixtures/projects/featured-client');
     await cp(sourceClient, join(projectsRoot, 'featured-client'), { recursive: true });
     for (let number = 1; number < count; number += 1) {
-      await addPersonal(projectsRoot, sourceImage, number);
+      await addPersonal(projectsRoot, sourceImage, number, number + 1);
     }
   }
 

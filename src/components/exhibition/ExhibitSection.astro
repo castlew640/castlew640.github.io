@@ -11,7 +11,11 @@ interface Props {
 
 const { project, index } = Astro.props;
 const { slug } = project.data;
-const shot = project.data.screenshots[0];
+const clientData = project.data.kind === 'client' ? project.data : undefined;
+const personalData = project.data.kind === 'personal' ? project.data : undefined;
+const shot = clientData ? clientData.screenshots[0] : personalData!.evidence[0];
+const evidenceKind = clientData ? 'screenshot' : personalData!.evidence[0].kind;
+const evidenceFit = clientData ? 'cover' : personalData!.evidence[0].fit;
 const panel = await getImage({ src: shot.src, width: 1600, format: 'webp' });
 const labels = {
   website: 'Website',
@@ -21,8 +25,8 @@ const labels = {
 ---
 
 <StopSection id={`exhibit-${slug}`} slug={slug} labelledBy={`exhibit-${slug}-title`}>
-  <figure data-panel-source>
-    <img src={panel.src} width={panel.attributes.width} height={panel.attributes.height} alt={shot.alt} decoding="async" />
+  <figure data-panel-source data-evidence-kind={evidenceKind} data-evidence-fit={evidenceFit}>
+    <img src={panel.src} width={panel.attributes.width} height={panel.attributes.height} alt={shot.alt} decoding="async" data-evidence-fit={evidenceFit} />
     <figcaption>{shot.caption}</figcaption>
   </figure>
   <ExhibitDrawing variant={index} />
@@ -30,9 +34,13 @@ const labels = {
     <p class="eyebrow">Exhibit {String(index + 1).padStart(2, '0')}</p>
     <h2 class="exhibit-title" id={`exhibit-${slug}-title`}>{project.data.title}</h2>
     <p class="exhibit-summary">{project.data.summary}</p>
-    <ul class="contract-labels">
-      {project.data.contracts.map((contract) => <li>{labels[contract.id]}</li>)}
-    </ul>
+    {clientData ? (
+      <ul class="contract-labels">
+        {clientData.contracts.map((contract) => <li>{labels[contract.id]}</li>)}
+      </ul>
+    ) : (
+      <ul class="contract-labels"><li>{personalData!.format === 'deep-dive' ? 'Technical deep dive' : personalData!.format === 'showcase' ? 'Project showcase' : 'Case study'}</li></ul>
+    )}
     <a class="text-link exhibit-link" href={`/projects/${slug}/`}>Read case study <span>→</span></a>
   </div>
 </StopSection>

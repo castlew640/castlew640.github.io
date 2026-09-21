@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+declare const process: { env: Record<string, string | undefined> };
+
 const count = Number.parseInt(process.env.GROWTH_FIXTURE_COUNT ?? '10', 10);
 const personalOnly = process.env.GROWTH_FIXTURE_SCENARIO === 'personal-only';
 const hasPersonal = personalOnly || count > 1;
@@ -7,6 +9,16 @@ const hasPersonal = personalOnly || count > 1;
 test('content alone publishes canonical pages, catalogue exhibits, and stable returns', async ({ page }) => {
   const home = await page.goto('/');
   expect(home?.status()).toBe(200);
+
+  if (!personalOnly && count > 0) {
+    await expect(page.locator('[data-slug]').first()).toHaveAttribute('data-slug', 'featured-client');
+    await page.goto('/projects/featured-client/');
+    await expect(page.locator('.evidence-grid figure')).toHaveCount(3);
+    for (const contract of ['website', 'manual-planner', 'ai-mvp']) {
+      await expect(page.locator(`#contract-${contract}`)).toHaveCount(1);
+    }
+    await page.goto('/');
+  }
 
   if (!hasPersonal) {
     await expect(page.locator('[data-slug^="fixture-personal-"]')).toHaveCount(0);

@@ -6,9 +6,13 @@ type ProjectRecord = {
   title?: string;
   summary?: string;
   published: boolean;
+  exhibitionOrder?: number;
+  kind?: 'client' | 'personal';
   liveUrl?: string;
-  contracts: { id: string }[];
-  screenshots: unknown[];
+  repositoryUrl?: string;
+  contracts?: { id: string }[];
+  screenshots?: unknown[];
+  evidence?: { alt?: string; caption?: string }[];
 };
 
 function requireHttpsUrl(value: string, label: string): void {
@@ -22,26 +26,40 @@ function requireHttpsUrl(value: string, label: string): void {
 
 export function validateProjectRecords(records: ProjectRecord[]): void {
   const publishedSlugs = new Set<string>();
+  const publishedOrders = new Set<number>();
   for (const project of records) {
+    const kind = project.kind ?? 'client';
+    if (project.liveUrl) requireHttpsUrl(project.liveUrl, `Project ${project.slug} live URL`);
+    if (project.repositoryUrl) requireHttpsUrl(project.repositoryUrl, `Project ${project.slug} repository URL`);
+
     if (project.published) {
       if (publishedSlugs.has(project.slug)) {
         throw new Error(`Duplicate published project slug: ${project.slug}`);
       }
       publishedSlugs.add(project.slug);
+      if (project.exhibitionOrder !== undefined && publishedOrders.has(project.exhibitionOrder)) {
+        throw new Error(`Duplicate published exhibition order: ${project.exhibitionOrder}`);
+      }
+      if (project.exhibitionOrder !== undefined) publishedOrders.add(project.exhibitionOrder);
       if (!project.title?.trim() || !project.summary?.trim()) {
         throw new Error(`Published project ${project.slug} requires a title and summary`);
       }
-      if (!project.liveUrl) {
-        throw new Error(`Published project ${project.slug} requires an HTTPS live URL`);
-      }
-      requireHttpsUrl(project.liveUrl, `Published project ${project.slug} live URL`);
-      if (project.screenshots.length < 1) {
-        throw new Error(`Published project ${project.slug} requires approved screenshots`);
+      if (kind === 'client') {
+        if (!project.liveUrl) {
+          throw new Error(`Published client project ${project.slug} requires an HTTPS live URL`);
+        }
+        if (!project.screenshots?.length) {
+          throw new Error(`Published client project ${project.slug} requires approved screenshots`);
+        }
+      } else if (!project.evidence?.length || project.evidence.some(({ alt, caption }) => !alt?.trim() || !caption?.trim())) {
+        throw new Error(`Published personal project ${project.slug} requires at least one described evidence still`);
       }
     }
-    const ids = project.contracts.map((contract) => contract.id);
-    if (ids.length !== CONTRACT_IDS.size || new Set(ids).size !== CONTRACT_IDS.size || ids.some((id) => !CONTRACT_IDS.has(id))) {
-      throw new Error(`Project ${project.slug} must contain exactly one website, manual-planner, and ai-mvp contract`);
+    if (kind === 'client') {
+      const ids = (project.contracts ?? []).map((contract) => contract.id);
+      if (ids.length !== CONTRACT_IDS.size || new Set(ids).size !== CONTRACT_IDS.size || ids.some((id) => !CONTRACT_IDS.has(id))) {
+        throw new Error(`Client project ${project.slug} must contain exactly one website, manual-planner, and ai-mvp contract`);
+      }
     }
   }
 }

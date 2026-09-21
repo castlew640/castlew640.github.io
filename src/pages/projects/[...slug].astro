@@ -14,40 +14,52 @@ export async function getStaticPaths() {
 const { project, rendered } = Astro.props;
 const { Content } = rendered;
 const { data } = project;
+const client = data.kind === 'client';
+const evidence = client ? data.screenshots.map((item) => ({ ...item, kind: 'screenshot' as const, fit: 'cover' as const })) : data.evidence;
+const formatLabel = {
+  'case-study': 'Case study',
+  showcase: 'Project showcase',
+  'deep-dive': 'Technical deep dive',
+}[data.format];
 ---
 
 <BaseLayout title={`${data.title} — William Castle`} description={data.summary}>
   <article class="project-page" aria-labelledby="project-title">
     <header class="project-header">
-      <p class="eyebrow">Featured client / Three contracts</p>
+      <p class="eyebrow">{client ? 'Featured client / Three contracts' : formatLabel}</p>
       <h1 id="project-title">{data.title}</h1>
       <p class="project-summary">{data.summary}</p>
-      <a class="text-link" href={data.liveUrl}>Visit {data.title.split(' — ')[0]} <span aria-hidden="true">↗</span></a>
+      <div class="project-links">
+        {data.liveUrl && <a class="text-link" href={data.liveUrl}>Visit {client ? data.title.split(' — ')[0] : 'live demo'} <span aria-hidden="true">↗</span></a>}
+        {data.repositoryUrl && <a class="text-link" href={data.repositoryUrl}>View repository <span aria-hidden="true">↗</span></a>}
+      </div>
     </header>
 
     <div class="project-content"><Content /></div>
 
-    <section class="contract-list" aria-labelledby="contracts-title">
-      <div class="section-heading"><p class="eyebrow">The engagements</p><h2 id="contracts-title">Three contracts</h2></div>
-      <div class="contract-grid">
-        {data.contracts.map((contract) => (
-          <article class="contract-card" aria-labelledby={`contract-${contract.id}`}>
-            <p class="eyebrow">{contract.id}</p>
-            <h3 id={`contract-${contract.id}`}>{contract.title}</h3>
-            <p>{contract.description}</p>
-            <p class="contract-meta">{contract.hosting} · {contract.stack.join(' · ')}</p>
-          </article>
-        ))}
-      </div>
-    </section>
+    {client && (
+      <section class="contract-list" aria-labelledby="contracts-title">
+        <div class="section-heading"><p class="eyebrow">The engagements</p><h2 id="contracts-title">Three contracts</h2></div>
+        <div class="contract-grid">
+          {data.contracts.map((contract) => (
+            <article class="contract-card" aria-labelledby={`contract-${contract.id}`}>
+              <p class="eyebrow">{contract.id}</p>
+              <h3 id={`contract-${contract.id}`}>{contract.title}</h3>
+              <p>{contract.description}</p>
+              <p class="contract-meta">{contract.hosting} · {contract.stack.join(' · ')}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+    )}
 
     <section class="evidence" aria-labelledby="evidence-title">
-      <div class="section-heading"><p class="eyebrow">Approved evidence</p><h2 id="evidence-title">What the work looks like</h2></div>
+      <div class="section-heading"><p class="eyebrow">{client ? 'Approved evidence' : 'Project evidence'}</p><h2 id="evidence-title">What the work looks like</h2></div>
       <div class="evidence-grid">
-        {data.screenshots.map((screenshot) => (
-          <figure>
-            <img src={screenshot.src.src} alt={screenshot.alt} width={screenshot.src.width} height={screenshot.src.height} loading="lazy" />
-            <figcaption>{screenshot.caption}</figcaption>
+        {evidence.map((item) => (
+          <figure data-evidence-kind={item.kind} data-evidence-fit={item.fit}>
+            <img src={item.src.src} alt={item.alt} width={item.src.width} height={item.src.height} loading="lazy" />
+            <figcaption>{item.caption}</figcaption>
           </figure>
         ))}
       </div>

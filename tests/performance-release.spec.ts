@@ -102,7 +102,9 @@ test('ten remounts and five project visits release scene listeners and contexts'
     expect(await page.evaluate(() => (window as typeof window & { __gpuOwnership: () => { liveTextures: number } }).__gpuOwnership().liveTextures)).toBe(0);
     expect(await page.evaluate(() => (window as typeof window & { __activeListeners: () => number }).__activeListeners())).toBe(baseline);
   }
-  expect((await page.evaluate(() => (window as typeof window & { __gpuOwnership: () => { createdContexts: number } }).__gpuOwnership())).createdContexts).toBe(10);
+  const ownership = await page.evaluate(() => (window as typeof window & { __gpuOwnership: () => { createdContexts: number; lostContexts: number; liveTextures: number } }).__gpuOwnership());
+  expect(ownership.createdContexts).toBe(10);
+  console.log(`N=2 ownership: baseline listeners ${baseline}, warm scene ${resources[0]}, contexts ${ownership.createdContexts}/${ownership.lostContexts}, live textures after teardown ${ownership.liveTextures}`);
   for (let visit = 0; visit < 5; visit++) {
     await page.goto('/projects/featured-client/');
     await page.getByRole('link', { name: /Back to the exhibition/ }).click();

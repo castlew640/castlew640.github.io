@@ -6,9 +6,9 @@ current_phase: 03
 current_phase_name: growth-and-release-polish
 status: executing
 stopped_at: Completed 03-08-PLAN.md; physical acceptance pending
-last_updated: "2026-09-21T19:53:54.694Z"
-last_activity: 2026-09-21
-last_activity_desc: Plan 03-08 verified live Pages release and ordinary-revert recovery; physical PERF-01 and device UAT remain pending
+last_updated: "2026-09-24T09:30:00.000Z"
+last_activity: 2026-09-24
+last_activity_desc: Quick task 260924-3fy rebuilt the exhibition as a clickable Dalí dreamscape on branch quick/260924-3fy-surreal-overhaul; owner review before merge
 progress:
   total_phases: 3
   completed_phases: 2
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-09-19)
 Phase: 03 (growth-and-release-polish) — AWAITING HUMAN VERIFICATION
 Plan: 8 of 8
 Status: All plans executed; final acceptance pending
-Last activity: 2026-09-21 — Plan 03-08 verified live Pages release and ordinary-revert recovery; physical PERF-01 and device UAT remain pending
+Last activity: 2026-09-24 - Completed quick task 260924-3fy: Surreal exhibition overhaul (click-to-travel, in-place exhibit viewer, melting clocks and Dalí details); awaiting owner review on branch `quick/260924-3fy-surreal-overhaul`
 
 **Progress:** [██████████] 100%
 
@@ -113,6 +113,8 @@ Decisions are logged in PROJECT.md.
 - [Phase 03]: Audit every public/media file against slug-owned published project references before Astro output — Static public files otherwise bypass draft filtering and can leak orphan or draft-only assets
 - [Phase 03]: Use one decoded DOM image and one GPU texture for contained route-mounted evidence panels — Stone letterboxing preserves every source corner without altering picking geometry or scene resource budgets
 
+- [Quick 260924-3fy]: The exhibition is a golden-hour Dalí plain with clickable exhibits (walk there, then open an in-place viewer), reactive props, fixed placards and a shared travel/view dock. Browsers that draw WebGL in software now default to the illustrated view (explicit choice › reduced motion › phone › software graphics); ambient animation runs only on hardware that keeps up and rests when hidden, offscreen, under the viewer or idle. Supersedes the Phase 2/3 corridor, reflection and on-demand-only rendering decisions; D-15 and D-22 are kept.
+
 ### Pending Todos
 
 Phase 02 execution is complete; the four acceptance checks are tracked in `02-UAT.md`, not implementation todos. Scene gzip is 157,185 B / 190,000 B. The original three-texture estimate is exceeded by five actual allocations; four are attributed, one remains unidentified. This and the native-flow mobile sheet are disclosed for human acceptance. Review and goal verification used explicitly documented reused-agent fallbacks.
@@ -133,6 +135,12 @@ Remaining publication inputs and environment notes:
 - Delivery is live at `https://castlew640.github.io/`; the public source repository is `https://github.com/castlew640/castlew640.github.io`. Initial and restored runs succeeded, while controlled run `35472453422` failed with no artifact or deployment and left the prior release available.
 - Subjective desktop/mobile appearance, zoom, and reduced-motion review remains for the Phase 1 verification/UAT gate; automated equivalents pass.
 - Wave 1 post-wave verification: static build and 5/5 Chromium tests pass. Schema drift gate does not block; codebase drift check skips because no STRUCTURE.md exists. Upcoming Plan 01-02 links to new collection/project/resume files remain intentionally pending; existing profile and navigation links verify.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Status | Directory |
+|---|-------------|------|--------|--------|-----------|
+| 260924-3fy | Surreal exhibition overhaul: click-to-travel, in-place exhibit viewer, melting clocks and Dalí details | 2026-09-24 | 5e988cf | Checks pass; owner review and device checks pending | [260924-3fy-surreal-exhibition-overhaul-click-to-tra](./quick/260924-3fy-surreal-exhibition-overhaul-click-to-tra/) |
 
 ### Roadmap Evolution
 

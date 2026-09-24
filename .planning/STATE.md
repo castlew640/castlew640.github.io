@@ -141,6 +141,7 @@ Remaining publication inputs and environment notes:
 | # | Description | Date | Commit | Status | Directory |
 |---|-------------|------|--------|--------|-----------|
 | 260924-3fy | Surreal exhibition overhaul: click-to-travel, in-place exhibit viewer, melting clocks and Dalí details | 2026-09-24 | 5e988cf | Checks pass; owner review and device checks pending | [260924-3fy-surreal-exhibition-overhaul-click-to-tra](./quick/260924-3fy-surreal-exhibition-overhaul-click-to-tra/) |
+| 260924-igc | Prune old Pages deployments, workflow runs and artifacts after each deploy | 2026-09-24 | 3262fdd | Verified on run 36033430777 | [260924-igc-prune-old-pages-deployments-workflow-run](./quick/260924-igc-prune-old-pages-deployments-workflow-run/) |
 
 ### Roadmap Evolution
 

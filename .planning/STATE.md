@@ -10,7 +10,7 @@ last_updated: "2026-09-24T09:30:00.000Z"
 last_activity: 2026-09-24
 last_activity_desc: Quick task 260924-3fy rebuilt the exhibition as a clickable Dalí dreamscape on branch quick/260924-3fy-surreal-overhaul; owner review before merge
 progress:
-  total_phases: 3
+  total_phases: 4
   completed_phases: 2
   total_plans: 19
   completed_plans: 19
@@ -145,6 +145,7 @@ Remaining publication inputs and environment notes:
 ### Roadmap Evolution
 
 - Phase 1 edited: edited fields: goal (MVP user-story format; meaning preserved)
+- Phase 4 added: Personality and Media
 
 ## Deferred Items
 

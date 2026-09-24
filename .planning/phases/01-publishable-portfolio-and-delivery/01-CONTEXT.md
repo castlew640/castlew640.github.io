@@ -30,6 +30,7 @@ Phase 1 establishes a deliberate visual identity. The scroll-driven 3D corridor 
 - **D-10:** William understood the AI MVP's purpose as demonstrating the product idea to potential customers, making it easy to understand, and including visible AI interactions. Present the delivered demo and its limited scope accurately; do not claim a completed production AI planner or verified commercial outcomes.
 - **D-11:** Use permitted screenshots, explanatory captions, and confirmed live links as public evidence. William can produce screenshots, but none were supplied during this discussion. Client-owned source code must remain private.
 - **D-11 execution confirmation:** William approved the public client name `eiffeltechnologies LLC` and live URL `https://eiffeltechnology.com`. A read-only HTTPS request returned HTTP 200 during execution. Screenshot files and their approved descriptions remain pending; omit unconfirmed dates and outcomes.
+- **D-11 publication inventory:** William supplied and approved three screenshots for publication: `clientScreenshot1.jpg` (Eiffel Technologies WiFi coverage planning landing page), `clientscreenshot2.jpg` (AI planner floor-plan analysis state), and `clientScreenshot3.jpg` (AI planner completed recommendation state). Captions describe only visible UI; no source code, dates, metrics, or unsupported outcomes are included.
 
 ### Identity, resume, and contact
 - **D-12:** Public display name: **William Castle**. Keep initial role positioning broad; include his computer science graduate background in About.
@@ -47,7 +48,9 @@ Phase 1 establishes a deliberate visual identity. The scroll-driven 3D corridor 
 These are content/setup inputs, not blockers to planning or reasons to invent public values:
 - Chosen actual resume PDF/path or online URL; resume review remains deferred at the user's request.
 - Email and GitHub profile were confirmed during execution: `castlew640@gmail.com` and `https://github.com/castlew640`. No additional profile is required.
-- Permitted screenshot files with approved descriptions/captions. Live URL confirmed during execution: `https://eiffeltechnology.com`.
+- Resume selected during execution: `/mnt/c/Users/castl/Downloads/William_Castle_Resume.pdf` for publication as `/resume/william-castle-resume.pdf`.
+- Profile destinations supplied during execution: `https://linkedin.com/in/will-castle-swefh` and `https://profile.indeed.com/?hl=en_US&co=US&from=gnav-homepage--homepage-frontend`.
+- Permitted screenshot files and descriptions supplied during execution; inventory is recorded above. Live URL confirmed during execution: `https://eiffeltechnology.com`.
 - Public client naming confirmed during execution: `eiffeltechnologies LLC`. Dates remain unconfirmed and will be omitted.
 - Actual blueprint file extension; exact names of the three AI demo scenarios if the copy names them; any additional technical specifics or outcome claims. Omit uncertain details until confirmed.
 - Repository/account-site availability and production setup verification.

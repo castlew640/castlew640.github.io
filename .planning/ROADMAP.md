@@ -152,5 +152,16 @@ Execution order: Phase 1 → Phase 2 → Phase 3.
 
 30 v1 requirements map to exactly one phase: 15 in Phase 1, 9 in Phase 2, and 6 in Phase 3. Complete traceability is in [REQUIREMENTS.md](REQUIREMENTS.md). All 11 planned implementation slices for Phases 1 and 2 have summaries; outstanding human acceptance is recorded in their verification/UAT files and STATE.md.
 
+### Phase 4: Personality and Media
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 3
+**Plans:** 0 plans
+
+Plans:
+
+- [ ] TBD (run $gsd-plan-phase 4 to break down)
+
 ---
 *Created: 2026-09-19 under the approved autonomous, coarse-granularity workflow*

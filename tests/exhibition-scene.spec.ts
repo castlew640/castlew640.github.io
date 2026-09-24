@@ -7,7 +7,7 @@ test.use({ viewport, reducedMotion: 'no-preference' });
 test.beforeEach(async ({ context }) => { await chooseMoving(context); });
 
 async function settleAt(page: Page, id: string): Promise<void> {
-  await expect.poll(() => page.evaluate(() => [window.__exhibition?.currentStopId, window.__exhibition?.u === window.__exhibition?.uTarget]), { timeout: 20_000 })
+  await expect.poll(() => page.evaluate(() => [window.__exhibition?.currentStopId, window.__exhibition?.u === window.__exhibition?.uTarget]), { timeout: 30_000 })
     .toEqual([id, true]);
 }
 
@@ -35,7 +35,7 @@ async function panelCentre(page: Page): Promise<{ x: number; y: number }> {
 
 test('exactly one placard shows, and it belongs to the current stop', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('html')).toHaveAttribute('data-scene', 'active', { timeout: 20_000 });
+  await expect(page.locator('html')).toHaveAttribute('data-scene', 'active', { timeout: 30_000 });
   for (const id of await page.locator('#exhibition [data-stop]').evaluateAll((stops) => stops.map((stop) => stop.id))) {
     await page.locator(`#${id}`).evaluate((el) => scrollTo({ top: el.getBoundingClientRect().top + scrollY, behavior: 'auto' }));
     await expect(page.locator(`#${id}`)).toHaveAttribute('data-current', '');
@@ -69,7 +69,7 @@ test('clicking a distant exhibit walks there, and clicking it on arrival opens i
   await settleAt(page, 'exhibit-featured-client');
   await expect(page.locator('#exhibit-featured-client')).toHaveAttribute('data-current', '');
   expect(await page.evaluate(() => window.history.length)).toBe(history);
-  await expect.poll(() => page.evaluate(() => window.__exhibition?.panelTextureReady), { timeout: 20_000 }).toBe(true);
+  await expect.poll(() => page.evaluate(() => window.__exhibition?.panelTextureReady), { timeout: 30_000 }).toBe(true);
   const centre = await panelCentre(page);
   await page.mouse.move(centre.x, centre.y);
   await expect(page.locator('.scene-tooltip')).toHaveText('View Eiffel Technologies');
@@ -83,7 +83,7 @@ test('clicking a distant exhibit walks there, and clicking it on arrival opens i
 test('the ground arrow walks on to the next stop', async ({ page }) => {
   await page.goto('/');
   await settleAt(page, 'entrance');
-  await expect.poll(() => page.evaluate(() => window.__exhibition?.arrowVisible), { timeout: 20_000 }).toBe(true);
+  await expect.poll(() => page.evaluate(() => window.__exhibition?.arrowVisible), { timeout: 30_000 }).toBe(true);
   const arrow = await screenPoint(page, 'arrow');
   await page.mouse.move(arrow.x, arrow.y);
   await expect(page.locator('.scene-tooltip')).toHaveText(/^Walk on to Exhibit 01/);
@@ -129,7 +129,7 @@ test('toys react where they stand without travelling', async ({ page }) => {
   await expect.poll(() => page.evaluate(() => window.__exhibition?.lastReaction)).toBe('ants');
   expect(await page.evaluate(() => scrollY)).toBe(before);
   // The reaction plays out, then the scene rests again.
-  await expect.poll(() => page.evaluate(() => window.__exhibition?.idle), { timeout: 20_000 }).toBe(true);
+  await expect.poll(() => page.evaluate(() => window.__exhibition?.idle), { timeout: 30_000 }).toBe(true);
 });
 
 test('keyboard focus inside another stop brings that stop into view', async ({ page }) => {

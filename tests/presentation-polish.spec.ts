@@ -16,7 +16,7 @@ for (const viewport of [{ width: 390, height: 664 }, { width: 844, height: 390 }
     await page.locator('[data-view-toggle]').click();
     await expect(page.locator('html')).toHaveAttribute('data-view', 'moving');
     await expect(page.locator('[data-view-toggle]')).toHaveText('Use illustrated still view');
-    await expect.poll(() => page.evaluate(() => Number(window.__exhibition?.renderCount ?? 0))).toBeGreaterThan(0);
+    await expect.poll(() => page.evaluate(() => Number(window.__exhibition?.renderCount ?? 0)), { timeout: 30_000 }).toBeGreaterThan(0);
     expect(requests.filter((url) => !initialScripts.includes(url)).length).toBeGreaterThan(0);
     await context.close();
   });

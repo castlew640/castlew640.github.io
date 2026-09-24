@@ -155,7 +155,6 @@ export function createViewer(onChange: (open: boolean) => void): Viewer {
     const trigger = document.querySelector<HTMLElement>(`[data-view-exhibit="${CSS.escape(initial)}"]`);
     queueMicrotask(() => show(initial, trigger, false));
   }
-  for (const button of document.querySelectorAll<HTMLElement>('[data-view-exhibit]')) button.hidden = false;
 
   return {
     open: (slug, trigger = null) => show(slug, trigger, true),

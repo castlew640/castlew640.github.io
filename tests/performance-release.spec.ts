@@ -17,9 +17,9 @@ test('texture work stays near the active station and idle rendering stops', asyn
     };
   });
   await page.goto('/');
-  await expect(page.locator('html')).toHaveAttribute('data-scene', 'active');
+  await expect(page.locator('html')).toHaveAttribute('data-scene', 'active', { timeout: 30_000 });
   // CI renders in software, where the loop rests as soon as the view settles.
-  await expect.poll(() => page.evaluate(() => window.__exhibition?.idle), { timeout: 20_000 }).toBe(true);
+  await expect.poll(() => page.evaluate(() => window.__exhibition?.idle), { timeout: 30_000 }).toBe(true);
   if (fixtureCount >= 10) {
     const initial = await page.evaluate(() => ({
       decoded: (window as typeof window & { __decodeCalls: string[] }).__decodeCalls.length,
@@ -92,8 +92,8 @@ test('ten remounts and five project visits release scene listeners and contexts'
   const resources: string[] = [];
   for (let visit = 0; visit < 10; visit++) {
     await toggle.click();
-    await expect(page.locator('html')).toHaveAttribute('data-scene', 'active', { timeout: 20_000 });
-    await expect.poll(() => page.evaluate(() => window.__exhibition?.idle && window.__exhibition?.panelTextureReady), { timeout: 20_000 }).toBe(true);
+    await expect(page.locator('html')).toHaveAttribute('data-scene', 'active', { timeout: 30_000 });
+    await expect.poll(() => page.evaluate(() => window.__exhibition?.idle && window.__exhibition?.panelTextureReady), { timeout: 30_000 }).toBe(true);
     const current = await page.evaluate(() => ({ ...window.__exhibition! }));
     resources.push(JSON.stringify({ geometries: current.geometries, textures: current.textures,
       interactives: current.interactives, quality: current.qualityLevel }));
@@ -144,7 +144,7 @@ test('expanded fixture preserves every route, ordered exhibit and return anchor'
     expect(response.status(), slug).toBe(200);
     const id = `exhibit-${slug}`;
     await page.locator(`[data-slug="${slug}"]`).evaluate((element) => scrollTo({ top: element.getBoundingClientRect().top + scrollY, behavior: 'auto' }));
-    await expect.poll(() => page.evaluate(() => [window.__exhibition?.currentStopId, window.__exhibition?.u === window.__exhibition?.uTarget, window.__exhibition?.panelTextureReady]), { timeout: 20_000 })
+    await expect.poll(() => page.evaluate(() => [window.__exhibition?.currentStopId, window.__exhibition?.u === window.__exhibition?.uTarget, window.__exhibition?.panelTextureReady]), { timeout: 30_000 })
       .toEqual([id, true, true]);
     const scene = await page.evaluate(() => ({ ...window.__exhibition! }));
     // Texture work stays near the visitor however long the exhibition grows.

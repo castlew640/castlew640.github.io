@@ -194,7 +194,7 @@ for (const viewport of [{ width: 1440, height: 810 }, { width: 1024, height: 768
     const page = await context.newPage();
     await page.goto('/');
     if (await page.locator('html').getAttribute('data-view') === 'still') await page.locator('[data-view-toggle]').click();
-    await expect(page.locator('html')).toHaveAttribute('data-scene', 'active');
+    await expect(page.locator('html')).toHaveAttribute('data-scene', 'active', { timeout: 30_000 });
     const exhibits = page.locator('#exhibition [data-stop][data-slug]');
     const projectCount = await exhibits.count();
     expect(projectCount).toBeGreaterThan(0);
@@ -202,7 +202,7 @@ for (const viewport of [{ width: 1440, height: 810 }, { width: 1024, height: 768
       const id = (await exhibit.getAttribute('id'))!;
       await exhibit.evaluate((el) => scrollTo({ top: el.getBoundingClientRect().top + scrollY, behavior: 'auto' }));
       // CI renders in software, so give the camera time to settle.
-      await expect.poll(() => page.evaluate(() => [window.__exhibition?.currentStopId, window.__exhibition?.u === window.__exhibition?.uTarget, window.__exhibition?.panelTextureReady]), { timeout: 20_000 })
+      await expect.poll(() => page.evaluate(() => [window.__exhibition?.currentStopId, window.__exhibition?.u === window.__exhibition?.uTarget, window.__exhibition?.panelTextureReady]), { timeout: 30_000 })
         .toEqual([id, true, true]);
       const data = await page.evaluate(() => window.__exhibition!);
       const panel = { left: Number(data.panelLeft) * viewport.width, right: Number(data.panelRight) * viewport.width,

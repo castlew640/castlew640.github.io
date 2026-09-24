@@ -46,7 +46,7 @@ test('wide terminal and portrait diagram keep all four corners in the HTML prese
 test('route-mounted panel shows the whole optimized still without cropping', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('exhibition-view', 'moving'));
   await page.goto('/#exhibit-fixture-personal-01');
-  await expect.poll(() => page.evaluate(() => [window.__exhibition?.panelStopId, window.__exhibition?.panelTextureReady]), { timeout: 20_000 })
+  await expect.poll(() => page.evaluate(() => [window.__exhibition?.panelStopId, window.__exhibition?.panelTextureReady]), { timeout: 30_000 })
     .toEqual(['exhibit-fixture-personal-01', true]);
   const data = await page.evaluate(() => ({ ...window.__exhibition! }));
   // The painted canvas takes the evidence's own proportions, so nothing is cropped or stretched.

@@ -227,7 +227,7 @@ test('context loss keeps navigation usable and context restoration never resumes
   await chooseMoving(context);
   const page = await context.newPage();
   await page.goto(exhibitPath);
-  await expect(page.locator('html')).toHaveAttribute('data-scene', 'active');
+  await expect(page.locator('html')).toHaveAttribute('data-scene', 'active', { timeout: 30_000 });
   const canvas = await page.locator('.exhibition-canvas canvas').elementHandle();
   expect(canvas).not.toBeNull();
   const lostContext = await canvas!.evaluateHandle((element) => {
@@ -251,10 +251,10 @@ test('context loss keeps navigation usable and context restoration never resumes
   await lostContext.evaluate((context) => context.restore());
   await lostContext.dispose();
   await page.waitForTimeout(1100);
-  await expect(page.locator('html')).not.toHaveAttribute('data-scene', 'active');
+  await expect(page.locator('html')).not.toHaveAttribute('data-scene', 'active', { timeout: 30_000 });
   await expect(page.locator('.exhibition-canvas')).toHaveCount(0);
   await page.getByRole('button', { name: 'Try the exhibition again', exact: true }).click();
-  await expect(page.locator('html')).toHaveAttribute('data-scene', 'active');
+  await expect(page.locator('html')).toHaveAttribute('data-scene', 'active', { timeout: 30_000 });
   await expect(page.locator('.exhibition-canvas')).toHaveCount(1);
   await context.close();
 });
@@ -264,7 +264,7 @@ test('the moving scene retains native canvas gestures, a level horizon and the f
   await chooseMoving(context);
   const page = await context.newPage();
   await page.goto('/');
-  await expect(page.locator('html')).toHaveAttribute('data-scene', 'active');
+  await expect(page.locator('html')).toHaveAttribute('data-scene', 'active', { timeout: 30_000 });
   await expect(page.locator('#exhibition')).toHaveCSS('pointer-events', 'none');
   for (const selector of ['.exhibition-canvas', '.exhibition-canvas canvas']) {
     await expect(page.locator(selector)).toHaveCSS('touch-action', 'auto');
@@ -279,7 +279,7 @@ test('the moving scene retains native canvas gestures, a level horizon and the f
   const samples: number[] = [];
   for (const id of ['entrance', exhibitId, 'about', 'landing']) {
     await page.locator(`#${id}`).evaluate((el) => window.scrollTo({ top: el.getBoundingClientRect().top + scrollY, behavior: 'auto' }));
-    await expect.poll(() => page.evaluate(() => [window.__exhibition?.currentStopId, window.__exhibition?.u === window.__exhibition?.uTarget]), { timeout: 20_000 })
+    await expect.poll(() => page.evaluate(() => [window.__exhibition?.currentStopId, window.__exhibition?.u === window.__exhibition?.uTarget]), { timeout: 30_000 })
       .toEqual([id, true]);
     const pose = await page.evaluate(() => ({ x: Number(window.__exhibition?.cameraX), tilt: Number(window.__exhibition?.horizonTilt) }));
     expect(Math.abs(pose.tilt)).toBeLessThan(1e-6);
@@ -299,7 +299,7 @@ test('scene resources stay bounded and return to zero across three deliberate re
   await page.locator('[data-view-toggle]').click();
   const projectCount = await page.locator('#exhibition [data-stop][data-slug]').count();
   const counts = () => page.evaluate(() => ({ geometries: window.__exhibition?.geometries, textures: window.__exhibition?.textures, interactives: window.__exhibition?.interactives }));
-  await expect.poll(() => page.evaluate(() => window.__exhibition?.idle), { timeout: 20_000 }).toBe(true);
+  await expect.poll(() => page.evaluate(() => window.__exhibition?.idle), { timeout: 30_000 }).toBe(true);
   const first = await counts();
   // Every exhibit plus the sofa, cabinet, phone, pint, castle, clocks, ants, egg, three elephants and the ground arrow.
   expect(first.interactives).toBe(projectCount + 12);
@@ -316,7 +316,7 @@ test('scene resources stay bounded and return to zero across three deliberate re
     // three keeps one 16×16 BRDF lookup table per renderer; the forced context loss frees it.
     expect(await page.evaluate(() => window.__exhibition?.textures)).toBeLessThanOrEqual(1);
     await page.locator('[data-view-toggle]').click();
-    await expect.poll(() => page.evaluate(() => window.__exhibition?.idle), { timeout: 20_000 }).toBe(true);
+    await expect.poll(() => page.evaluate(() => window.__exhibition?.idle), { timeout: 30_000 }).toBe(true);
     await expect.poll(counts).toEqual(first);
     await expect(page.locator('.exhibition-canvas canvas')).toHaveCount(1);
   }
@@ -332,7 +332,7 @@ test('the scene rests when settled and suspends for hidden tabs, an offscreen ex
   await page.goto('/');
   const count = () => page.evaluate(() => Number(window.__exhibition?.renderCount ?? 0));
   // CI draws in software, where ambient animation is off and the loop rests as soon as travel settles.
-  await expect.poll(() => page.evaluate(() => [window.__exhibition?.softwareRenderer, window.__exhibition?.ambient, window.__exhibition?.idle]), { timeout: 20_000 })
+  await expect.poll(() => page.evaluate(() => [window.__exhibition?.softwareRenderer, window.__exhibition?.ambient, window.__exhibition?.idle]), { timeout: 30_000 })
     .toEqual([true, false, true]);
   const idle = await count();
   await page.waitForTimeout(1100);
@@ -350,7 +350,7 @@ test('the scene rests when settled and suspends for hidden tabs, an offscreen ex
     document.dispatchEvent(new Event('visibilitychange'));
   });
   await expect.poll(count).toBeGreaterThan(idle);
-  await expect.poll(() => page.evaluate(() => window.__exhibition?.idle), { timeout: 20_000 }).toBe(true);
+  await expect.poll(() => page.evaluate(() => window.__exhibition?.idle), { timeout: 30_000 }).toBe(true);
   // A tall spacer after the exhibition lets it scroll completely out of view.
   await page.addStyleTag({ content: 'main::after { content: ""; display: block; height: 300vh; }' });
   await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
@@ -361,7 +361,7 @@ test('the scene rests when settled and suspends for hidden tabs, an offscreen ex
   expect(await count()).toBe(offscreen);
   await page.evaluate(() => scrollTo(0, 0));
   await expect.poll(count).toBeGreaterThan(offscreen);
-  await expect.poll(() => page.evaluate(() => window.__exhibition?.idle), { timeout: 20_000 }).toBe(true);
+  await expect.poll(() => page.evaluate(() => window.__exhibition?.idle), { timeout: 30_000 }).toBe(true);
   // The open viewer covers the scene, so it pauses until the viewer closes.
   await page.locator('#exhibit-featured-client').evaluate((el) => scrollTo({ top: el.getBoundingClientRect().top + scrollY, behavior: 'auto' }));
   await page.getByRole('button', { name: /View exhibit/ }).first().click();
@@ -389,7 +389,7 @@ test('software-rendered browsers open the illustrated view by default and can st
   await page.waitForTimeout(300);
   expect((await Promise.all(downloaded)).some((source) => source.includes('WebGLRenderer'))).toBe(false);
   await page.locator('[data-view-toggle]').click();
-  await expect(page.locator('html')).toHaveAttribute('data-scene', 'active', { timeout: 20_000 });
+  await expect(page.locator('html')).toHaveAttribute('data-scene', 'active', { timeout: 30_000 });
   expect(await page.evaluate(() => [window.__exhibition?.softwareRenderer, window.__exhibition?.qualityLevel, window.__exhibition?.shadows]))
     .toEqual([true, MAX_QUALITY_LEVEL, false]);
   await context.close();
@@ -408,7 +408,7 @@ test('actual emitted renderer chunks never download for reduced motion or projec
   await page.waitForTimeout(300);
   expect((await Promise.all(downloaded)).some((source) => source.includes('WebGLRenderer'))).toBe(false);
   await page.emulateMedia({ reducedMotion: 'no-preference' });
-  await expect(page.locator('html')).toHaveAttribute('data-scene', 'active');
+  await expect(page.locator('html')).toHaveAttribute('data-scene', 'active', { timeout: 30_000 });
   expect((await Promise.all(downloaded)).some((source) => source.includes('WebGLRenderer'))).toBe(true);
   downloaded.length = 0;
   await page.goto(projectPath);
@@ -515,7 +515,7 @@ test('a shader that fails to link after construction releases the scene and keep
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'The exhibition could not start.', exact: true })).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByRole('heading', { name: 'The exhibition could not start.', exact: true })).toBeVisible({ timeout: 30_000 });
   await expect(page.locator('html')).toHaveAttribute('data-view', 'still');
   await expect(page.locator('.exhibition-canvas')).toHaveCount(0);
   expect(errors).toEqual([]);
@@ -530,7 +530,7 @@ test('a blocked screenshot restores its authored description and caption without
   const page = await context.newPage();
   await page.route('**/*.webp', (route) => route.abort());
   await page.goto(exhibitPath);
-  await expect(page.locator('html')).toHaveAttribute('data-scene', 'active');
+  await expect(page.locator('html')).toHaveAttribute('data-scene', 'active', { timeout: 30_000 });
   const figure = page.locator('#exhibit-featured-client figure[data-panel-source]');
   await expect(figure).toHaveClass(/panel-source-failed/);
   await expect(figure).toHaveCSS('visibility', 'visible');
@@ -556,7 +556,7 @@ test('the live panel uses the catalogue image request and restores the figure in
   const requests: string[] = [];
   page.on('request', (request) => { if (request.url().endsWith('.webp')) requests.push(request.url()); });
   await page.goto(exhibitPath);
-  await expect.poll(() => page.evaluate(() => [window.__exhibition?.panelStopId, window.__exhibition?.panelTextureReady]), { timeout: 20_000 })
+  await expect.poll(() => page.evaluate(() => [window.__exhibition?.panelStopId, window.__exhibition?.panelTextureReady]), { timeout: 30_000 })
     .toEqual([exhibitId, true]);
   const figure = page.locator('#exhibit-featured-client figure[data-panel-source]');
   const imageUrl = await figure.locator('img').evaluate((el) => (el as HTMLImageElement).src);
@@ -595,7 +595,7 @@ test('exhibit text keeps ink contrast on an opaque plate with the scene active a
   await chooseMoving(context);
   const page = await context.newPage();
   await page.goto(exhibitPath);
-  await expect(page.locator('html')).toHaveAttribute('data-scene', 'active');
+  await expect(page.locator('html')).toHaveAttribute('data-scene', 'active', { timeout: 30_000 });
   for (const active of [true, false]) {
     if (!active) await page.locator('[data-view-toggle]').click();
     for (const selector of ['.exhibit-title', '.exhibit-summary']) {

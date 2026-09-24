@@ -40,8 +40,9 @@ const destinations = ['Projects', 'About', 'Resume', 'Contact'];
           let choice = null;
           try { choice = localStorage.getItem('exhibition-view'); } catch { /* storage blocked */ }
           if (choice === 'still' || choice === 'moving') { root.dataset.view = choice; return; }
-          if (matchMedia('(prefers-reduced-motion: reduce)').matches
-            || matchMedia('(max-width: 767px), (pointer: coarse) and (max-height: 480px)').matches) { root.dataset.view = 'still'; return; }
+          const reason = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'reduced-motion'
+            : matchMedia('(max-width: 767px), (pointer: coarse) and (max-height: 480px)').matches ? 'phone' : '';
+          if (reason) { root.dataset.view = 'still'; root.dataset.viewReason = reason; return; }
           let software = false;
           try {
             const gl = document.createElement('canvas').getContext('webgl2') || document.createElement('canvas').getContext('webgl');
@@ -54,6 +55,7 @@ const destinations = ['Projects', 'About', 'Resume', 'Contact'];
           } catch { /* the scene reports its own failure */ }
           root.dataset.graphics = software ? 'software' : 'hardware';
           root.dataset.view = software ? 'still' : 'moving';
+          if (software) root.dataset.viewReason = 'graphics';
         })();
       </script>
     )}

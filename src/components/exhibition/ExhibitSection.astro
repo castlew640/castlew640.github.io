@@ -46,7 +46,7 @@ const evidenceCount = clientData ? clientData.screenshots.length : personalData!
         <ul class="contract-labels"><li>{personalData!.format === 'deep-dive' ? 'Technical deep dive' : personalData!.format === 'showcase' ? 'Project showcase' : 'Case study'}</li></ul>
       )}
       <div class="exhibit-actions">
-        <button type="button" class="view-exhibit" data-view-exhibit={slug} hidden>View exhibit{evidenceCount > 1 ? ` (${evidenceCount} images)` : ''}</button>
+        <button type="button" class="view-exhibit" data-view-exhibit={slug}>View exhibit{evidenceCount > 1 ? ` (${evidenceCount} images)` : ''}</button>
         <a class="text-link exhibit-link" href={`/projects/${slug}/`}>Read case study <span>→</span></a>
       </div>
     </div>

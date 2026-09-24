@@ -56,9 +56,6 @@ export function start(): void {
   toggle.className = 'view-toggle';
   toggle.dataset.viewToggle = '';
   preferences.append(toggle);
-  const notice = document.createElement('p');
-  notice.className = 'view-notice';
-  document.querySelector('main')?.prepend(notice);
   let explicitChoice = readStoredChoice();
   let retryUsed = false;
   const failure = document.createElement('div');
@@ -157,13 +154,10 @@ export function start(): void {
       ? [part('Enter ', false), part('3D', true), part(' exhibition', false)]
       : [part('Use illustrated ', false), part('still', true), part(' view', false)]));
     toggle.setAttribute('aria-pressed', String(mode === 'still'));
+    // The notice is in the page from the start; naming the reason reveals it.
     const reason = defaultViewReason();
-    notice.textContent = reason === 'phone'
-      ? 'Illustrated still view is on. You can enter the 3D exhibition.'
-      : reason === 'graphics'
-        ? 'Illustrated still view is on because this browser draws 3D without graphics acceleration. You can still enter the 3D exhibition.'
-        : 'Still view is on because your device requests reduced motion.';
-    notice.hidden = !(mode === 'still' && explicitChoice === null && reason !== 'none');
+    if (mode === 'still' && explicitChoice === null && reason !== 'none') root.dataset.viewReason = reason;
+    else delete root.dataset.viewReason;
     if (mode === 'still') {
       sceneGeneration++;
       sceneHandle?.dispose();

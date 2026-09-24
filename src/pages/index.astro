@@ -15,6 +15,12 @@ const projects = await getPublishedProjects();
 ---
 
 <BaseLayout exhibition>
+  <!-- Rendered up front and revealed before first paint, so the notice never shifts the page. -->
+  <p class="view-notice" data-view-notice>
+    <span data-reason="phone">Illustrated still view is on. You can enter the 3D exhibition.</span>
+    <span data-reason="reduced-motion">Still view is on because your device requests reduced motion.</span>
+    <span data-reason="graphics">Illustrated still view is on because this browser draws 3D without graphics acceleration. You can still enter the 3D exhibition.</span>
+  </p>
   <ExhibitionShell>
   <StopSection id="entrance" class="introduction" labelledBy="introduction-title" name="Entrance">
     <div class="placard placard-hero">

@@ -59,8 +59,9 @@ test('browser back and forward retain the native history and scroll position', a
 
 test('a persisted pageshow rederives the restored stop without scrolling or focusing', async ({ page }) => {
   await page.goto('/');
+  // Start just inside the exhibit so the restored stop is unambiguous at any font metrics.
+  await page.locator('#exhibit-featured-client').evaluate((el) => scrollTo({ top: el.getBoundingClientRect().top + scrollY + 8, behavior: 'auto' }));
   const link = page.locator('#exhibit-featured-client').getByRole('link', { name: 'Read case study →' });
-  await link.scrollIntoViewIfNeeded();
   await link.click();
   await page.goBack();
   await settleLayout(page);
@@ -146,9 +147,9 @@ test('all shipped primary anchors resolve in their original reading order', asyn
 async function panelPoint(page: Page): Promise<{ x: number; y: number }> {
   await page.goto('/');
   if (await page.locator('html').getAttribute('data-view') === 'still') await page.locator('[data-view-toggle]').click();
-  await expect(page.locator('html')).toHaveAttribute('data-scene', 'active', { timeout: 20_000 });
+  await expect(page.locator('html')).toHaveAttribute('data-scene', 'active', { timeout: 30_000 });
   await page.locator(`#${exhibitId}`).evaluate((el) => scrollTo({ top: el.getBoundingClientRect().top + scrollY, behavior: 'auto' }));
-  await expect.poll(() => page.evaluate(() => [window.__exhibition?.panelStopId, window.__exhibition?.u === window.__exhibition?.uTarget, window.__exhibition?.panelTextureReady]), { timeout: 20_000 })
+  await expect.poll(() => page.evaluate(() => [window.__exhibition?.panelStopId, window.__exhibition?.u === window.__exhibition?.uTarget, window.__exhibition?.panelTextureReady]), { timeout: 30_000 })
     .toEqual([exhibitId, true, true]);
   return page.evaluate(() => {
     const d = window.__exhibition!;

@@ -1,6 +1,6 @@
 # Surreal Portfolio
 
-William Castle’s portfolio presents real software work as a winding exhibition. Every project also has an ordinary, direct HTML case study. Phones open an illustrated still view first; visitors can choose the optional 3D scene.
+William Castle’s portfolio presents real software work as a Dalí-inspired 3D exhibition: a checkerboard walk through a golden desert, with each project in a gilded frame, melting clocks that keep the visitor's real time, and an in-place viewer for every screenshot. Every project also has an ordinary, direct HTML case study. Phones, reduced-motion preferences and browsers without graphics acceleration open an illustrated still view first; visitors can choose the 3D scene from the bottom bar.
 
 ## Run locally
 

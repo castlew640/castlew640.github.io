@@ -5,11 +5,14 @@ import '../styles/global.css';
 interface Props {
   title?: string;
   description?: string;
+  /** The home exhibition chooses its view before first paint to avoid a layout flash. */
+  exhibition?: boolean;
 }
 
 const {
   title = `${profile.displayName} — Software & solutions`,
   description = profile.introduction,
+  exhibition = false,
 } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const destinations = ['Projects', 'About', 'Resume', 'Contact'];
@@ -28,6 +31,32 @@ const destinations = ['Projects', 'About', 'Resume', 'Contact'];
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <title>{title}</title>
+    {exhibition && (
+      <script is:inline>
+        // Mirrors policy.ts: an explicit choice wins, then reduced motion, the
+        // phone default, then graphics drawn without hardware acceleration.
+        (() => {
+          const root = document.documentElement;
+          let choice = null;
+          try { choice = localStorage.getItem('exhibition-view'); } catch { /* storage blocked */ }
+          if (choice === 'still' || choice === 'moving') { root.dataset.view = choice; return; }
+          if (matchMedia('(prefers-reduced-motion: reduce)').matches
+            || matchMedia('(max-width: 767px), (pointer: coarse) and (max-height: 480px)').matches) { root.dataset.view = 'still'; return; }
+          let software = false;
+          try {
+            const gl = document.createElement('canvas').getContext('webgl2') || document.createElement('canvas').getContext('webgl');
+            if (gl) {
+              const info = gl.getExtension('WEBGL_debug_renderer_info');
+              software = /swiftshader|llvmpipe|softpipe|software|basic render/i.test(String(gl.getParameter(info ? info.UNMASKED_RENDERER_WEBGL : gl.RENDERER)));
+              const lose = gl.getExtension('WEBGL_lose_context');
+              if (lose) lose.loseContext();
+            }
+          } catch { /* the scene reports its own failure */ }
+          root.dataset.graphics = software ? 'software' : 'hardware';
+          root.dataset.view = software ? 'still' : 'moving';
+        })();
+      </script>
+    )}
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>

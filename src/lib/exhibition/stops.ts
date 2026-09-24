@@ -1,25 +1,19 @@
-interface StopTable {
-  stops: { id: string; z: number }[];
-  thresholdArchZ: number;
-  portalZ: (index: number) => number;
-  landingArchZ: number;
-}
+import type { StopTable } from './types';
+
+// Stations are metres along the walk. Each value depends only on the stops
+// before it, so appending a project never moves an earlier exhibit (GROW-04).
+export const FIRST_EXHIBIT_STATION = 34;
+export const EXHIBIT_SPACING = 30;
+export const ABOUT_GAP = 32;
+export const LANDING_GAP = 30;
 
 export function buildStopTable(slugs: string[]): StopTable {
   const stops = [
     { id: 'entrance', z: 0 },
-    ...slugs.map((slug, index) => ({ id: `exhibit-${slug}`, z: -18 - 18 * index })),
+    ...slugs.map((slug, index) => ({ id: `exhibit-${slug}`, z: -(FIRST_EXHIBIT_STATION + EXHIBIT_SPACING * index) })),
   ];
-  const lastExhibitZ = stops[stops.length - 1].z;
-  stops.push(
-    { id: 'about', z: lastExhibitZ - 18 },
-    { id: 'landing', z: lastExhibitZ - 28 },
-  );
-
-  return {
-    stops,
-    thresholdArchZ: -12,
-    portalZ: (index: number): number => stops[index].z - 12,
-    landingArchZ: stops[stops.length - 1].z - 18,
-  };
+  const lastExhibit = slugs.length > 0 ? -stops[stops.length - 1].z : FIRST_EXHIBIT_STATION - ABOUT_GAP;
+  const about = lastExhibit + ABOUT_GAP;
+  stops.push({ id: 'about', z: -about }, { id: 'landing', z: -(about + LANDING_GAP) });
+  return { stops };
 }

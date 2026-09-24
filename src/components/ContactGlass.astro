@@ -1,10 +1,27 @@
 <span class="contact-glass" data-contact-glass data-filled="false" aria-hidden="true">
-  <svg viewBox="0 0 44 44" fill="none" focusable="false" aria-hidden="true">
-    <defs><clipPath id="contact-glass-inside"><path d="M14 13h16l-2.3 23H16.3L14 13Z" /></clipPath></defs>
-    <path class="contact-glass-fill" d="M13 16h18v22H13z" fill="#b7791f" clip-path="url(#contact-glass-inside)" />
-    <path d="M12 10h20l-2.5 27h-15L12 10Z" stroke="#4e5144" stroke-width="1.3" />
-    <path d="M10 10h24M17 37h10M17 7h10" stroke="#8b877b" stroke-width="1" />
-    <path d="M8 22h4m20 0h4M22 3v4" stroke="#b9b3a4" stroke-width="1" />
+  <svg viewBox="0 0 64 84" fill="none" focusable="false" aria-hidden="true">
+    <defs>
+      <clipPath id="contact-glass-inside"><path d="M15.5 10c-1 3-2.6 6.4-1.8 10L20.6 73c.3 1.6 1.4 2.4 3 2.4h16.8c1.6 0 2.7-.8 3-2.4l6.9-53c.8-3.6-.8-7-1.8-10z" /></clipPath>
+      <linearGradient id="contact-glass-beer" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#e6a23c" />
+        <stop offset="1" stop-color="#b0660f" />
+      </linearGradient>
+    </defs>
+    <ellipse class="contact-glass-coaster" cx="32" cy="79" rx="27" ry="4" fill="#e6dac2" stroke="#8b877b" stroke-width="1" />
+    <g clip-path="url(#contact-glass-inside)">
+      <rect class="contact-glass-fill" x="8" y="16" width="48" height="62" fill="url(#contact-glass-beer)" />
+      <g class="contact-glass-bubbles" fill="#fbe0a6">
+        <circle cx="27" cy="66" r="1.1" />
+        <circle cx="35" cy="58" r=".9" />
+        <circle cx="30" cy="46" r="1" />
+        <circle cx="38" cy="70" r=".8" />
+      </g>
+      <path class="contact-glass-foam" d="M10 12h44v8c-3 2-6 2-9 0-3 2-6 2-9 0-3 2-6 2-9 0-3 2-6 2-9 0-3 2-6 2-8 0z" fill="#f7f0e1" />
+    </g>
+    <path class="contact-glass-drip" d="M48.6 13c1.8 2.4 2.1 5.6 1.4 8.6-.4 1.8-2.4 1.8-2.6 0-.3-2.4.1-5.4 1.2-8.6z" fill="#f7f0e1" stroke="#8b877b" stroke-width=".6" />
+    <path d="M14 8c-1.4 3.4-3 7.6-2.2 12L19 73.4c.4 2.4 2.2 3.8 4.6 3.8h16.8c2.4 0 4.2-1.4 4.6-3.8L52.2 20c.8-4.4-.8-8.6-2.2-12z" stroke="#4e5144" stroke-width="1.4" stroke-linejoin="round" />
+    <path d="M13 8h38" stroke="#4e5144" stroke-width="1.4" stroke-linecap="round" />
+    <path d="M18.5 24 23 66" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".7" />
   </svg>
 </span>
 
@@ -16,7 +33,7 @@
     button.className = drawing.className;
     button.dataset.contactGlass = '';
     button.dataset.filled = 'false';
-    button.setAttribute('aria-label', 'Fill glass');
+    button.setAttribute('aria-label', 'Pour a pint');
     button.setAttribute('aria-pressed', 'false');
     button.append(...drawing.childNodes);
     drawing.replaceWith(button);
@@ -24,16 +41,32 @@
       const filled = button.dataset.filled !== 'true';
       button.dataset.filled = String(filled);
       button.setAttribute('aria-pressed', String(filled));
-      button.setAttribute('aria-label', filled ? 'Empty glass' : 'Fill glass');
+      button.setAttribute('aria-label', filled ? 'Empty the pint' : 'Pour a pint');
     });
   }
 </script>
 
 <style is:global>
-  [data-contact-glass] { display: inline-grid; place-items: center; width: 44px; height: 44px; flex: none; padding: 0; }
+  [data-contact-glass] { display: inline-grid; place-items: end center; width: 64px; height: 84px; flex: none; padding: 0; }
   button[data-contact-glass] { border: 0; background: transparent; color: inherit; cursor: pointer; }
-  [data-contact-glass] svg { width: 44px; height: 44px; }
-  [data-contact-glass] .contact-glass-fill { transform: scaleY(0); transform-origin: 50% 100%; transition: transform 220ms ease-out; }
+  [data-contact-glass] svg { width: 64px; height: 84px; overflow: visible; }
+  [data-contact-glass] .contact-glass-fill { transform: scaleY(0); transform-origin: 50% 100%; transform-box: fill-box; transition: transform 700ms cubic-bezier(.3, .7, .3, 1); }
+  [data-contact-glass] :is(.contact-glass-foam, .contact-glass-drip, .contact-glass-bubbles) { opacity: 0; transition: opacity 240ms ease-out 480ms; }
+  [data-contact-glass] .contact-glass-drip { transform-origin: 50% 0; transform-box: fill-box; }
   [data-contact-glass][data-filled="true"] .contact-glass-fill { transform: scaleY(1); }
-  @media (prefers-reduced-motion: reduce) { [data-contact-glass] .contact-glass-fill { transition: none; } }
+  [data-contact-glass][data-filled="true"] :is(.contact-glass-foam, .contact-glass-drip, .contact-glass-bubbles) { opacity: 1; }
+  [data-contact-glass][data-filled="true"] .contact-glass-drip { animation: glass-drip 3.2s ease-in 900ms infinite; }
+  [data-contact-glass][data-filled="true"] .contact-glass-bubbles circle { animation: glass-bubble 2.4s linear infinite; }
+  [data-contact-glass][data-filled="true"] .contact-glass-bubbles circle:nth-child(2) { animation-delay: -.7s; }
+  [data-contact-glass][data-filled="true"] .contact-glass-bubbles circle:nth-child(3) { animation-delay: -1.3s; }
+  [data-contact-glass][data-filled="true"] .contact-glass-bubbles circle:nth-child(4) { animation-delay: -1.9s; }
+  button[data-contact-glass]:hover .contact-glass-coaster { fill: #eadfca; }
+  @keyframes glass-bubble { from { transform: translateY(0); opacity: .9; } to { transform: translateY(-46px); opacity: 0; } }
+  @keyframes glass-drip { 0%, 30% { transform: scaleY(1); } 70% { transform: scaleY(1.9); } 100% { transform: scaleY(1); } }
+  @media (max-width: 30rem) {
+    [data-contact-glass], [data-contact-glass] svg { width: 52px; height: 68px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-contact-glass] :is(.contact-glass-fill, .contact-glass-foam, .contact-glass-drip, .contact-glass-bubbles) { transition: none; }
+  }
 </style>

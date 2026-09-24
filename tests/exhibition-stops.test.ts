@@ -5,40 +5,31 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { buildStopTable } from '../src/lib/exhibition/stops.ts';
 import { progressFor } from '../src/scripts/exhibition/scroll.ts';
-import { routeBounds, sampleRoute } from '../src/scripts/exhibition/scene/path.ts';
 
 const slugs = () => ['featured-client', 'second-project', 'third-project'];
 
-test('one published project follows the approved stop and architecture table', () => {
+test('one published project follows the approved stop table', () => {
   const table = buildStopTable(slugs().slice(0, 1));
-  assert.deepEqual(table.stops.map((stop) => stop.z), [0, -18, -36, -46]);
-  assert.equal(table.thresholdArchZ, -12);
-  assert.equal(table.portalZ(1), -30);
-  assert.equal(table.landingArchZ, -64);
+  assert.deepEqual(table.stops.map((stop) => stop.id), ['entrance', 'exhibit-featured-client', 'about', 'landing']);
+  assert.deepEqual(table.stops.map((stop) => stop.z), [0, -34, -66, -96]);
 });
 
 test('an empty collection keeps the entrance and destination without an invented exhibit', () => {
   const table = buildStopTable([]);
   assert.deepEqual(table.stops.map((stop) => stop.id), ['entrance', 'about', 'landing']);
-  assert.deepEqual(table.stops.map((stop) => stop.z), [0, -18, -28]);
+  assert.deepEqual(table.stops.map((stop) => stop.z), [0, -34, -64]);
   assert.equal(table.stops.some((stop) => stop.id.startsWith('exhibit-')), false);
 });
 
-test('three published projects retain eighteen metre exhibit spacing', () => {
+test('three published projects retain thirty metre exhibit spacing', () => {
   const table = buildStopTable(slugs());
-  assert.deepEqual(table.stops.map((stop) => stop.z), [0, -18, -36, -54, -72, -82]);
+  assert.deepEqual(table.stops.map((stop) => stop.z), [0, -34, -64, -94, -126, -156]);
 });
 
-test('GROW-04 invariance keeps earlier stops and portals fixed when projects are appended', () => {
+test('GROW-04 invariance keeps earlier stops fixed when projects are appended', () => {
   const original = buildStopTable(slugs().slice(0, 1));
   const expanded = buildStopTable(slugs());
-  assert.equal(expanded.stops[1].z, original.stops[1].z);
-  assert.equal(expanded.portalZ(1), original.portalZ(1));
-  assert.equal(expanded.stops[1].id, original.stops[1].id);
-  const originalFrame = sampleRoute(-original.stops[1].z, routeBounds(-original.stops.at(-1)!.z));
-  const expandedFrame = sampleRoute(-expanded.stops[1].z, routeBounds(-expanded.stops.at(-1)!.z));
-  assert.deepEqual(expandedFrame.position.toArray(), originalFrame.position.toArray());
-  assert.deepEqual(expandedFrame.forward.toArray(), originalFrame.forward.toArray());
+  assert.deepEqual(expanded.stops.slice(0, 2), original.stops.slice(0, 2));
 });
 
 test('exhibit ids preserve the supplied published slug order', () => {

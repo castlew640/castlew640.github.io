@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
-import { createQualityPolicy, qualityFor } from '../src/scripts/exhibition/scene/quality';
+import { createQualityPolicy, MAX_QUALITY_LEVEL, qualityFor } from '../src/scripts/exhibition/scene/quality';
+import { fovFor } from '../src/scripts/exhibition/scene/rig';
+import { chooseMoving, pretendHardwareGraphics } from './support/views';
 
 const exhibitId = 'exhibit-featured-client';
 const exhibitPath = `/#${exhibitId}`;
@@ -89,6 +91,7 @@ test('invalid stored choices cannot override the device motion preference', asyn
 
 test('changing the device preference switches to still view without an explicit override', async ({ browser }) => {
   const context = await browser.newContext({ reducedMotion: 'no-preference' });
+  await pretendHardwareGraphics(context);
   const page = await context.newPage();
   await page.goto(exhibitPath);
   const toggle = page.locator('[data-view-toggle]');
@@ -221,8 +224,9 @@ test('unavailable webgl keeps the complete catalogue and offers one deliberate r
 
 test('context loss keeps navigation usable and context restoration never resumes the scene', async ({ browser }) => {
   const context = await browser.newContext({ reducedMotion: 'no-preference' });
+  await chooseMoving(context);
   const page = await context.newPage();
-  await page.goto('/');
+  await page.goto(exhibitPath);
   await expect(page.locator('html')).toHaveAttribute('data-scene', 'active');
   const canvas = await page.locator('.exhibition-canvas canvas').elementHandle();
   expect(canvas).not.toBeNull();
@@ -255,9 +259,9 @@ test('context loss keeps navigation usable and context restoration never resumes
   await context.close();
 });
 
-test('the moving scene retains native canvas gestures and the level route-frame light contract', async ({ browser }) => {
+test('the moving scene retains native canvas gestures, a level horizon and the fitted field of view', async ({ browser }) => {
   const context = await browser.newContext({ reducedMotion: 'no-preference' });
-  await context.addInitScript(() => localStorage.setItem('exhibition-view', 'moving'));
+  await chooseMoving(context);
   const page = await context.newPage();
   await page.goto('/');
   await expect(page.locator('html')).toHaveAttribute('data-scene', 'active');
@@ -269,72 +273,67 @@ test('the moving scene retains native canvas gestures and the level route-frame 
   await expect(page.locator('canvas')).toHaveAttribute('aria-hidden', 'true');
   for (const viewport of [{ width: 1440, height: 810 }, { width: 390, height: 664 }, { width: 844, height: 390 }]) {
     await page.setViewportSize(viewport);
-    const expected = Math.max(36, Math.min(68, 2 * Math.atan(Math.tan(32 * Math.PI / 180) / (viewport.width / viewport.height)) * 180 / Math.PI));
-    await expect.poll(() => page.evaluate(() => window.__exhibition?.fovY)).toBeCloseTo(expected, 2);
+    const expected = fovFor(viewport.width / viewport.height) * 180 / Math.PI;
+    await expect.poll(() => page.evaluate(() => window.__exhibition?.fovY)).toBeCloseTo(expected, 4);
   }
-  const routeSamples: { x: number; y: number }[] = [];
-  const stopCount = await page.locator('#exhibition [data-stop]').count();
-  const landingStation = (stopCount - 3) * 18 + 28;
-  for (const [id, station] of [['entrance', 0], [exhibitId, 18], ['landing', landingStation]] as const) {
+  const samples: number[] = [];
+  for (const id of ['entrance', exhibitId, 'about', 'landing']) {
     await page.locator(`#${id}`).evaluate((el) => window.scrollTo({ top: el.getBoundingClientRect().top + scrollY, behavior: 'auto' }));
-    await expect.poll(() => page.evaluate(() => Number(window.__exhibition?.station))).toBeCloseTo(station, 1);
-    const pose = await page.evaluate(() => ({
-      stopId: window.__exhibition?.currentStopId,
-      x: Number(window.__exhibition?.cameraX), y: Number(window.__exhibition?.cameraY),
-      zeroPitch: window.__exhibition?.cameraRotationX === 0,
-      zeroRoll: window.__exhibition?.cameraRoll === 0,
-      up: [window.__exhibition?.cameraUpX, window.__exhibition?.cameraUpY, window.__exhibition?.cameraUpZ],
-    }));
-    expect(pose).toMatchObject({ stopId: id, zeroPitch: true, zeroRoll: true, up: [0, 1, 0] });
-    routeSamples.push({ x: pose.x, y: pose.y });
+    await expect.poll(() => page.evaluate(() => [window.__exhibition?.currentStopId, window.__exhibition?.u === window.__exhibition?.uTarget]), { timeout: 20_000 })
+      .toEqual([id, true]);
+    const pose = await page.evaluate(() => ({ x: Number(window.__exhibition?.cameraX), tilt: Number(window.__exhibition?.horizonTilt) }));
+    expect(Math.abs(pose.tilt)).toBeLessThan(1e-6);
+    samples.push(pose.x);
   }
-  expect(routeSamples.some(({ x }) => Math.abs(x) > 0.01)).toBe(true);
-  expect(routeSamples.some(({ y }) => Math.abs(y - 1.62) > 0.01)).toBe(true);
-  expect(await page.evaluate(() => ({ lights: window.__exhibition?.lights, shadowLights: window.__exhibition?.shadowLights }))).toEqual({ lights: 3, shadowLights: 1 });
+  // The walk meanders: the visitor does not travel down one straight axis.
+  expect(Math.max(...samples) - Math.min(...samples)).toBeGreaterThan(1);
   await context.close();
 });
 
-test('scene resources and css-pixel ink stay bounded across three deliberate remounts', async ({ browser }) => {
+test('scene resources stay bounded and return to zero across three deliberate remounts', async ({ browser }) => {
+  // Four software-rendered scene mounts.
+  test.setTimeout(150_000);
   const context = await browser.newContext({ reducedMotion: 'no-preference', deviceScaleFactor: 2, viewport: { width: 390, height: 844 } });
   const page = await context.newPage();
   await page.goto('/');
   await page.locator('[data-view-toggle]').click();
   const projectCount = await page.locator('#exhibition [data-stop][data-slug]').count();
-  const counts = () => page.evaluate(() => ({ materials: window.__exhibition?.materials, geometries: window.__exhibition?.geometries, textures: window.__exhibition?.textures }));
-  await expect.poll(() => page.evaluate(() => window.__exhibition?.renderCount ?? 0)).toBeGreaterThan(0);
+  const counts = () => page.evaluate(() => ({ geometries: window.__exhibition?.geometries, textures: window.__exhibition?.textures, interactives: window.__exhibition?.interactives }));
+  await expect.poll(() => page.evaluate(() => window.__exhibition?.idle), { timeout: 20_000 }).toBe(true);
   const first = await counts();
-  expect(first.materials).toBeLessThanOrEqual(17 + projectCount);
-  expect(first.materials).toBeGreaterThanOrEqual(8 + projectCount);
-  expect(await page.evaluate(() => window.__exhibition?.pickablePanels)).toBe(projectCount);
-  expect(await page.evaluate(() => Number(window.__exhibition?.lineSegments))).toBeLessThanOrEqual(1200 + 400 * Math.max(0, projectCount - 1));
-  expect(await page.evaluate(() => window.__exhibition?.walkwayObstructions)).toBe(0);
-  expect(await page.evaluate(() => window.__exhibition?.pixelRatio)).toBe(1.75);
-  expect(await page.evaluate(() => Object.values(window.__exhibition!).every((value) =>
-    typeof value === 'number' || typeof value === 'boolean' || typeof value === 'string'))).toBe(true);
-  expect(await page.evaluate(() => Array.from({ length: 6 }, (_, i) => window.__exhibition![`ink${i}Width`]))).toEqual([1.4, 1.3, 1, 1, 1, 1.4]);
-  expect(await page.evaluate(() => Array.from({ length: 6 }, (_, i) => window.__exhibition![`ink${i}Color`]))).toEqual([0x4e5144, 0x8b877b, 0xb9b3a4, 0xb9b3a4, 0x656256, 0x8e4935]);
+  // Every exhibit plus the sofa, cabinet, phone, pint, castle, clocks, ants, egg, three elephants and the ground arrow.
+  expect(first.interactives).toBe(projectCount + 12);
+  expect(Number(first.textures)).toBeLessThanOrEqual(8 + 2 * projectCount);
+  expect(Number(first.geometries)).toBeLessThanOrEqual(120 + 12 * projectCount);
+  const debug = await page.evaluate(() => window.__exhibition!);
+  expect(Object.values(debug).every((value) => ['number', 'boolean', 'string'].includes(typeof value))).toBe(true);
+  expect(debug.pixelRatio).toBe(qualityFor(390, 2, Number(debug.qualityLevel)).pixelRatio);
   for (let i = 0; i < 3; i++) {
     await page.locator('[data-view-toggle]').click();
     await expect(page.locator('.exhibition-canvas')).toHaveCount(0);
     expect(await page.evaluate(() => window.__exhibition?.mounted)).toBe(false);
     expect(await page.evaluate(() => window.__exhibition?.geometries)).toBe(0);
+    // three keeps one 16×16 BRDF lookup table per renderer; the forced context loss frees it.
+    expect(await page.evaluate(() => window.__exhibition?.textures)).toBeLessThanOrEqual(1);
     await page.locator('[data-view-toggle]').click();
+    await expect.poll(() => page.evaluate(() => window.__exhibition?.idle), { timeout: 20_000 }).toBe(true);
     await expect.poll(counts).toEqual(first);
     await expect(page.locator('.exhibition-canvas canvas')).toHaveCount(1);
   }
   await page.setViewportSize({ width: 844, height: 390 });
   await expect.poll(() => page.evaluate(() => window.__exhibition?.cssWidth)).toBe(844);
-  expect(await page.evaluate(() => window.__exhibition?.inkScreenSpace && window.__exhibition?.inkCssResolution)).toBe(true);
   await context.close();
 });
 
-test('the scene idles and independently suspends for hidden tabs and offscreen exhibition', async ({ browser }) => {
+test('the scene rests when settled and suspends for hidden tabs, an offscreen exhibition and the open viewer', async ({ browser }) => {
   const context = await browser.newContext({ reducedMotion: 'no-preference' });
+  await chooseMoving(context);
   const page = await context.newPage();
   await page.goto('/');
   const count = () => page.evaluate(() => Number(window.__exhibition?.renderCount ?? 0));
-  await expect.poll(count).toBeGreaterThan(0);
-  await page.waitForTimeout(1100);
+  // CI draws in software, where ambient animation is off and the loop rests as soon as travel settles.
+  await expect.poll(() => page.evaluate(() => [window.__exhibition?.softwareRenderer, window.__exhibition?.ambient, window.__exhibition?.idle]), { timeout: 20_000 })
+    .toEqual([true, false, true]);
   const idle = await count();
   await page.waitForTimeout(1100);
   expect(await count()).toBe(idle);
@@ -343,32 +342,62 @@ test('the scene idles and independently suspends for hidden tabs and offscreen e
     document.dispatchEvent(new Event('visibilitychange'));
     scrollBy(0, 200);
   });
-  await page.waitForTimeout(200);
+  await page.waitForTimeout(300);
   expect(await count()).toBe(idle);
   expect(await page.evaluate(() => window.__exhibition?.suspended)).toBe(true);
   await page.evaluate(() => {
     Object.defineProperty(document, 'hidden', { configurable: true, value: false });
     document.dispatchEvent(new Event('visibilitychange'));
   });
-  await expect.poll(count).toBe(idle + 1);
-  // A tall footer puts the scrolling exhibition completely outside the viewport.
-  await page.addStyleTag({ content: '.site-footer { min-height: 200vh; }' });
+  await expect.poll(count).toBeGreaterThan(idle);
+  await expect.poll(() => page.evaluate(() => window.__exhibition?.idle), { timeout: 20_000 }).toBe(true);
+  // A tall spacer after the exhibition lets it scroll completely out of view.
+  await page.addStyleTag({ content: 'main::after { content: ""; display: block; height: 300vh; }' });
   await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
   await expect.poll(() => page.evaluate(() => window.__exhibition?.suspended)).toBe(true);
   const offscreen = await count();
-  await page.evaluate(() => {
-    document.dispatchEvent(new Event('visibilitychange'));
-    scrollBy(0, -10);
-  });
-  await page.waitForTimeout(200);
+  await page.evaluate(() => scrollBy(0, -10));
+  await page.waitForTimeout(300);
   expect(await count()).toBe(offscreen);
   await page.evaluate(() => scrollTo(0, 0));
-  await expect.poll(count).toBe(offscreen + 1);
+  await expect.poll(count).toBeGreaterThan(offscreen);
+  await expect.poll(() => page.evaluate(() => window.__exhibition?.idle), { timeout: 20_000 }).toBe(true);
+  // The open viewer covers the scene, so it pauses until the viewer closes.
+  await page.locator('#exhibit-featured-client').evaluate((el) => scrollTo({ top: el.getBoundingClientRect().top + scrollY, behavior: 'auto' }));
+  await page.getByRole('button', { name: /View exhibit/ }).first().click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  expect(await page.evaluate(() => [window.__exhibition?.paused, window.__exhibition?.running])).toEqual([true, false]);
+  const paused = await count();
+  await page.waitForTimeout(500);
+  expect(await count()).toBe(paused);
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toBeHidden();
+  expect(await page.evaluate(() => window.__exhibition?.paused)).toBe(false);
+  await context.close();
+});
+
+test('software-rendered browsers open the illustrated view by default and can still enter the scene', async ({ browser }) => {
+  const context = await browser.newContext({ reducedMotion: 'no-preference', viewport: { width: 1440, height: 900 } });
+  const page = await context.newPage();
+  const downloaded: Promise<string>[] = [];
+  page.on('response', (response) => { if (response.url().endsWith('.js')) downloaded.push(response.text()); });
+  await page.goto('/');
+  // CI's Chromium draws WebGL with SwiftShader.
+  await expect(page.locator('html')).toHaveAttribute('data-graphics', 'software');
+  await expect(page.locator('html')).toHaveAttribute('data-view', 'still');
+  await expect(page.getByText(/draws 3D without graphics acceleration/)).toBeVisible();
+  await page.waitForTimeout(300);
+  expect((await Promise.all(downloaded)).some((source) => source.includes('WebGLRenderer'))).toBe(false);
+  await page.locator('[data-view-toggle]').click();
+  await expect(page.locator('html')).toHaveAttribute('data-scene', 'active', { timeout: 20_000 });
+  expect(await page.evaluate(() => [window.__exhibition?.softwareRenderer, window.__exhibition?.qualityLevel, window.__exhibition?.shadows]))
+    .toEqual([true, MAX_QUALITY_LEVEL, false]);
   await context.close();
 });
 
 test('actual emitted renderer chunks never download for reduced motion or project routes', async ({ browser }) => {
   const context = await browser.newContext({ reducedMotion: 'reduce' });
+  await pretendHardwareGraphics(context);
   const page = await context.newPage();
   const downloaded: Promise<string>[] = [];
   page.on('response', (response) => {
@@ -389,26 +418,30 @@ test('actual emitted renderer chunks never download for reduced motion or projec
   await context.close();
 });
 
-test('sustained measured cost degrades quality in order and fast frames reverse each step', () => {
-  const policy = createQualityPolicy();
-  expect(qualityFor(1440, 3)).toEqual({ level: 0, reflection: true, shadowMapSize: 1024, pixelRatio: 2, shadows: true });
+test('sustained slow frames step quality down in order and long fast runs step it back up', () => {
+  expect(qualityFor(1440, 3)).toEqual({ level: 0, pixelRatio: 2, shadows: true, shadowMapSize: 2048 });
   expect(qualityFor(390, 3).pixelRatio).toBe(1.75);
-  for (let level = 1; level <= 4; level++) {
-    for (let frame = 0; frame < 11; frame++) expect(policy.sample(35)).toBe(level === 1 && frame === 1);
+  const policy = createQualityPolicy();
+  for (let level = 1; level <= MAX_QUALITY_LEVEL; level++) {
+    for (let frame = 0; frame < 39; frame++) expect(policy.sample(35)).toBe(false);
     expect(policy.sample(35)).toBe(true);
+    expect(policy.level).toBe(level);
     const settings = qualityFor(1440, 2, policy.level);
-    expect(settings).toEqual({ level, reflection: false, shadowMapSize: level < 2 ? 1024 : 512, pixelRatio: level < 3 ? 2 : 1.25, shadows: level < 4 });
+    expect(settings.shadows).toBe(level < 3);
+    expect(settings.pixelRatio).toBeLessThan(qualityFor(1440, 2, level - 1).pixelRatio);
   }
-  for (let level = 3; level >= 0; level--) {
-    for (let frame = 0; frame < 89; frame++) expect(policy.sample(5)).toBe(false);
-    expect(policy.sample(5)).toBe(true);
+  expect(policy.sample(35)).toBe(false);
+  for (let level = MAX_QUALITY_LEVEL - 1; level >= 0; level--) {
+    for (let frame = 0; frame < 299; frame++) expect(policy.sample(10)).toBe(false);
+    expect(policy.sample(10)).toBe(true);
     expect(policy.level).toBe(level);
   }
-  expect(policy.reflectionFallback).toBe(false);
+  expect(createQualityPolicy(99).level).toBe(MAX_QUALITY_LEVEL);
 });
 
 test('a blocked renderer chunk retains the catalogue with one retry', async ({ browser }) => {
   const context = await browser.newContext({ reducedMotion: 'no-preference' });
+  await chooseMoving(context);
   const page = await context.newPage();
   let aborted = 0;
   await page.route('**/_astro/*.js', async (route) => {
@@ -429,6 +462,7 @@ test('a blocked renderer chunk retains the catalogue with one retry', async ({ b
 
 test('a post-construction setup failure releases every scene canvas and context before retry', async ({ browser }) => {
   const context = await browser.newContext({ reducedMotion: 'no-preference' });
+  await chooseMoving(context);
   await context.addInitScript(() => {
     const contexts: WebGL2RenderingContext[] = [];
     Object.defineProperty(window, '__setupContexts', { value: contexts });
@@ -466,59 +500,33 @@ test('a post-construction setup failure releases every scene canvas and context 
   await context.close();
 });
 
-for (const fault of ['unsupported format', 'incomplete framebuffer'] as const) {
-  test(`reflection uses ink fallback after ${fault} without losing the exhibition`, async ({ browser }) => {
-    const context = await browser.newContext({ reducedMotion: 'no-preference', viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 });
-    await context.addInitScript((fault) => {
-      let rejected = 0;
-      Object.defineProperty(window, '__reflectionFaults', { get: () => rejected });
-      if (fault === 'unsupported format') {
-        const original = WebGL2RenderingContext.prototype.getExtension;
-        WebGL2RenderingContext.prototype.getExtension = function (this: WebGL2RenderingContext, name: string) {
-          if (name === 'EXT_color_buffer_float' || name === 'EXT_color_buffer_half_float') { rejected++; return null; }
-          return Reflect.apply(original, this, [name]);
-        } as typeof original;
-      } else {
-        const original = WebGL2RenderingContext.prototype.checkFramebufferStatus;
-        WebGL2RenderingContext.prototype.checkFramebufferStatus = function (target: number) {
-          // Reject only a bound floating-point colour attachment, leaving the
-          // default canvas framebuffer and depth-only shadows fully usable.
-          if (this.getParameter(this.FRAMEBUFFER_BINDING)
-            && this.getFramebufferAttachmentParameter(target, this.COLOR_ATTACHMENT0, this.FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE) !== this.NONE
-            && this.getFramebufferAttachmentParameter(target, this.COLOR_ATTACHMENT0, this.FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE) === this.FLOAT) {
-            rejected++;
-            return this.FRAMEBUFFER_UNSUPPORTED;
-          }
-          return original.call(this, target);
-        };
-      }
-    }, fault);
-    const page = await context.newPage();
-    const errors: string[] = [];
-    page.on('pageerror', (error) => errors.push(error.message));
-    await page.goto('/');
-    await expect.poll(() => page.evaluate(() => Number(window.__exhibition?.renderCount ?? 0))).toBeGreaterThan(0);
-    await expect(page.locator('html')).toHaveAttribute('data-scene', 'active');
-    expect(await page.evaluate(() => (window as unknown as { __reflectionFaults: number }).__reflectionFaults)).toBeGreaterThan(0);
-    const debug = await page.evaluate(() => window.__exhibition!);
-    expect(debug.reflectionEnabled).toBe(false);
-    expect(debug.reflectionTargetWidth).toBe(0);
-    expect(debug.reflectionTargetHeight).toBe(0);
-    expect(debug.renderTargetRendersPerFrame).toBe(0);
-    expect(Number(debug.reflectionFallbackSegments)).toBeGreaterThan(0);
-    expect(await page.locator('.exhibition-canvas canvas').evaluate((canvas) => {
-      const gl = (canvas as HTMLCanvasElement).getContext('webgl2')!;
-      return !gl.isContextLost() && gl.getParameter(gl.FRAMEBUFFER_BINDING) === null;
-    })).toBe(true);
-    expect(errors).toEqual([]);
-    await page.locator('#exhibit-featured-client').getByRole('link', { name: 'Read case study →' }).click();
-    await expect(page).toHaveURL(new RegExp(`${projectPath}$`));
-    await context.close();
+test('a shader that fails to link after construction releases the scene and keeps the catalogue', async ({ browser }) => {
+  const context = await browser.newContext({ reducedMotion: 'no-preference' });
+  await chooseMoving(context);
+  await context.addInitScript(() => {
+    for (const prototype of [WebGLRenderingContext.prototype, WebGL2RenderingContext.prototype]) {
+      const original = prototype.getProgramParameter;
+      prototype.getProgramParameter = function (this: WebGLRenderingContext, program: WebGLProgram, name: number) {
+        return name === this.LINK_STATUS ? false : Reflect.apply(original, this, [program, name]);
+      } as typeof original;
+    }
   });
-}
+  const page = await context.newPage();
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: 'The exhibition could not start.', exact: true })).toBeVisible({ timeout: 20_000 });
+  await expect(page.locator('html')).toHaveAttribute('data-view', 'still');
+  await expect(page.locator('.exhibition-canvas')).toHaveCount(0);
+  expect(errors).toEqual([]);
+  await page.locator('#exhibit-featured-client').getByRole('link', { name: 'Read case study →' }).click();
+  await expect(page).toHaveURL(new RegExp(`${projectPath}$`));
+  await context.close();
+});
 
 test('a blocked screenshot restores its authored description and caption without a broken icon', async ({ browser }) => {
   const context = await browser.newContext({ reducedMotion: 'no-preference' });
+  await chooseMoving(context);
   const page = await context.newPage();
   await page.route('**/*.webp', (route) => route.abort());
   await page.goto(exhibitPath);
@@ -541,26 +549,30 @@ test('a blocked screenshot restores its authored description and caption without
   await context.close();
 });
 
-test('the live panel reuses one image request and restores the figure in still view', async ({ browser }) => {
+test('the live panel uses the catalogue image request and restores the figure in still view', async ({ browser }) => {
   const context = await browser.newContext({ reducedMotion: 'no-preference' });
+  await chooseMoving(context);
   const page = await context.newPage();
   const requests: string[] = [];
   page.on('request', (request) => { if (request.url().endsWith('.webp')) requests.push(request.url()); });
-  await page.goto('/');
-  await expect.poll(() => page.evaluate(() => window.__exhibition?.panelReusesImage)).toBe(true);
+  await page.goto(exhibitPath);
+  await expect.poll(() => page.evaluate(() => [window.__exhibition?.panelStopId, window.__exhibition?.panelTextureReady]), { timeout: 20_000 })
+    .toEqual([exhibitId, true]);
   const figure = page.locator('#exhibit-featured-client figure[data-panel-source]');
   const imageUrl = await figure.locator('img').evaluate((el) => (el as HTMLImageElement).src);
   expect(requests.filter((url) => url === imageUrl)).toHaveLength(1);
   await expect(figure).not.toHaveAttribute('aria-hidden', 'true');
-  await expect(figure).toHaveCSS('opacity', '0');
-  await expect(figure).toHaveCSS('pointer-events', 'none');
+  expect((await figure.boundingBox())!.width).toBeLessThanOrEqual(1);
+  const view = page.locator('#exhibit-featured-client .view-exhibit');
   const link = page.locator('#exhibit-featured-client').getByRole('link', { name: 'Read case study →' });
   await page.locator(`#${exhibitId}`).focus();
   await page.keyboard.press('Tab');
+  await expect(view).toBeFocused();
+  await page.keyboard.press('Tab');
   await expect(link).toBeFocused();
   await page.locator('[data-view-toggle]').click();
-  await expect(figure).not.toHaveAttribute('aria-hidden', 'true');
-  await expect(figure).toHaveCSS('visibility', 'visible');
+  await expect(figure).toBeVisible();
+  expect((await figure.boundingBox())!.width).toBeGreaterThan(200);
   expect(requests.filter((url) => url === imageUrl)).toHaveLength(1);
   await context.close();
 });
@@ -578,24 +590,29 @@ test('every published exhibit contains the canonical case-study anchor without j
   await context.close();
 });
 
-test('the overlay plate guarantees ink contrast with the scene active and after teardown', async ({ browser }) => {
+test('exhibit text keeps ink contrast on an opaque plate with the scene active and after teardown', async ({ browser }) => {
   const context = await browser.newContext({ reducedMotion: 'no-preference' });
+  await chooseMoving(context);
   const page = await context.newPage();
-  await page.goto('/');
+  await page.goto(exhibitPath);
   await expect(page.locator('html')).toHaveAttribute('data-scene', 'active');
   for (const active of [true, false]) {
     if (!active) await page.locator('[data-view-toggle]').click();
-    const contrast = await page.locator('#exhibit-featured-client .exhibit-overlay').evaluate((el) => {
-      const style = getComputedStyle(el);
-      const rgb = (value: string) => value.match(/[\d.]+/g)!.map(Number);
-      const ink = rgb(style.color).map((value) => value / 255);
-      const plate = rgb(style.backgroundColor);
-      const luminance = (channels: number[]) => channels.map((v) => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)
-        .reduce((sum, value, i) => sum + value * [0.2126, 0.7152, 0.0722][i], 0);
-      // The plate is opaque, so scene pixels cannot lower the contrast.
-      return (luminance(plate.slice(0, 3).map((v) => (v / 255) * (plate[3] ?? 1))) + 0.05) / (luminance(ink) + 0.05);
-    });
-    expect(contrast).toBeGreaterThanOrEqual(4.5);
+    for (const selector of ['.exhibit-title', '.exhibit-summary']) {
+      const contrast = await page.locator(`#exhibit-featured-client ${selector}`).evaluate((el) => {
+        const rgb = (value: string) => value.match(/[\d.]+/g)!.map(Number);
+        // The nearest painted ancestor is the plate; it must be opaque so scene pixels cannot show through.
+        let plate: HTMLElement | null = el as HTMLElement;
+        while (plate && rgb(getComputedStyle(plate).backgroundColor)[3] === 0) plate = plate.parentElement;
+        const background = rgb(getComputedStyle(plate!).backgroundColor);
+        if ((background[3] ?? 1) < 1) return 0;
+        const luminance = (channels: number[]) => channels.slice(0, 3).map((v) => v / 255).map((v) => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)
+          .reduce((sum, value, i) => sum + value * [0.2126, 0.7152, 0.0722][i], 0);
+        const [light, dark] = [luminance(background), luminance(rgb(getComputedStyle(el).color))].sort((a, b) => b - a);
+        return (light + 0.05) / (dark + 0.05);
+      });
+      expect(contrast, `${selector} with the scene ${active ? 'active' : 'removed'}`).toBeGreaterThanOrEqual(4.5);
+    }
   }
   await context.close();
 });

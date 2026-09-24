@@ -63,7 +63,7 @@ test('copy, opaque evidence label and contact glass remain usable', async ({ pag
   await expect(page.locator('#about .section-body')).toContainText('existing tool makes more sense');
   await expect(page.locator('#about .section-body')).toContainText('three client contracts');
   await expect(page.locator('#contact a[href^="mailto:"]')).toBeVisible();
-  await expect(page.locator('.hero-footnote')).not.toContainText('Ideas, considered. Software, delivered.');
+  await expect(page.locator('body')).not.toContainText('Ideas, considered. Software, delivered.');
   const overlay = page.locator('#exhibit-featured-client .exhibit-overlay');
   const style = await overlay.evaluate((element) => {
     const computed = getComputedStyle(element);
@@ -75,14 +75,19 @@ test('copy, opaque evidence label and contact glass remain usable', async ({ pag
   expect(style.blur).toBe('none');
   expect(Number.parseFloat(style.padding)).toBeGreaterThanOrEqual(24);
   const glass = page.locator('button[data-contact-glass]');
-  await expect(glass).toHaveAttribute('aria-label', 'Fill glass');
-  const box = await glass.boundingBox();
-  expect(box!.width).toBeGreaterThanOrEqual(44);
-  expect(box!.height).toBeGreaterThanOrEqual(44);
+  await expect(glass).toHaveAttribute('aria-label', 'Pour a pint');
+  await glass.scrollIntoViewIfNeeded();
+  const box = (await glass.boundingBox())!;
+  expect(box.width).toBeGreaterThanOrEqual(44);
+  expect(box.height).toBeGreaterThanOrEqual(64);
+  // The pint sits on its coaster at the heading's baseline instead of floating beside it.
+  const heading = (await page.locator('#contact-title').boundingBox())!;
+  expect(Math.abs(box.y + box.height - (heading.y + heading.height))).toBeLessThanOrEqual(12);
   await glass.focus();
   await page.keyboard.press('Enter');
   await expect(glass).toHaveAttribute('data-filled', 'true');
   await expect(glass).toHaveAttribute('aria-pressed', 'true');
+  await expect(glass).toHaveAttribute('aria-label', 'Empty the pint');
   await page.keyboard.press('Space');
   await expect(glass).toHaveAttribute('data-filled', 'false');
 });

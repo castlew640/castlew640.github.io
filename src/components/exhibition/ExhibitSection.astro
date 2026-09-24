@@ -2,7 +2,6 @@
 import { getImage } from 'astro:assets';
 import type { CollectionEntry } from 'astro:content';
 import StopSection from './StopSection.astro';
-import ExhibitDrawing from './drawings/ExhibitDrawing.astro';
 import { evidenceFit, imageSize } from '../../lib/evidence-fit';
 
 interface Props {
@@ -24,25 +23,32 @@ const labels = {
   'manual-planner': 'Manual Wi-Fi planner',
   'ai-mvp': 'AI planner MVP',
 };
+const number = String(index + 1).padStart(2, '0');
+const shortTitle = project.data.title.split(' — ')[0];
+const evidenceCount = clientData ? clientData.screenshots.length : personalData!.evidence.length;
 ---
 
-<StopSection id={`exhibit-${slug}`} slug={slug} labelledBy={`exhibit-${slug}-title`}>
-  <figure data-panel-source data-evidence-kind={evidenceKind} data-evidence-fit={resolvedFit}>
-    <img src={panel.src} width={panel.attributes.width} height={panel.attributes.height} alt={shot.alt} decoding="async" loading={index === 0 ? 'eager' : 'lazy'} fetchpriority={index === 0 ? 'high' : 'auto'} data-evidence-fit={resolvedFit} />
-    <figcaption>{shot.caption}</figcaption>
-  </figure>
-  <ExhibitDrawing variant={index} />
-  <div class="exhibit-overlay">
-    <p class="eyebrow">Exhibit {String(index + 1).padStart(2, '0')}</p>
-    <h2 class="exhibit-title" id={`exhibit-${slug}-title`}>{project.data.title}</h2>
-    <p class="exhibit-summary">{project.data.summary}</p>
-    {clientData ? (
-      <ul class="contract-labels">
-        {clientData.contracts.map((contract) => <li>{labels[contract.id]}</li>)}
-      </ul>
-    ) : (
-      <ul class="contract-labels"><li>{personalData!.format === 'deep-dive' ? 'Technical deep dive' : personalData!.format === 'showcase' ? 'Project showcase' : 'Case study'}</li></ul>
-    )}
-    <a class="text-link exhibit-link" href={`/projects/${slug}/`}>Read case study <span>→</span></a>
+<StopSection id={`exhibit-${slug}`} slug={slug} labelledBy={`exhibit-${slug}-title`} name={`Exhibit ${number} · ${shortTitle}`} title={shortTitle}>
+  <div class="placard exhibit-placard">
+    <figure data-panel-source data-view-figure={slug} data-evidence-kind={evidenceKind} data-evidence-fit={resolvedFit}>
+      <img src={panel.src} width={panel.attributes.width} height={panel.attributes.height} alt={shot.alt} decoding="async" loading={index === 0 ? 'eager' : 'lazy'} fetchpriority={index === 0 ? 'high' : 'auto'} data-evidence-fit={resolvedFit} />
+      <figcaption>{shot.caption}</figcaption>
+    </figure>
+    <div class="exhibit-overlay">
+      <p class="eyebrow">Exhibit {number}{clientData ? ' · Client work' : ' · Personal work'}</p>
+      <h2 class="exhibit-title" id={`exhibit-${slug}-title`}>{project.data.title}</h2>
+      <p class="exhibit-summary">{project.data.summary}</p>
+      {clientData ? (
+        <ul class="contract-labels">
+          {clientData.contracts.map((contract) => <li>{labels[contract.id]}</li>)}
+        </ul>
+      ) : (
+        <ul class="contract-labels"><li>{personalData!.format === 'deep-dive' ? 'Technical deep dive' : personalData!.format === 'showcase' ? 'Project showcase' : 'Case study'}</li></ul>
+      )}
+      <div class="exhibit-actions">
+        <button type="button" class="view-exhibit" data-view-exhibit={slug} hidden>View exhibit{evidenceCount > 1 ? ` (${evidenceCount} images)` : ''}</button>
+        <a class="text-link exhibit-link" href={`/projects/${slug}/`}>Read case study <span>→</span></a>
+      </div>
+    </div>
   </div>
 </StopSection>

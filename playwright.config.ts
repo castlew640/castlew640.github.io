@@ -5,6 +5,9 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: true,
   retries: 0,
+  // CI draws WebGL in software, where mounting the 3D scene takes several seconds.
+  timeout: 60_000,
+  expect: { timeout: 10_000 },
   reporter: 'list',
   use: {
     baseURL: 'http://127.0.0.1:4321',

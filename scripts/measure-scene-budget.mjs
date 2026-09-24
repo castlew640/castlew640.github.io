@@ -20,10 +20,17 @@ async function filesIn(directory) {
   return files;
 }
 
+// Ambient animation (clocks, ants, elephants) may only run on the scene's
+// requestAnimationFrame loop, which suspends for hidden tabs, an offscreen
+// exhibition, an open viewer and idle visitors. Browser tests prove the pauses.
 for (const file of await filesIn(join(project, 'src/scripts/exhibition/scene'))) {
-  if (file.endsWith('.ts') && /new\s+Clock\b|elapsedTime|getDelta\s*\(\s*\)|performance\.now\s*\(\s*\)/.test(await readFile(file, 'utf8'))) {
-    throw new Error(`Scene must derive motion only from route station; forbidden clock in ${relative(project, file)}`);
+  if (file.endsWith('.ts') && /\bsetInterval\s*\(|new\s+Clock\b/.test(await readFile(file, 'utf8'))) {
+    throw new Error(`Scene animation must use the suspendable frame loop; found a free-running timer in ${relative(project, file)}`);
   }
+}
+const sceneIndex = await readFile(join(project, 'src/scripts/exhibition/scene/index.ts'), 'utf8');
+for (const gate of ['document.hidden', 'IntersectionObserver', 'IDLE_AFTER_MS', 'setPaused']) {
+  if (!sceneIndex.includes(gate)) throw new Error(`Scene loop lost its ${gate} suspension gate`);
 }
 
 const scripts = await Promise.all((await filesIn(join(dist, '_astro'))).filter((file) => file.endsWith('.js'))
@@ -71,4 +78,4 @@ for (const [, url] of panels) {
 if (unique.size !== panels.length || new Set([...unique.values()].map((image) => image.sha256)).size !== panels.length) {
   throw new Error(`Published preview images must have distinct optimized URLs and hashes: ${unique.size}/${panels.length}`);
 }
-console.log(`Scene budget: scene gzip ${sceneBytes}/${SCENE_BUDGET} B; controller gzip ${controllerBytes} B; essential scripts gzip ${essentialBytes} B; all JS gzip ${allScriptBytes} B; ${unique.size} unique previews / ${[...unique.values()].reduce((total, image) => total + image.bytes, 0)} B encoded; screenshots ${images.join(', ')} (<=1600px, <=${SCREENSHOT_BUDGET} B each); route-station no-clock source guard passed.`);
+console.log(`Scene budget: scene gzip ${sceneBytes}/${SCENE_BUDGET} B; controller gzip ${controllerBytes} B; essential scripts gzip ${essentialBytes} B; all JS gzip ${allScriptBytes} B; ${unique.size} unique previews / ${[...unique.values()].reduce((total, image) => total + image.bytes, 0)} B encoded; screenshots ${images.join(', ')} (<=1600px, <=${SCREENSHOT_BUDGET} B each); suspendable animation-loop source guard passed.`);

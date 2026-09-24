@@ -3,9 +3,10 @@ import type { ScrollProgress } from './scroll';
 
 export function createControls(
   stops: { offsetTop: number; el?: HTMLElement }[],
+  names: string[],
   getMode: () => ViewMode,
   getProgress: () => ScrollProgress,
-): { nav: HTMLElement; update: (progress: ScrollProgress) => void } {
+): { nav: HTMLElement; update: (progress: ScrollProgress) => void; setCurrent: (index: number) => void } {
   const nav = document.createElement('nav');
   nav.className = 'exhibition-controls';
   nav.setAttribute('aria-label', 'Exhibition travel');
@@ -25,6 +26,7 @@ export function createControls(
   const createButton = (direction: -1 | 1): HTMLButtonElement => {
     const button = document.createElement('button');
     button.type = 'button';
+    button.className = direction === -1 ? 'travel-back' : 'travel-forward';
     button.setAttribute('aria-label', direction === -1 ? 'Previous exhibit' : 'Next exhibit');
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('viewBox', '0 0 24 24');
@@ -56,15 +58,33 @@ export function createControls(
   };
 
   const back = createButton(-1);
-  const marker = document.createElement('span');
-  marker.className = 'exhibition-marker';
-  marker.setAttribute('aria-hidden', 'true');
   const forward = createButton(1);
+  // A visual itinerary: where you are, and how far the exhibition goes.
+  const now = document.createElement('div');
+  now.className = 'exhibition-now';
+  now.setAttribute('aria-hidden', 'true');
+  const label = document.createElement('span');
+  label.className = 'exhibition-now-label';
+  const dots = document.createElement('span');
+  dots.className = 'exhibition-dots';
+  const dotElements = names.map(() => {
+    const dot = document.createElement('i');
+    dots.append(dot);
+    return dot;
+  });
+  now.append(label, dots);
   const status = document.createElement('p');
   status.className = 'exhibition-status';
   status.setAttribute('role', 'status');
   status.setAttribute('aria-live', 'polite');
-  nav.append(back, marker, forward, status);
+  nav.append(back, now, forward, status);
+
+  const setCurrent = (index: number): void => {
+    const name = names[index] ?? '';
+    if (label.textContent !== name) label.textContent = name;
+    dotElements.forEach((dot, dotIndex) => dot.classList.toggle('is-current', dotIndex === index));
+    nav.dataset.currentStop = String(index);
+  };
 
   const update = (progress: ScrollProgress): void => {
     const offsets = positions();
@@ -79,5 +99,6 @@ export function createControls(
     if (status.textContent !== message) status.textContent = message;
   };
   update(getProgress());
-  return { nav, update };
+  setCurrent(0);
+  return { nav, update, setCurrent };
 }

@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 // @ts-expect-error Node test module types are intentionally not a production dependency.
 import test from 'node:test';
 import { registerTap } from '../src/scripts/exhibition/tap.ts';
+import type { Pick } from '../src/lib/exhibition/types.ts';
 
 function harness() {
   const target = new EventTarget();
-  const state = { clicks: 0, hits: 0, scrollY: 0, overCanvas: true, mounted: true, slug: 'featured-client' as string | null, hasAnchor: true };
+  const state = { picks: [] as Pick[], hits: 0, scrollY: 0, overCanvas: true, mounted: true, pick: { id: 'exhibit-featured-client', kind: 'exhibit', name: 'Eiffel Technologies', action: 'View Eiffel Technologies', stopIndex: 1, slug: 'featured-client' } as Pick | null };
   const listeners: { type: string; passive: boolean }[] = [];
-  const selectors: string[] = [];
   const add = target.addEventListener.bind(target);
   target.addEventListener = (type, listener, options) => {
     listeners.push({ type, passive: typeof options === 'object' && options.passive === true });
@@ -18,34 +18,25 @@ function harness() {
   Object.defineProperty(globalThis, 'window', { configurable: true, value: target });
   Object.defineProperty(globalThis, 'document', { configurable: true, value: {
     elementFromPoint: () => state.overCanvas ? { matches: () => true } : null,
-    querySelector: (selector: string) => {
-      selectors.push(selector);
-      if (selector !== '#exhibit-featured-client[data-slug="featured-client"]') return null;
-      return { querySelector: (link: string) => {
-        selectors.push(link);
-        return state.hasAnchor && link === 'a[href="/projects/featured-client/"]' ? { click: () => state.clicks++ } : null;
-      } };
-    },
   } });
-  registerTap(() => state.mounted ? { hitPanel: () => { state.hits++; return state.slug; } } : null);
+  registerTap(() => state.mounted ? { pick: () => { state.hits++; return state.pick; } } : null, (pick) => state.picks.push(pick));
   const pointer = (type: string, overrides: Partial<PointerEvent> = {}) => {
     const event = new Event(type);
     const values = { pointerId: 1, isPrimary: true, button: 0, clientX: 100, clientY: 100, timeStamp: 0, ...overrides };
     for (const [key, value] of Object.entries(values)) Object.defineProperty(event, key, { value });
     target.dispatchEvent(event);
   };
-  return { state, listeners, selectors, pointer, target };
+  return { state, listeners, pointer, target };
 }
 
-test('a tap at every inclusive threshold delegates exactly once to the matching DOM anchor', () => {
+test('a tap at every inclusive threshold delivers the scene pick exactly once', () => {
   const h = harness();
   h.pointer('pointerdown');
   h.pointer('pointermove', { clientX: 106, clientY: 108 });
   h.state.scrollY = 4;
   h.pointer('pointerup', { clientX: 106, clientY: 108, timeStamp: 500 });
-  assert.equal(h.state.clicks, 1);
   assert.equal(h.state.hits, 1);
-  assert.deepEqual(h.selectors, ['#exhibit-featured-client[data-slug="featured-client"]', 'a[href="/projects/featured-client/"]']);
+  assert.deepEqual(h.state.picks.map((pick) => pick.id), ['exhibit-featured-client']);
 });
 
 const failures: [string, (h: ReturnType<typeof harness>) => void][] = [
@@ -69,7 +60,7 @@ for (const [reason, finish] of failures) {
     const h = harness();
     h.pointer('pointerdown');
     finish(h);
-    assert.equal(h.state.clicks, 0);
+    assert.equal(h.state.picks.length, 0);
     assert.equal(h.state.hits, 0);
   });
 }
@@ -85,26 +76,32 @@ test('an ordinary DOM target, nonprimary press, or secondary mouse button cannot
   }
 });
 
-test('still view, a missed panel, or a missing anchor cannot navigate', () => {
-  for (const mode of ['still', 'miss', 'missing-anchor']) {
+test('still view or tapping empty sky delivers no pick', () => {
+  for (const mode of ['still', 'miss']) {
     const h = harness();
     h.state.mounted = mode !== 'still';
-    h.state.slug = mode === 'miss' ? null : 'featured-client';
-    h.state.hasAnchor = mode !== 'missing-anchor';
+    if (mode === 'miss') h.state.pick = null;
     h.pointer('pointerdown');
     h.pointer('pointerup');
-    assert.equal(h.state.clicks, 0);
+    assert.equal(h.state.picks.length, 0);
   }
 });
 
-test('unsafe scene slugs are rejected before composing any selector', () => {
+test('toys and arrows without a project slug are delivered unchanged', () => {
+  const h = harness();
+  h.state.pick = { id: 'persistence', kind: 'toy', name: 'Soft clocks', action: 'Turn back time' };
+  h.pointer('pointerdown');
+  h.pointer('pointerup');
+  assert.deepEqual(h.state.picks, [{ id: 'persistence', kind: 'toy', name: 'Soft clocks', action: 'Turn back time' }]);
+});
+
+test('unsafe project slugs are rejected before the pick is used', () => {
   for (const slug of ['bad"], a', '../featured-client', 'Featured-client', '-featured', 'featured--client', '']) {
     const h = harness();
-    h.state.slug = slug;
+    h.state.pick = { id: 'exhibit-x', kind: 'exhibit', name: 'X', action: 'View X', stopIndex: 1, slug };
     h.pointer('pointerdown');
     h.pointer('pointerup');
-    assert.deepEqual(h.selectors, []);
-    assert.equal(h.state.clicks, 0);
+    assert.equal(h.state.picks.length, 0);
   }
 });
 
@@ -115,11 +112,11 @@ test('a cancelled multi-pointer gesture cannot restart until every pointer is re
   h.pointer('pointerup');
   h.pointer('pointerdown');
   h.pointer('pointerup');
-  assert.equal(h.state.clicks, 0);
+  assert.equal(h.state.picks.length, 0);
   h.pointer('pointerup', { pointerId: 2, isPrimary: false });
   h.pointer('pointerdown');
   h.pointer('pointerup');
-  assert.equal(h.state.clicks, 1);
+  assert.equal(h.state.picks.length, 1);
 });
 
 test('every gesture listener is passive and no wheel or touch listener is installed', () => {

@@ -142,36 +142,37 @@ test('all shipped primary anchors resolve in their original reading order', asyn
   )).toEqual(['projects', 'about', 'resume', 'contact']);
 });
 
+/** Enter the 3D view and settle in front of the client exhibit; returns the centre of its evidence. */
 async function panelPoint(page: Page): Promise<{ x: number; y: number }> {
   await page.goto('/');
   if (await page.locator('html').getAttribute('data-view') === 'still') await page.locator('[data-view-toggle]').click();
-  await expect.poll(() => page.evaluate(() => window.__exhibition?.panelTextureReady)).toBe(true);
-  await page.locator(`#${exhibitId}`).evaluate((el) => el.scrollIntoView());
-  await expect.poll(() => page.evaluate(() => window.__exhibition?.currentStopId)).toBe(exhibitId);
-  await expect.poll(() => page.evaluate(() => Number(window.__exhibition?.station))).toBeCloseTo(18, 2);
+  await expect(page.locator('html')).toHaveAttribute('data-scene', 'active', { timeout: 20_000 });
+  await page.locator(`#${exhibitId}`).evaluate((el) => scrollTo({ top: el.getBoundingClientRect().top + scrollY, behavior: 'auto' }));
+  await expect.poll(() => page.evaluate(() => [window.__exhibition?.panelStopId, window.__exhibition?.u === window.__exhibition?.uTarget, window.__exhibition?.panelTextureReady]), { timeout: 20_000 })
+    .toEqual([exhibitId, true, true]);
   return page.evaluate(() => {
     const d = window.__exhibition!;
-    return {
-      x: (Number(d.panelCorner0X) + Number(d.panelCorner2X)) / 2 * innerWidth,
-      y: (Number(d.panelCorner0Y) + Number(d.panelCorner2Y)) / 2 * innerHeight,
-    };
+    return { x: (Number(d.panelLeft) + Number(d.panelRight)) / 2 * innerWidth, y: (Number(d.panelTop) + Number(d.panelBottom)) / 2 * innerHeight };
   });
 }
 
-test('one touch on the screenshot opens the same anchor as the visible case-study link', async ({ browser }) => {
+test('one touch on the screenshot opens the exhibit in place, with the same case study as the visible link', async ({ browser }) => {
   const context = await browser.newContext({ viewport: { width: 390, height: 664 }, hasTouch: true, deviceScaleFactor: 3, reducedMotion: 'no-preference' });
   const page = await context.newPage();
   const point = await panelPoint(page);
-  await page.locator('#exhibit-featured-client .exhibit-link').evaluate((anchor) => {
-    const link = anchor as HTMLAnchorElement;
-    const click = link.click.bind(link);
-    link.click = () => { sessionStorage.setItem('panel-used-anchor', 'true'); click(); };
-  });
+  const historyBefore = await page.evaluate(() => history.length);
   await page.touchscreen.tap(point.x, point.y);
-  await expect(page).toHaveURL(new RegExp(`${projectPath}$`));
-  expect(await page.evaluate(() => location.pathname)).toBe(projectPath);
-  expect(await page.evaluate(() => sessionStorage.getItem('panel-used-anchor'))).toBe('true');
-  await panelPoint(page);
+  const viewer = page.getByRole('dialog', { name: /Eiffel Technologies/ });
+  await expect(viewer).toBeVisible();
+  await expect(page.locator('html')).toHaveAttribute('data-viewer', 'featured-client');
+  expect(await page.evaluate(() => history.length)).toBe(historyBefore + 1);
+  const visible = await page.locator('#exhibit-featured-client .exhibit-link').getAttribute('href');
+  await expect(viewer.getByRole('link', { name: /Read the full case study/ })).toHaveAttribute('href', visible!);
+  // The browser's Back closes the viewer without leaving the exhibition.
+  await page.goBack();
+  await expect(viewer).toBeHidden();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.locator('#exhibit-featured-client .view-exhibit')).toBeFocused();
   await page.locator('#exhibit-featured-client').getByRole('link', { name: 'Read case study →' }).tap();
   await expect(page).toHaveURL(new RegExp(`${projectPath}$`));
   await context.close();
@@ -186,37 +187,31 @@ test('the active decorative canvas preserves the screenshot alternative and capt
   const caption = await figure.locator('figcaption').innerText();
   expect(alt).toBeTruthy();
   expect(caption).toBeTruthy();
-  // Role queries exclude aria-hidden and visibility:hidden descendants. The
-  // snapshot additionally proves the authored caption remains readable.
+  // The closed viewer's copies are outside the accessibility tree; the catalogue figure stays in it.
   await expect(page.getByRole('img', { name: alt!, exact: true })).toHaveCount(1);
   const accessible = await figure.ariaSnapshot();
   expect(accessible).toContain(alt!);
   expect(accessible).toContain(caption);
   await expect(figure).not.toHaveAttribute('aria-hidden', 'true');
-  await expect(figure).toHaveCSS('opacity', '0');
-  await expect(figure).toHaveCSS('pointer-events', 'none');
   await expect(page.locator('.exhibition-canvas canvas')).toHaveAttribute('aria-hidden', 'true');
   expect(await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.matches('canvas'), point)).toBe(true);
   await page.locator('[data-view-toggle]').click();
-  await expect(figure).toHaveCSS('opacity', '1');
+  await expect(figure).toBeVisible();
+  expect((await figure.boundingBox())!.width).toBeGreaterThan(200);
   await expect(page.getByRole('img', { name: alt!, exact: true })).toHaveCount(1);
   expect(await figure.ariaSnapshot()).toContain(caption);
   await context.close();
 });
 
-for (const gesture of ['long press', 'wandering press', 'scroll during press', 'two pointers', 'pier', 'missing slug'] as const) {
-  test(`a real panel rejects ${gesture}`, async ({ browser }) => {
+for (const gesture of ['long press', 'wandering press', 'scroll during press', 'two pointers', 'empty sky'] as const) {
+  test(`a real exhibit rejects ${gesture}`, async ({ browser }) => {
     const context = await browser.newContext({ viewport: { width: 390, height: 664 }, hasTouch: true, deviceScaleFactor: 3, reducedMotion: 'no-preference' });
     const page = await context.newPage();
     const point = await panelPoint(page);
     const initial = page.url();
-    if (gesture === 'pier') point.x = await page.evaluate(() => {
-      const d = window.__exhibition!;
-      const xs = Array.from({ length: 4 }, (_, index) => Number(d[`panelCorner${index}X`]));
-      const centre = (Math.min(...xs) + Math.max(...xs)) / 2;
-      return (centre + (Math.max(...xs) - Math.min(...xs)) * 3.9 / 4) * innerWidth;
-    });
-    if (gesture === 'missing slug') await page.locator(`#${exhibitId}`).evaluate((el) => el.removeAttribute('data-slug'));
+    // Beside the frame's generous hit volume, where only sand and sky remain.
+    if (gesture === 'empty sky') point.x = 6;
+    const scrollBefore = await page.evaluate(() => scrollY);
     await page.mouse.move(point.x, point.y);
     await page.mouse.down();
     if (gesture === 'long press') await page.waitForTimeout(550);
@@ -227,33 +222,36 @@ for (const gesture of ['long press', 'wandering press', 'scroll during press', '
     }, point);
     await page.mouse.up();
     if (gesture === 'two pointers') await page.evaluate(() => window.dispatchEvent(new PointerEvent('pointerup', { pointerId: 2 })));
-    await page.waitForTimeout(200);
+    await page.waitForTimeout(250);
     expect(page.url()).toBe(initial);
+    await expect(page.locator('html')).not.toHaveAttribute('data-viewer');
+    if (gesture !== 'scroll during press') expect(await page.evaluate(() => scrollY)).toBe(scrollBefore);
     await context.close();
   });
 }
 
-test('lintel sill walkway and empty sky never act as project links', async ({ browser }) => {
+test('sky and sand never act as links or travel', async ({ browser }) => {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'no-preference' });
   const page = await context.newPage();
   await panelPoint(page);
   const initial = page.url();
+  const before = await page.evaluate(() => scrollY);
   const points = await page.evaluate(() => {
     const d = window.__exhibition!;
-    const xs = Array.from({ length: 4 }, (_, index) => Number(d[`panelCorner${index}X`]) * innerWidth);
-    const ys = Array.from({ length: 4 }, (_, index) => Number(d[`panelCorner${index}Y`]) * innerHeight);
-    const centreX = (Math.min(...xs) + Math.max(...xs)) / 2;
+    // Open sky and sand to the left of the framed exhibit, above its placard.
+    const left = Number(d.panelLeft) * innerWidth;
     return [
-      { x: centreX, y: Math.max(4, Math.min(...ys) - 24) },
-      { x: centreX, y: Math.min(innerHeight - 4, Math.max(...ys) + 12) },
-      { x: centreX, y: Math.min(innerHeight - 4, Math.max(...ys) + 180) },
-      { x: 40, y: 90 },
+      { x: 60, y: 110 },
+      { x: left * 0.5, y: 170 },
+      { x: left * 0.8, y: 240 },
     ];
   });
   for (const point of points) {
     await page.mouse.click(point.x, point.y);
-    await page.waitForTimeout(100);
+    await page.waitForTimeout(150);
     expect(page.url()).toBe(initial);
+    expect(await page.evaluate(() => scrollY)).toBe(before);
+    await expect(page.locator('html')).not.toHaveAttribute('data-viewer');
   }
   await context.close();
 });

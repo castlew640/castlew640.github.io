@@ -22,9 +22,11 @@ test('travel arrows retain comfortable targets and unclipped focus at every widt
       await expect(button).toHaveCSS('outline-style', 'solid');
     }
     expect(boxes).toHaveLength(2);
-    expect(boxes[1].x - boxes[0].x - boxes[0].width).toBe(12);
+    // Back and Forward bracket the itinerary label without overlapping it.
+    const label = (await nav.locator('.exhibition-now').boundingBox())!;
+    expect(label.x).toBeGreaterThanOrEqual(boxes[0].x + boxes[0].width);
+    expect(boxes[1].x).toBeGreaterThanOrEqual(label.x + label.width);
     await expect(nav).toHaveCSS('overflow', 'visible');
-    await expect(nav).toHaveCSS('padding', '8px');
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   }
 });
@@ -186,76 +188,68 @@ test('fractional stop arrivals disable only actual endpoints and forward reaches
   }
 });
 
-for (const viewport of [{ width: 1440, height: 810 }, { width: 390, height: 664 }, { width: 844, height: 390 }]) {
-  test(`published panels fit the computed route frame at ${viewport.width} by ${viewport.height}`, async ({ browser }) => {
-    const context = await browser.newContext({ viewport, hasTouch: viewport.width < 900, deviceScaleFactor: 3, reducedMotion: 'no-preference' });
+for (const viewport of [{ width: 1440, height: 810 }, { width: 1024, height: 768 }, { width: 390, height: 664 }, { width: 844, height: 390 }]) {
+  test(`every exhibit settles in view, clear of its placard and the controls, at ${viewport.width} by ${viewport.height}`, async ({ browser }) => {
+    const context = await browser.newContext({ viewport, hasTouch: viewport.width < 900, reducedMotion: 'no-preference' });
     const page = await context.newPage();
     await page.goto('/');
     if (await page.locator('html').getAttribute('data-view') === 'still') await page.locator('[data-view-toggle]').click();
-    await expect.poll(() => page.evaluate(() => window.__exhibition?.panelTextureReady)).toBe(true);
+    await expect(page.locator('html')).toHaveAttribute('data-scene', 'active');
     const exhibits = page.locator('#exhibition [data-stop][data-slug]');
     const projectCount = await exhibits.count();
     expect(projectCount).toBeGreaterThan(0);
     for (const exhibit of await exhibits.all()) {
       const id = (await exhibit.getAttribute('id'))!;
-      await exhibit.evaluate((el) => el.scrollIntoView());
-      await expect.poll(() => page.evaluate(() => window.__exhibition?.currentStopId)).toBe(id);
+      await exhibit.evaluate((el) => scrollTo({ top: el.getBoundingClientRect().top + scrollY, behavior: 'auto' }));
+      // CI renders in software, so give the camera time to settle.
+      await expect.poll(() => page.evaluate(() => [window.__exhibition?.currentStopId, window.__exhibition?.u === window.__exhibition?.uTarget, window.__exhibition?.panelTextureReady]), { timeout: 20_000 })
+        .toEqual([id, true, true]);
       const data = await page.evaluate(() => window.__exhibition!);
-      const fovY = Number(data.fovY) * Math.PI / 180;
-      const fovX = 2 * Math.atan(Math.tan(fovY / 2) * Number(data.cssWidth) / Number(data.cssHeight));
-      const expectedWidthFraction = Math.atan(2.00 / 12) / Math.tan(fovX / 2);
-      const corners = Array.from({ length: 4 }, (_, index) => ({
-        x: Number(data[`panelCorner${index}X`]), y: Number(data[`panelCorner${index}Y`]),
-      }));
-      const left = Math.min(...corners.map(({ x }) => x));
-      const right = Math.max(...corners.map(({ x }) => x));
-      expect(Math.abs(right - left - expectedWidthFraction)).toBeLessThanOrEqual(0.02);
-      expect(Math.min(...corners.map(({ y }) => y))).toBeGreaterThanOrEqual(0.05);
-      expect(data).toMatchObject({ panelStopId: id, panelFacingCamera: true, panelMinX: -2, panelMaxX: 2,
-        panelMinY: 3.1, panelMaxY: 5.1, panelTextureSRGB: true, panelReusesImage: true,
-        pickablePanels: projectCount, nonPanelRaycasts: 0, walkwayObstructions: 0 });
-      expect(Number(data.materials)).toBeLessThanOrEqual(17 + projectCount);
-      expect(Number(data.drawCalls)).toBeLessThanOrEqual(90);
-      expect(Number(data.triangles)).toBeLessThanOrEqual(120000);
-      const overlay = await exhibit.locator('.exhibit-overlay').boundingBox();
-      expect(overlay!.y).toBeGreaterThan(Math.max(...corners.map(({ y }) => y)) * viewport.height);
-      if (viewport.width === 1440) {
-        expect(Math.abs(overlay!.y / viewport.height - 0.46)).toBeLessThan(0.01);
-        expect(overlay!.width).toBe(Math.min(34 * 16, viewport.width * 0.4));
+      const panel = { left: Number(data.panelLeft) * viewport.width, right: Number(data.panelRight) * viewport.width,
+        top: Number(data.panelTop) * viewport.height, bottom: Number(data.panelBottom) * viewport.height };
+      expect(panel.left).toBeGreaterThanOrEqual(0);
+      expect(panel.right).toBeLessThanOrEqual(viewport.width);
+      // The evidence is large enough to read and never hidden by HTML.
+      expect((panel.right - panel.left) / viewport.width).toBeGreaterThan(viewport.width < 768 ? 0.6 : 0.3);
+      const placard = (await exhibit.locator('.placard').boundingBox())!;
+      const controls = (await page.locator('.exhibition-controls').boundingBox())!;
+      // Landscape phones fold the primary nav away to leave room for the scene.
+      const header = await page.locator('.primary-nav').boundingBox();
+      for (const box of [placard, controls]) {
+        const overlapsX = panel.left < box.x + box.width - 1 && panel.right > box.x + 1;
+        const overlapsY = panel.top < box.y + box.height - 1 && panel.bottom > box.y + 1;
+        expect(overlapsX && overlapsY, `${id} evidence is covered`).toBe(false);
       }
-      if (viewport.width === 390) {
-        const link = (await exhibit.getByRole('link', { name: 'Read case study →' }).boundingBox())!;
-        const controls = (await page.locator('.exhibition-controls').boundingBox())!;
-        expect(1 - (link.y + link.height / 2) / viewport.height).toBeGreaterThanOrEqual(0.30);
-        expect(1 - (link.y + link.height / 2) / viewport.height).toBeLessThanOrEqual(0.48);
-        expect(controls.y - link.y - link.height).toBeGreaterThanOrEqual(16);
-        await expect(exhibit.locator('.exhibit-overlay')).toHaveCSS('padding-bottom', '104px');
-      }
+      if (header) expect(panel.top).toBeGreaterThanOrEqual(header.y + header.height - 1);
+      expect(Number(data.drawCalls)).toBeLessThanOrEqual(120);
+      expect(Number(data.triangles)).toBeLessThanOrEqual(150_000);
     }
     await context.close();
   });
 }
 
-test('mobile exhibit text continues in document flow at enlarged sizes without covering controls', async ({ browser }) => {
+test('phone placards stay above the travel bar and scroll to every action at enlarged text sizes', async ({ browser }) => {
   for (const width of [390, 320]) {
     const context = await browser.newContext({ viewport: { width, height: 664 }, hasTouch: true, reducedMotion: 'no-preference' });
     const page = await context.newPage();
     await page.goto('/');
     await page.locator('[data-view-toggle]').click();
-    await expect(page.locator('html')).toHaveAttribute('data-scene', 'active');
+    await expect(page.locator('html')).toHaveAttribute('data-view', 'moving');
     await page.addStyleTag({ content: ':root { font-size: 200%; }' });
     const exhibit = page.locator('#exhibition [data-stop][data-slug]').first();
-    await exhibit.evaluate((el) => el.scrollIntoView());
-    await page.waitForTimeout(200);
-    const link = (await exhibit.getByRole('link', { name: 'Read case study →' }).boundingBox())!;
+    await exhibit.evaluate((el) => scrollTo({ top: el.getBoundingClientRect().top + scrollY, behavior: 'auto' }));
+    await expect(exhibit).toHaveAttribute('data-current', '');
+    const placard = exhibit.locator('.placard');
     const controls = (await page.locator('.exhibition-controls').boundingBox())!;
-    expect(controls.y - link.y - link.height).toBeGreaterThanOrEqual(16);
+    const sheet = (await placard.boundingBox())!;
+    expect(sheet.y + sheet.height).toBeLessThanOrEqual(controls.y + 1);
+    await expect(placard).toHaveCSS('overflow-y', 'auto');
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
-    await expect(exhibit.locator('.exhibit-overlay')).toHaveCSS('overflow-y', 'visible');
-    for (const selector of ['.exhibit-summary', '.contract-labels']) {
-      await exhibit.locator(selector).evaluate((el) => el.scrollIntoView({ block: 'start' }));
-      await expect(exhibit.locator(selector)).toBeInViewport();
-      expect(await exhibit.locator(selector).evaluate((el) => getComputedStyle(el.parentElement!).backgroundColor)).toBe('rgb(244, 240, 230)');
+    for (const selector of ['.view-exhibit', '.exhibit-link', '.exhibit-summary', '.contract-labels']) {
+      await exhibit.locator(selector).evaluate((el) => el.scrollIntoView({ block: 'nearest' }));
+      const box = (await exhibit.locator(selector).boundingBox())!;
+      expect(box.y).toBeGreaterThanOrEqual(sheet.y - 1);
+      expect(box.y + Math.min(box.height, sheet.height)).toBeLessThanOrEqual(sheet.y + sheet.height + 1);
     }
     for (const button of await page.locator('.exhibition-controls button').all()) await expect(button).toBeInViewport({ ratio: 1 });
     await context.close();

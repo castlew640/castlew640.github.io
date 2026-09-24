@@ -1,34 +1,57 @@
-<div class="architectural-study stop-drawing" aria-hidden="true">
-  <div class="drawing-label"><span>Fig. 05</span><span>Beyond, a possibility.</span></div>
-  <svg class="exhibition-horizon" viewBox="0 0 520 620" fill="none" focusable="false">
+<figure class="stop-drawing drawing-landing" aria-hidden="true">
+  <div class="drawing-label"><span>Fig. 04</span><span>The castle keeps office hours</span></div>
+  <svg viewBox="0 0 520 420" fill="none" focusable="false">
     <defs>
-      <g id="landing-built" stroke="var(--edge)" stroke-width="1.4">
-        <path d="M166 320V191H194V320Z" fill="var(--stone-lit)" />
-        <path d="M166 191 178 183V312L166 320Z" fill="var(--stone-shade)" />
-        <path d="M166 191C166 66 354 66 354 191H326C326 103 194 103 194 191Z" fill="var(--stone-lit)" />
-        <path d="M178 183C178 56 366 56 366 183L354 191C354 66 166 66 166 191Z" fill="var(--stone-shade)" />
-        <path d="M166 191C166 66 354 66 354 191" />
-      </g>
-      <path id="landing-right-pier" d="M326 191H354V320H326ZM354 191 366 183V312L354 320" />
-      <g id="landing-completed">
-        <use href="#landing-built" />
-        <use href="#landing-right-pier" fill="var(--stone-lit)" stroke="var(--edge)" stroke-width="1.4" />
-      </g>
+      <linearGradient id="landing-sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#5f8797" />
+        <stop offset=".6" stop-color="#b6c9c4" />
+        <stop offset="1" stop-color="#f1dcae" />
+      </linearGradient>
+      <linearGradient id="landing-ground" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#e3c490" />
+        <stop offset="1" stop-color="#c99b5e" />
+      </linearGradient>
+      <linearGradient id="landing-beer" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#e3a03a" />
+        <stop offset="1" stop-color="#b56a15" />
+      </linearGradient>
     </defs>
-    <path d="M24 320H496V602H24Z" fill="var(--water)" />
-    <path d="M152 191C152 44 380 44 380 191" stroke="var(--construction)" stroke-width="1" stroke-dasharray="2 6" />
-    <path d="M260 32V320M142 191H390" stroke="var(--construction)" stroke-width="1" stroke-dasharray="4 7" />
-    <use href="#landing-built" />
-    <use href="#landing-right-pier" stroke="var(--edge-unbuilt)" stroke-width="1.3" stroke-dasharray="5 5" />
-    <g transform="translate(0 640) scale(1 -1)" opacity="0.35">
-      <use href="#landing-completed" />
+    <rect width="520" height="250" fill="url(#landing-sky)" />
+    <rect y="250" width="520" height="170" fill="url(#landing-ground)" />
+    <path d="M0 250h520" stroke="#4e5144" />
+    <g class="drawing-castle">
+      <path d="M204 84c24-10 84-12 112 0-8 26-32 50-52 74-12-24-36-50-60-74z" fill="#8b7154" stroke="#4e5144" stroke-width="1.2" />
+      <path d="M226 84V56h12v28m16 0V44h12v40m16 0V62h12v22" fill="#d6c6a4" stroke="#4e5144" stroke-width="1.2" />
+      <path d="M226 56v-4h4v4m4 0v-4h4v4m16-12v-4h4v4m4 0v-4h4v4m12 18v-4h4v4m4 0v-4h4v4M238 74h16m12 0h16" stroke="#4e5144" />
     </g>
-    <path d="M24 320H496" stroke="var(--line)" stroke-width="1" />
-    <path d="M25 32h14m-7-7v14M481 32h14m-7-7v14M25 602h14m-7-7v14M481 602h14m-7-7v14" stroke="var(--registration)" stroke-width="1" />
+    <ellipse cx="260" cy="350" rx="236" ry="36" fill="#e6dac2" stroke="#4e5144" stroke-width="1.2" />
+    <path d="M24 350c0 12 106 34 236 34s236-22 236-34v10c0 14-106 36-236 36S24 374 24 360z" fill="#cdbf9f" stroke="#4e5144" stroke-width="1.2" />
+    <g class="drawing-cabinet">
+      <path d="M78 196h96v140H78z" fill="#6b432a" stroke="#4e5144" stroke-width="1.2" />
+      <path d="M72 190h108v8H72z" fill="#5a3822" stroke="#4e5144" />
+      <path d="M86 252h80v24H86zm0 32h80v24H86zm0 32h80v14H86z" fill="#87583a" stroke="#4e5144" />
+      <path d="M106 264h2m36 0h2m-40 32h2m36 0h2" stroke="#caa24f" stroke-width="4" stroke-linecap="round" />
+      <path d="M82 212h88v26H82z" fill="#9a6843" stroke="#4e5144" />
+      <path d="M100 216c10-4 46-4 54 0 4 12 0 30-4 42-3 8-9 8-10 2-2-14-10-20-22-24-12-3-20-10-18-20z" fill="#f7f2e6" stroke="#4e5144" />
+      <path d="M108 222h30m-28 6h24m-24 6h28" stroke="#b9b3a4" />
+      <path d="M108 221h16" stroke="#8e4935" stroke-width="1.6" />
+    </g>
+    <path d="M346 272h64v62h-64z" fill="#efe6d2" stroke="#4e5144" stroke-width="1.2" />
+    <path d="M340 266h76v8h-76z" fill="#e2d6bd" stroke="#4e5144" />
+    <g class="drawing-phone">
+      <path d="M356 266l8-18h28l8 18z" fill="#1c1a19" stroke="#4e5144" />
+      <circle cx="378" cy="258" r="5.5" fill="#e9dfc7" stroke="#4e5144" stroke-width=".8" />
+      <path d="M354 246c2-6 46-6 48 0" stroke="#1c1a19" stroke-width="6" stroke-linecap="round" />
+      <path d="M352 240c10-6 34-8 52-2 4 3 0 7-6 6-8-2-16-1-22 1-8 3-18 2-24-5z" fill="#cf4a2b" stroke="#7a2412" />
+      <path d="M404 238c8-4 14-10 16-18m-18 22c10 0 18-4 24-10M352 242l-8 4m10-1-6 6M366 244l-3 7m13-6-1 7m13-7 2 7" stroke="#cf4a2b" stroke-width="1.6" stroke-linecap="round" />
+      <path d="M346 238c-6-2-10-6-12-12m14 10c-8 2-14 0-18-4" stroke="#cf4a2b" stroke-width="2.4" stroke-linecap="round" />
+    </g>
+    <g class="drawing-pint">
+      <path d="M436 262h34l-2 64c0 4-3 6-6 6h-18c-3 0-6-2-6-6z" fill="url(#landing-beer)" />
+      <path d="M435 262c0-6 36-6 36 0 0 4-36 4-36 0z" fill="#f6efe0" stroke="#4e5144" />
+      <path d="M434 256h38l-3 70c0 5-4 8-8 8h-16c-4 0-8-3-8-8z" stroke="#4e5144" stroke-width="1.2" />
+      <path d="M442 276v40m18-34v28" stroke="#fbe2b0" opacity=".7" />
+    </g>
   </svg>
-  <p class="drawing-caption"><span>An open ending</span><span>Structure → horizon</span></p>
-</div>
-
-<style>
-  .exhibition-horizon { background-size: 100% 51.62%; background-repeat: no-repeat; }
-</style>
+  <p class="drawing-caption"><span>Drawers, a lobster telephone, a pint</span><span>Resume → conversation</span></p>
+</figure>

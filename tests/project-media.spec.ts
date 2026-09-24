@@ -43,20 +43,18 @@ test('wide terminal and portrait diagram keep all four corners in the HTML prese
   await expect(figure.locator('img')).toHaveCSS('object-fit', 'contain');
 });
 
-test('route-mounted panel reuses the optimized still without cropping or changing pick corners', async ({ page }) => {
+test('route-mounted panel shows the whole optimized still without cropping', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('exhibition-view', 'moving'));
   await page.goto('/#exhibit-fixture-personal-01');
-  await expect.poll(() => page.evaluate(() => window.__exhibition?.panelTextureReady)).toBe(true);
+  await expect.poll(() => page.evaluate(() => [window.__exhibition?.panelStopId, window.__exhibition?.panelTextureReady]), { timeout: 20_000 })
+    .toEqual(['exhibit-fixture-personal-01', true]);
   const data = await page.evaluate(() => ({ ...window.__exhibition! }));
-  expect(data.panelStopId).toBe('exhibit-fixture-personal-01');
-  expect(data.panelEvidenceFit).toBe('contain');
-  expect(data.panelReusesImage).toBe(true);
-  expect(data.panelImageScaleX).toBe(1);
-  expect(data.panelImageScaleY).toBeCloseTo(0.4);
-  expect(data.panelFacingCamera).toBe(true);
-  for (let corner = 0; corner < 4; corner++) {
-    expect(Number(data[`panelCorner${corner}X`])).toBeGreaterThanOrEqual(0);
-    expect(Number(data[`panelCorner${corner}X`])).toBeLessThanOrEqual(1);
-    expect(Number(data[`panelCorner${corner}Y`])).toBeGreaterThanOrEqual(0);
-    expect(Number(data[`panelCorner${corner}Y`])).toBeLessThanOrEqual(1);
+  // The painted canvas takes the evidence's own proportions, so nothing is cropped or stretched.
+  expect(Number(data.panelAspect)).toBeCloseTo(Number(data.panelImageAspect), 2);
+  const src = await page.locator('#exhibit-fixture-personal-01 figure[data-panel-source] img').evaluate((img: HTMLImageElement) => img.naturalWidth / img.naturalHeight);
+  expect(Number(data.panelImageAspect)).toBeCloseTo(src, 3);
+  for (const key of ['panelLeft', 'panelRight', 'panelTop', 'panelBottom']) {
+    expect(Number(data[key])).toBeGreaterThanOrEqual(0);
+    expect(Number(data[key])).toBeLessThanOrEqual(1);
   }
 });

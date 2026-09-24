@@ -4,9 +4,13 @@ interface Props {
   labelledBy?: string;
   slug?: string;
   class?: string;
+  /** Short itinerary label shown in the travel controls. */
+  name: string;
+  /** Name used when the visitor points at this stop in the scene. */
+  title?: string;
 }
 
-const { id, labelledBy, slug, class: className = '' } = Astro.props;
+const { id, labelledBy, slug, class: className = '', name, title = name } = Astro.props;
 ---
 
 <section
@@ -14,6 +18,8 @@ const { id, labelledBy, slug, class: className = '' } = Astro.props;
   class:list={['exhibition-stop', className]}
   data-stop
   data-stop-id={id}
+  data-stop-name={name}
+  data-stop-title={title}
   data-slug={slug}
   tabindex="-1"
   aria-labelledby={labelledBy}

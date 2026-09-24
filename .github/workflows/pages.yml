@@ -48,3 +48,37 @@ jobs:
       - name: Deploy checked Pages artifact
         id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+  prune:
+    # Keeps the repository's history to the live release: once this deploy succeeds,
+    # older Pages deployments, finished workflow runs and their artifacts are deleted.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: deploy
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      deployments: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      RUN_ID: ${{ github.run_id }}
+    steps:
+      - name: Delete older deployments, runs and artifacts
+        run: |
+          live=$(gh api "repos/$REPO/deployments?environment=github-pages&per_page=1" --jq '.[0].id')
+          if [ -z "$live" ]; then echo "No live Pages deployment found; nothing pruned." >&2; exit 1; fi
+          # A deployment must be inactive before it can be deleted.
+          for id in $(gh api --paginate "repos/$REPO/deployments?per_page=100" --jq ".[] | select(.id != $live) | .id"); do
+            gh api -X POST "repos/$REPO/deployments/$id/statuses" -f state=inactive > /dev/null
+            gh api -X DELETE "repos/$REPO/deployments/$id"
+            echo "Deleted deployment $id"
+          done
+          for id in $(gh api --paginate "repos/$REPO/actions/artifacts?per_page=100" --jq ".artifacts[] | select(.workflow_run.id != $RUN_ID) | .id"); do
+            gh api -X DELETE "repos/$REPO/actions/artifacts/$id"
+            echo "Deleted artifact $id"
+          done
+          # Only finished runs, so a newer push that is still building is left alone.
+          for id in $(gh api --paginate "repos/$REPO/actions/runs?status=completed&per_page=100" --jq ".workflow_runs[] | select(.id != $RUN_ID) | .id"); do
+            gh api -X DELETE "repos/$REPO/actions/runs/$id"
+            echo "Deleted run $id"
+          done

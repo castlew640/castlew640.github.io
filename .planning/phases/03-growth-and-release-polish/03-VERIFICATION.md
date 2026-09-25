@@ -1,8 +1,8 @@
 ---
 phase: 03-growth-and-release-polish
 verified: 2026-09-21T19:54:51Z
-status: human_needed
-score: 5/6 phase requirements evidenced
+status: passed
+score: 6/6 phase requirements accepted
 behavior_unverified: 0
 verification_method: inline goal-backward review; subagents unavailable under session instruction
 human_verification:
@@ -21,7 +21,7 @@ human_verification:
 
 **Phase goal:** The owner can add completed work while keeping a polished, responsive exhibition and a reliable live application link.
 
-**Status: human_needed.** All eight execution plans have summaries and automated checks. Five of the six Phase 3 requirement implementations have direct build, browser, lifecycle or live-host evidence. PERF-01 still requires physical displayed-frame measurements on both representative targets and the independent device/visual pass. No implementation gap was established by this review; Phase 3 must remain open until the human evidence is collected and judged.
+**Status: passed (human acceptance 2026-09-24).** The owner completed Windows and iPhone testing and accepted the performance; all three checks in [03-UAT.md](03-UAT.md) passed. PERF-01 is closed on that acceptance; no trace files or frame percentiles were recorded. Original assessment: all eight execution plans have summaries and automated checks. Five of the six Phase 3 requirement implementations have direct build, browser, lifecycle or live-host evidence. PERF-01 still requires physical displayed-frame measurements on both representative targets and the independent device/visual pass. No implementation gap was established by this review; Phase 3 must remain open until the human evidence is collected and judged.
 
 ## Goal-backward result
 
@@ -32,7 +32,7 @@ human_verification:
 | PERF-02 | Current/adjacent texture window, hidden/offscreen/idle suspension, 10 remounts with 20 baseline listeners, 10 contexts created/lost and zero owned textures after teardown. | Verified by automated lifecycle and resource gates. |
 | SHIP-03 | The intended [Pages run 35645308662](https://github.com/castlew640/castlew640.github.io/actions/runs/35645308662) succeeded. Its exact downloaded artifact matched 19 live HTTPS files, including project pages, images, scripts and PDF; browser smoke passed direct/reload/return/contact/no-JS/phone-still journeys. | Verified on actual host. |
 | SHIP-04 | [Release evidence](03-RELEASE-EVIDENCE.md) records known-good K, reviewed C, normal revert R and re-revert intended SHA/run/artifact/deployment IDs. All 19 live R hashes matched K; all 19 intended hashes matched C, including sentence removal and restoration. | Verified on actual host. |
-| PERF-01 | Fixed N=2/N=10 targets, lab transfer and resource measurements in [03-MEASUREMENTS.md](03-MEASUREMENTS.md). Physical complete-frame timelines are absent. | **Human needed; not passed.** |
+| PERF-01 | Fixed N=2/N=10 targets, lab transfer and resource measurements in [03-MEASUREMENTS.md](03-MEASUREMENTS.md). Owner completed Windows and iPhone testing on 2026-09-24 and accepted the performance; no trace files or frame percentiles were recorded. | Accepted by owner. |
 
 The eight plan summaries account for all assigned Phase 3 requirements; `PERF-01` remains open in REQUIREMENTS.md. The Phase 3 release smoke test suite has six controlled failures and the final `npm run check` gate passed 47 unit tests, six smoke tests, 90 production browser tests and isolated growth/media/performance builds. The successful live smoke report is `/tmp/phase03-production-smoke.json`. The K/C/R/intended artifact comparisons used downloaded CI output rather than a local rebuild. The plan's static key-link scanner did not find the literal Pages URL inside `scripts/production-smoke.mjs` because the destination is correctly supplied by `--base-url`; the actual-host run and its report establish that link dynamically.
 

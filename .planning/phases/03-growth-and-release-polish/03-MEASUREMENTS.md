@@ -38,12 +38,12 @@ The N=2 ten-remount test observed a baseline of **20 actual EventTarget registra
 
 The first N=10 test decoded all **10** images at mount, violating the ≤3 current/adjacent window; [the final suite](evidence/isolated-n10.json) decodes and uploads only nearby panels. The first expanded draw test measured **212** calls against the N=10 limit of 198; per-portal stone batching brought the sampled entrance to 99 calls. The first full N=2 traversal retained the fallback gradient after live reflection resumed, reaching **7** actual textures against its ceiling of 6. The [pre-fix N=2 trace](evidence/production-n2-before-water-fix.json) and [pre-fix N=10 trace](evidence/isolated-n10-before-water-fix.json) remain retained. The final N=2 full/warm samples stayed at 6 textures, and the fallback-to-reflection regression test passed.
 
-## Physical and human acceptance still pending
+## Physical and human acceptance
 
 | Required evidence | Status |
 |---|---|
-| Windows laptop Chrome, normal power/60 Hz: complete displayed-frame median ≤16.7 ms, p95 ≤33.4 ms, worst ≤100 ms on real N=2 and locally served N=10; three forward/back traversals, cold startup separate, device/OS/browser/GPU/viewport/DPR and trace path | **Pending owner trace**. Headless rAF and submission costs above do not satisfy it. |
-| Physical iPhone 12 Pro Safari after explicit 3D opt-in: median ≤33.4 ms, p95 ≤50 ms, worst ≤100 ms on N=2 and N=10, same provenance and traversal count | **Pending.** Owner has iPhone but no Mac; Apple's connected-Mac Web Inspector is unavailable for a rendering timeline. Visitor observations remain useful but do not supply frame percentiles. |
-| Windows Chrome and iPhone Safari visual/touch/zoom/browser-chrome pass, plus prior Phase 01/02 UAT | **Pending independent checklist** in the release runbook and inherited UAT files. Automated Chromium emulation does not close these fields. |
+| Windows laptop Chrome, normal power/60 Hz: complete displayed-frame median ≤16.7 ms, p95 ≤33.4 ms, worst ≤100 ms on real N=2 and locally served N=10; three forward/back traversals, cold startup separate, device/OS/browser/GPU/viewport/DPR and trace path | **Accepted 2026-09-24.** Owner completed Windows Chrome testing and accepted the performance; no trace or frame percentiles recorded. |
+| Physical iPhone 12 Pro Safari after explicit 3D opt-in: median ≤33.4 ms, p95 ≤50 ms, worst ≤100 ms on N=2 and N=10, same provenance and traversal count | **Accepted 2026-09-24.** Owner completed physical iPhone Safari testing and accepted the performance. No Mac was available, so no rendering timeline or frame percentiles were recorded. |
+| Windows Chrome and iPhone Safari visual/touch/zoom/browser-chrome pass, plus prior Phase 01/02 UAT | **Passed 2026-09-24.** Owner completed Windows and iPhone testing; see 02-UAT.md and 03-UAT.md. Phase 01 UAT keeps its own status. |
 
-**PERF-01 is unverified (`human_needed`).** Transfer and automated lifecycle/growth evidence supports GROW-01, GROW-04 and PERF-02, but it cannot establish the complete physical performance truth. No historical UAT result was changed by this plan.
+**PERF-01 is closed on owner acceptance (2026-09-24), without recorded frame percentiles.** Transfer and automated lifecycle/growth evidence supports GROW-01, GROW-04 and PERF-02, but it cannot establish the complete physical performance truth. No historical UAT result was changed by this plan.

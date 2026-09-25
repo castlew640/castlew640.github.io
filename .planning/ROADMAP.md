@@ -9,8 +9,8 @@ Planning baseline: Astro static HTML/content collections, TypeScript, and a Reac
 ## Phases
 
 - [x] **Phase 1: Publishable Portfolio and Delivery** - Present real professional evidence through a readable site and working automated delivery. (completed 2026-09-19)
-- [ ] **Phase 2: One-Handed Surreal Exhibition** - Let visitors explore a distinctive corridor and its projects with scroll, swipe, or simple taps. (implementation complete; human verification pending)
-- [ ] **Phase 3: Growth and Release Polish** - Make additions repeatable and verify performance, visual refinement, and production reliability. (implementation complete; human verification pending)
+- [x] **Phase 2: One-Handed Surreal Exhibition** - Let visitors explore a distinctive corridor and its projects with scroll, swipe, or simple taps. (completed 2026-09-24)
+- [x] **Phase 3: Growth and Release Polish** - Make additions repeatable and verify performance, visual refinement, and production reliability. (completed 2026-09-24)
 
 ## Phase Details
 
@@ -145,8 +145,8 @@ Execution order: Phase 1 → Phase 2 → Phase 3.
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Publishable Portfolio and Delivery | 3/3 | Complete   | 2026-09-19 |
-| 2. One-Handed Surreal Exhibition | 8/8 | Awaiting human verification | - |
-| 3. Growth and Release Polish | 8/8 | Awaiting human verification | - |
+| 2. One-Handed Surreal Exhibition | 8/8 | Complete   | 2026-09-24 |
+| 3. Growth and Release Polish | 8/8 | Complete   | 2026-09-24 |
 
 ## Coverage
 

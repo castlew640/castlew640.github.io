@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 03
 current_phase_name: growth-and-release-polish
-status: executing
-stopped_at: Completed 03-08-PLAN.md; physical acceptance pending
-last_updated: "2026-09-24T09:30:00.000Z"
+status: phase-complete
+stopped_at: Phases 2 and 3 accepted after owner Windows and phone testing
+last_updated: "2026-09-24T21:45:00.000Z"
 last_activity: 2026-09-24
-last_activity_desc: Quick task 260924-3fy rebuilt the exhibition as a clickable Dalí dreamscape on branch quick/260924-3fy-surreal-overhaul; owner review before merge
+last_activity_desc: Quick task 260924-p7k added the link preview image; owner Windows and phone testing recorded as complete
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 19
   completed_plans: 19
   percent: 100
@@ -24,24 +24,24 @@ progress:
 See: .planning/PROJECT.md (updated 2026-09-19)
 
 **Core value:** Help employers understand real software delivery through a memorable, one-handed portfolio.
-**Current focus:** Phase 03 — growth-and-release-polish
+**Current focus:** Phase 04 — personality-and-media (not yet planned)
 
 ## Current Position
 
-Phase: 03 (growth-and-release-polish) — AWAITING HUMAN VERIFICATION
+Phase: 03 (growth-and-release-polish) — COMPLETE
 Plan: 8 of 8
-Status: All plans executed; final acceptance pending
-Last activity: 2026-09-24 - Completed quick task 260924-3fy: Surreal exhibition overhaul (click-to-travel, in-place exhibit viewer, melting clocks and Dalí details); awaiting owner review on branch `quick/260924-3fy-surreal-overhaul`
+Status: Phases 2 and 3 accepted on 2026-09-24
+Last activity: 2026-09-24 - Completed quick task 260924-p7k: link preview image; owner completed Windows and phone testing
 
 **Progress:** [██████████] 100%
 
-Next action: collect the three pending checks in `.planning/phases/03-growth-and-release-polish/03-UAT.md`; use `$gsd-verify-work 3` when results are available. All eight Phase 03 plans have summaries. Five of six Phase 03 requirements have evidence; PERF-01 is still open.
+Next action: plan Phase 04 (personality and media). The owner completed Windows and phone testing on 2026-09-24, so the Phase 02 and Phase 03 UAT checks are passed and PERF-01 is closed on owner acceptance; no trace files or frame percentiles were recorded.
 
-Outstanding from Phase 02: all eight implementation plans and automated checks (33 unit and 69 browser tests) passed, but the four checks in `.planning/phases/02-one-handed-surreal-exhibition/02-UAT.md` remain pending: composition/reflections, Windows Chrome input/real zoom, actual iPhone Safari, and landing clearance. Phase 03 explicitly revises the route, phone defaults and copy; its plans preserve the remaining acceptance obligations without inventing previous results. Phase 02 remains open.
+Phase 02: all four checks in `.planning/phases/02-one-handed-surreal-exhibition/02-UAT.md` passed on 2026-09-24 after owner Windows and phone testing; composition was judged against the current Dalí dreamscape. Phase 02 is complete.
 
-Phase 03 live production smoke and observed ordinary-revert recovery passed on 2026-09-21. [Release evidence](phases/03-growth-and-release-polish/03-RELEASE-EVIDENCE.md) records four successful Pages runs and exact live hashes; the intended content is restored at `2407476`. Actual Windows/iPhone performance evidence and independent device checks remain `human_needed`. The owner has no Mac for the iPhone Safari rendering timeline.
+Phase 03 live production smoke and observed ordinary-revert recovery passed on 2026-09-21. [Release evidence](phases/03-growth-and-release-polish/03-RELEASE-EVIDENCE.md) records four successful Pages runs and exact live hashes; the intended content is restored at `2407476`. The owner completed Windows and iPhone testing on 2026-09-24 and accepted the performance; without a Mac, no Safari rendering timeline was recorded.
 
-Deployment for UAT: on 2026-09-21 the owner authorized pushing Phase 02. Commit `0f0507e0101ab68072002049c3cc9089072847f1` deployed successfully through [Pages run 35552310047](https://github.com/castlew640/castlew640.github.io/actions/runs/35552310047). The CI build passed all 33 unit and 69 browser tests, including real WebGL scene contracts. `https://castlew640.github.io/` returned HTTP 200 and its HTML exactly matched the tested local build. Test the exhibition at that URL; human results remain pending.
+Deployment for UAT: on 2026-09-21 the owner authorized pushing Phase 02. Commit `0f0507e0101ab68072002049c3cc9089072847f1` deployed successfully through [Pages run 35552310047](https://github.com/castlew640/castlew640.github.io/actions/runs/35552310047). The CI build passed all 33 unit and 69 browser tests, including real WebGL scene contracts. `https://castlew640.github.io/` returned HTTP 200 and its HTML exactly matched the tested local build. Owner testing at that URL completed on 2026-09-24.
 
 Outstanding from Phase 01: verification status is `human_needed` and 01-UAT.md is still `testing` — the subjective live visual/keyboard passes have not been signed off. Phase 1 is not closed.
 
@@ -140,8 +140,9 @@ Remaining publication inputs and environment notes:
 
 | # | Description | Date | Commit | Status | Directory |
 |---|-------------|------|--------|--------|-----------|
-| 260924-3fy | Surreal exhibition overhaul: click-to-travel, in-place exhibit viewer, melting clocks and Dalí details | 2026-09-24 | 5e988cf | Checks pass; owner review and device checks pending | [260924-3fy-surreal-exhibition-overhaul-click-to-tra](./quick/260924-3fy-surreal-exhibition-overhaul-click-to-tra/) |
+| 260924-3fy | Surreal exhibition overhaul: click-to-travel, in-place exhibit viewer, melting clocks and Dalí details | 2026-09-24 | 5e988cf | Checks pass; owner device testing complete 2026-09-24 | [260924-3fy-surreal-exhibition-overhaul-click-to-tra](./quick/260924-3fy-surreal-exhibition-overhaul-click-to-tra/) |
 | 260924-igc | Prune old Pages deployments, workflow runs and artifacts after each deploy | 2026-09-24 | 3262fdd | Verified on run 36033430777 | [260924-igc-prune-old-pages-deployments-workflow-run](./quick/260924-igc-prune-old-pages-deployments-workflow-run/) |
+| 260924-p7k | Link preview image and Open Graph tags; record owner Windows/phone testing | 2026-09-24 | 1b6a0e5 | Build checks pass | [260924-p7k-link-preview-image](./quick/260924-p7k-link-preview-image/) |
 
 ### Roadmap Evolution
 
@@ -158,5 +159,5 @@ Remaining publication inputs and environment notes:
 ## Session Continuity
 
 Last session: 2026-09-21T19:53:54.676Z
-Stopped at: Completed 03-08-PLAN.md; physical acceptance pending
+Stopped at: Phases 2 and 3 accepted after owner Windows and phone testing
 Resume file: None

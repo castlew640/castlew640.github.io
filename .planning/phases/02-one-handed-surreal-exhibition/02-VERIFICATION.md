@@ -1,7 +1,7 @@
 ---
 phase: 02-one-handed-surreal-exhibition
 verified: 2026-09-21T01:43:58Z
-status: human_needed
+status: passed
 score: 11/13 must-haves verified
 behavior_unverified: 0
 overrides_applied: 0
@@ -25,7 +25,7 @@ human_verification:
 
 **Phase goal:** Visitors can explore a memorable surreal corridor, open the real work, and return to their place using one hand, with a complete still presentation available.
 
-**Status: human_needed.** No implementation blocker was identified. Eleven of thirteen merged observable truths are verified; composition acceptance and the required physical/manual validation remain uncertain. The nine requirement implementations are present, but ART-01 and physical one-handed acceptance are not signed off.
+**Status: passed (human acceptance 2026-09-24).** All four checks in [02-UAT.md](02-UAT.md) passed after the owner completed Windows and phone testing; composition was judged against the current Dalí dreamscape that replaced the reflections. Original assessment: no implementation blocker was identified. Eleven of thirteen merged observable truths are verified; composition acceptance and the required physical/manual validation remain uncertain. The nine requirement implementations are present, but ART-01 and physical one-handed acceptance are not signed off.
 
 This is a **reused-agent verifier fallback**, following `/home/castlewr/.codex/agents/gsd-verifier.toml` because the agent limit prevented a fresh typed verifier. This agent previously implemented part of this phase; the report does not claim independent fresh-agent verification. Actual source, tests, final execution logs, screenshots, and data paths were inspected, rather than accepting summary completion statements as proof. No source was changed and no tests were redundantly rerun during this verification.
 

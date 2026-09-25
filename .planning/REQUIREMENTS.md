@@ -51,7 +51,7 @@ The first milestone includes both an early readable release and the finished ini
 
 ### Performance
 
-- [ ] **PERF-01**: Visitors on the representative desktop and physical mobile targets defined during planning receive responsive navigation and readable content within recorded transfer/frame-time budgets, with measured evidence before the immersive release.
+- [x] **PERF-01**: Visitors on the representative desktop and physical mobile targets defined during planning receive responsive navigation and readable content within recorded transfer/frame-time budgets, with measured evidence before the immersive release.
 - [x] **PERF-02**: A visitor's browser stops unnecessary scene work when the exhibition is hidden or inactive, and repeated project visits do not accumulate scene listeners or owned rendering resources.
 
 ### Delivery and Release
@@ -125,7 +125,7 @@ Every v1 requirement is owned by exactly one phase. Later phases preserve and re
 | GROW-02 | Phase 1 | Complete |
 | GROW-03 | Phase 1 | Complete |
 | GROW-04 | Phase 3 | Complete |
-| PERF-01 | Phase 3 | Pending |
+| PERF-01 | Phase 3 | Complete |
 | PERF-02 | Phase 3 | Complete |
 | SHIP-01 | Phase 1 | Complete |
 | SHIP-02 | Phase 1 | Complete |

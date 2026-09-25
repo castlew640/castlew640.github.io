@@ -15,6 +15,8 @@ const {
   exhibition = false,
 } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
+// A still of the entrance, shown when the site is shared as a link.
+const previewImage = new URL('/og-image.jpg', Astro.site);
 const destinations = ['Projects', 'About', 'Resume', 'Contact'];
 ---
 
@@ -30,6 +32,13 @@ const destinations = ['Projects', 'About', 'Resume', 'Contact'];
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content={profile.displayName} />
+    <meta property="og:image" content={previewImage} />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={`${profile.displayName}'s portfolio: a checkered path through a surreal desert of melting clocks and framed project screens.`} />
+    <meta name="twitter:card" content="summary_large_image" />
     <title>{title}</title>
     {exhibition && (
       <script is:inline>

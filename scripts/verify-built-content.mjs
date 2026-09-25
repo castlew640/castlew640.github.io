@@ -3,7 +3,7 @@ import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../dist/', import.meta.url));
-const requiredFiles = ['index.html', 'projects/featured-client/index.html', 'resume/william-castle-resume.pdf'];
+const requiredFiles = ['index.html', 'projects/featured-client/index.html', 'resume/william-castle-resume.pdf', 'og-image.jpg'];
 const forbiddenTokens = ['verification-draft', 'Verification Draft', 'sample@example.com', 'example.com',
   'GROWTH_FIXTURE_DO_NOT_PUBLISH', 'GROWTH_DRAFT_DO_NOT_PUBLISH', 'fixture-personal-', 'project-starter'];
 
@@ -53,6 +53,20 @@ for (const file of files.filter((candidate) => /^projects\/.*\/index\.html$/.tes
 for (const name of mediaWhitelist) if (!names.has(name)) throw new Error(`Published page media missing from artifact: ${name}`);
 for (const name of names) {
   if (name.startsWith('media/') && !mediaWhitelist.has(name)) throw new Error(`Unreferenced media in artifact: ${name}`);
+}
+// Every page shares one link preview, and it must be the exact size its tags declare.
+const preview = await readFile(join(root, 'og-image.jpg'));
+// The frame header (baseline 0xFFC0 or progressive 0xFFC2) holds height then width.
+const frame = [0xc0, 0xc2].map((marker) => preview.indexOf(Buffer.from([0xff, marker]))).filter((at) => at >= 0).sort((a, b) => a - b)[0] ?? -1;
+if (frame < 0 || preview.readUInt16BE(frame + 7) !== 1200 || preview.readUInt16BE(frame + 5) !== 630) {
+  throw new Error('Link preview image must be a 1200x630 JPEG');
+}
+for (const file of files.filter((candidate) => candidate.endsWith('.html'))) {
+  const page = await readFile(file, 'utf8');
+  if (!page.includes('<meta property="og:image" content="https://castlew640.github.io/og-image.jpg">')
+    || !page.includes('<meta name="twitter:card" content="summary_large_image">')) {
+    throw new Error(`Link preview tags missing from ${relative(root, file)}`);
+  }
 }
 const project = await readFile(join(root, 'projects/featured-client/index.html'), 'utf8');
 for (const identifier of ['website', 'manual-planner', 'ai-mvp', 'castlew640@gmail.com']) {
